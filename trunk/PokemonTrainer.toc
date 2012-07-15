@@ -1,0 +1,32 @@
+## Interface: 50001
+## Title: Pokemon Trainer
+## Version: 0.0.1
+## Notes: The pet battle addon!
+## Author: grdn
+## SavedVariables: PokemonTrainerDB
+## OptionalDeps: Ace3, iLib
+
+# Libraries#
+#Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+#Libs\LibStub\Libstub.lua
+#Libs\libdatabroker-1-1\LibDataBroker-1.1.lua
+
+Libs\iLib\lib.xml
+#Libs\LibBabble-Zone-3.0\lib.xml
+#Libs\LibTourist-3.0\lib.xml
+#Libs\LibCrayon-3.0\lib.xml
+
+#Libs\AceBucket-3.0\AceBucket-3.0.xml
+#Libs\AceGUI-3.0\AceGUI-3.0.xml
+#Libs\AceConfig-3.0\AceConfig-3.0.xml
+#Libs\AceDB-3.0\AceDB-3.0.xml
+Libs\AceEvent-3.0\AceEvent-3.0.xml
+#Libs\AceLocale-3.0\AceLocale-3.0.xml
+#Libs\AceTimer-3.0\AceTimer-3.0.xml
+
+# Locales
+Locales\Locales.xml
+
+# Main
+Core.lua
+GameTooltip.lua
