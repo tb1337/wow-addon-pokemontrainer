@@ -29,4 +29,3 @@ Locales\Locales.xml
 
 # Main
 Core.lua
-GameTooltip.lua
