@@ -39,6 +39,7 @@ function PT:Boot()
 	self:RegisterEvent("PET_BATTLE_OPENING_DONE", "PetBattleStart");
 	self:RegisterEvent("PET_BATTLE_OVER", "PetBattleStop");
 	self:RegisterEvent("PET_BATTLE_CLOSE", "PetBattleStop");
+	self:RegisterEvent("PET_BATTLE_PET_CHANGED", "PetBattleChanged");
 end
 PT:RegisterEvent("PLAYER_ENTERING_WORLD", "Boot");
 
@@ -66,6 +67,9 @@ local function damage_icon(modifier, size)
 end
 
 function PT:Compare(petType, enemyType)
+	if( not petType or not enemyType ) then
+		return 1;
+	end
 	return _G.C_PetBattles.GetAttackModifier(petType, enemyType);
 end
 
@@ -82,35 +86,29 @@ end
 -- BATTLE FRAME
 ---------------------------------------------------------
 
-local enemyIDs, enemyLevels = {}, {};
 local enemyAbilitys = {};
-
-local skillIDs, skillLevels = {}, {};
 local petAbilitys = {};
-
-_G.E = enemyAbilitys;
-_G.P = petAbilitys;
 
 local function scan_pets(player, t, tID, tLvl)
 	local num = _G.C_PetBattles.GetNumPets(player);
-	local species, petName, petIcon, petType, creatureID;
+	
+	local species, petName, petIcon, petType, level, abilityID;
 	
 	for i = 1, num do
 		species = _G.C_PetBattles.GetPetSpeciesID(player, i);
-		_G.C_PetJournal.GetPetAbilityList(species, tID, tLvl);
-		petName, petIcon, petType, creatureID = _G.C_PetJournal.GetPetInfoBySpeciesID(species);
+		petName, petIcon, petType = _G.C_PetJournal.GetPetInfoBySpeciesID(species);
+		level = _G.C_PetBattles.GetLevel(player, i);
 		
 		t[i] = {
 			name = petName,
 			icon = petIcon,
 			type = petType,
-			level = _G.C_PetBattles.GetLevel(player, i),
+			--level = level
 		};
 		
-		for j, ability in pairs(tID) do
-			if( t[i].level >= tLvl[j] ) then
-				table.insert(t[i], tID[j]);
-			end
+		for j = 1, (level >= 4 and 3 or level >= 2 and 2 or 1) do
+			abilityID = _G.C_PetBattles.GetAbilityInfo(player, i, j);
+			table.insert(t[i], abilityID);
 		end
 	end
 end
@@ -123,26 +121,46 @@ function PT:PetBattleStart()
 	tip:SetPoint("TOPRIGHT", _G.UIParent, "RIGHT", 0, 300);
 	tip:Show();
 	
+	tip = self:GetTooltip("PlayerSkills", "UpdatePlayerSkills");
+	tip:SetPoint("TOPLEFT", _G.UIParent, "LEFT", 0, 300);
+	tip:Show();
+	
 	_G.WatchFrame:Hide();
 end
 
 function PT:PetBattleStop()
 	self:GetTooltip("EnemySkills"):Release();
+	self:GetTooltip("PlayerSkills"):Release();
 	_G.WatchFrame:Show();
+end
+
+function PT:PetBattleChanged()
+	self:CheckTooltips("EnemySkills", "PlayerSkills");
+end
+
+local function enemySkill_OnEnter(anchor, info)
+	_G.PetBattleAbilityTooltip_SetAuraID(_G.LE_BATTLE_PET_ENEMY, info[1], info[2]);
+	_G.PetBattleAbilityTooltip_Show("TOPRIGHT", anchor, "TOPLEFT", -10, 2);
+end
+local function enemySkill_OnLeave()
+	_G.PetBattlePrimaryAbilityTooltip:Hide();
 end
 
 function PT:UpdateEnemySkills(tip)
 	tip:Clear();
 	tip:SetColumnLayout(2 + #petAbilitys, "LEFT", "LEFT", "CENTER", "CENTER", "CENTER");
 	
-	line = tip:AddLine("", "");
+	local line = tip:AddLine("", "");
 	for _, pet in ipairs(petAbilitys) do
 		tip:SetCell(line, 2+_, "|T"..pet.icon..":22:22|t");
+		if( _ == _G.C_PetBattles.GetActivePet(_G.LE_BATTLE_PET_ALLY) ) then
+			tip:SetColumnColor(2+_, 0, 1, 0, 0.5);
+		else
+			tip:SetColumnColor(2+_, 0, 0, 0, 0);
+		end
 	end
 	
-	local line;
 	local id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints;
-	
 	local modifier;
 	
 	for i, enemy in ipairs(enemyAbilitys) do
@@ -155,9 +173,12 @@ function PT:UpdateEnemySkills(tip)
 			(COLOR_GOLD):format(enemy.name)
 		);
 		for _, pet in ipairs(petAbilitys) do
-			--modifier = self:Compare(pet.type, enemy.type);
 			modifier = self:Compare(enemy.type, pet.type);
 			tip:SetCell(line, 2+_, damage_icon(modifier, 22));
+		end
+
+		if( i == _G.C_PetBattles.GetActivePet(_G.LE_BATTLE_PET_ENEMY) ) then
+			tip:SetLineColor(line, 1, 0, 0, 0.5);
 		end
 		
 		for j, ability in ipairs(enemy) do
@@ -165,10 +186,70 @@ function PT:UpdateEnemySkills(tip)
 			
 			line = tip:AddLine("|T"..icon..":22:22|t", "  "..name);
 			for _, pet in ipairs(petAbilitys) do
-				--modifier = self:Compare(pet.type, petType);
 				modifier = self:Compare(petType, pet.type);
 				tip:SetCell(line, 2+_, damage_icon(modifier, 22));
 			end
+			
+			tip:SetLineScript(line, "OnEnter", enemySkill_OnEnter, {i, ability});
+			tip:SetLineScript(line, "OnLeave", enemySkill_OnLeave);
+		end
+	end
+end
+
+local function playerSkill_OnEnter(anchor, info)
+	_G.PetBattleAbilityTooltip_SetAuraID(_G.LE_BATTLE_PET_ALLY, info[1], info[2]);
+	_G.PetBattleAbilityTooltip_Show("TOPLEFT", anchor, "TOPRIGHT", 10, 2);
+end
+local function playerSkill_OnLeave()
+	_G.PetBattlePrimaryAbilityTooltip:Hide();
+end
+
+function PT:UpdatePlayerSkills(tip)
+	tip:Clear();
+	tip:SetColumnLayout(2 + #enemyAbilitys, "LEFT", "LEFT", "CENTER", "CENTER", "CENTER");
+	
+	local line = tip:AddLine("", "");
+	for _, enemy in ipairs(enemyAbilitys) do
+		tip:SetCell(line, 2+_, "|T"..enemy.icon..":22:22|t");
+		if( _ == _G.C_PetBattles.GetActivePet(_G.LE_BATTLE_PET_ENEMY) ) then
+			tip:SetColumnColor(2+_, 1, 0, 0, 0.5);
+		else
+			tip:SetColumnColor(2+_, 0, 0, 0, 0);
+		end
+	end
+	
+	local id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints;
+	local modifier;
+	
+	for i, pet in ipairs(petAbilitys) do
+		if( i ~= 1 ) then
+			tip:AddSeparator();
+		end
+		
+		line = tip:AddLine(
+			type_icon(pet.type, 22),
+			(COLOR_GOLD):format(pet.name)
+		);
+		for _, enemy in ipairs(enemyAbilitys) do
+			modifier = self:Compare(pet.type, enemy.type);
+			tip:SetCell(line, 2+_, damage_icon(modifier, 22));
+		end
+
+		if( i == _G.C_PetBattles.GetActivePet(_G.LE_BATTLE_PET_ALLY) ) then
+			tip:SetLineColor(line, 0, 1, 0, 0.5);
+		end
+		
+		for j, ability in ipairs(pet) do
+			id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints = _G.C_PetBattles.GetAbilityInfoByID(ability);
+			
+			line = tip:AddLine("|T"..icon..":22:22|t", "  "..name);
+			for _, enemy in ipairs(enemyAbilitys) do
+				modifier = self:Compare(petType, enemy.type);
+				tip:SetCell(line, 2+_, damage_icon(modifier, 22));
+			end
+			
+			tip:SetLineScript(line, "OnEnter", playerSkill_OnEnter, {i, ability});
+			tip:SetLineScript(line, "OnLeave", playerSkill_OnLeave);
 		end
 	end
 end
