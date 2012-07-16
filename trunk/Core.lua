@@ -190,7 +190,7 @@ local function GameTooltip_hook(self)
 	local _, petID, ability1, ability2, ability3, locked, customName, lvl, petName, petType;
 	local modifier, name;
 	
-	for i = 1, PT.maxActive do
+	for i = 1, 3 do
 		petID, ability1, ability2, ability3, locked = _G.C_PetJournal.GetPetLoadOutInfo(i);
 		
 		if( not locked and petID > 0 ) then
