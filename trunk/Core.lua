@@ -1,3 +1,7 @@
+-----------------------------------
+-- Setting up scope, upvalues and libs
+-----------------------------------
+
 local AddonName, PT = ...;
 LibStub("AceEvent-3.0"):Embed(PT);
 
@@ -10,13 +14,17 @@ _G.PT=PT;
 -- pets nach stufe und qualität sortieren
 -- Vorschläge, welches Setup das Pet schlagen könnte
 
+-------------------------------
+-- Registering with iLib
+-------------------------------
+
 LibStub("iLib"):Register(AddonName, nil, PT);
 
 ----------------------
 -- Variables
 ----------------------
 
-PT.maxActive = 3;
+local COLOR_GOLD = "|cfffed100%s|r";
 
 ------------------
 -- Boot
@@ -61,7 +69,7 @@ function PT:Compare(petType, enemyType)
 	return _G.C_PetBattles.GetAttackModifier(petType, enemyType);
 end
 
-function PT:ComparyByAbilityID(abilityID, enemyType)
+function PT:CompareByAbilityID(abilityID, enemyType)
 	local _, name, icon, _, _, _, petType, noStrongWeakHints = _G.C_PetBattles.GetAbilityInfoByID(abilityID);
 	if( noStrongWeakHints ) then
 		return 1, name, icon;
@@ -74,32 +82,42 @@ end
 -- BATTLE FRAME
 ---------------------------------------------------------
 
-local abilityIDs, abilityLevels = {}, {};
+local enemyIDs, enemyLevels = {}, {};
 local enemyAbilitys = {};
 
-_G.E = enemyAbilitys;
+local skillIDs, skillLevels = {}, {};
+local petAbilitys = {};
 
-function PT:PetBattleStart()
-	local species, id, name, icon, maxCD, desc;
-	local petName, petIcon, petType, creatureID;
+_G.E = enemyAbilitys;
+_G.P = petAbilitys;
+
+local function scan_pets(player, t, tID, tLvl)
+	local num = _G.C_PetBattles.GetNumPets(player);
+	local species, petName, petIcon, petType, creatureID;
 	
-	for i = 1, 3 do
-		species = _G.C_PetBattles.GetPetSpeciesID(_G.LE_BATTLE_PET_ENEMY, i);
-		_G.C_PetJournal.GetPetAbilityList(species, abilityIDs, abilityLevels);
+	for i = 1, num do
+		species = _G.C_PetBattles.GetPetSpeciesID(player, i);
+		_G.C_PetJournal.GetPetAbilityList(species, tID, tLvl);
 		petName, petIcon, petType, creatureID = _G.C_PetJournal.GetPetInfoBySpeciesID(species);
 		
-		enemyAbilitys[i] = {
+		t[i] = {
 			name = petName,
 			icon = petIcon,
 			type = petType,
+			level = _G.C_PetBattles.GetLevel(player, i),
 		};
 		
-		for j, ability in pairs(abilityIDs) do
-			id, name, icon, maxCD, desc = _G.C_PetBattles.GetAbilityInfoByID(ability);
-			
-			table.insert(enemyAbilitys[i], {abilityLevels[j], _G.C_PetBattles.GetAbilityInfoByID(ability)});
+		for j, ability in pairs(tID) do
+			if( t[i].level >= tLvl[j] ) then
+				table.insert(t[i], tID[j]);
+			end
 		end
 	end
+end
+
+function PT:PetBattleStart()
+	scan_pets(_G.LE_BATTLE_PET_ALLY, petAbilitys, skillIDs, skillLevels);
+	scan_pets(_G.LE_BATTLE_PET_ENEMY, enemyAbilitys, enemyIDs, enemyLevels);
 
 	local tip = self:GetTooltip("EnemySkills", "UpdateEnemySkills");
 	tip:SetPoint("TOPRIGHT", _G.UIParent, "RIGHT", 0, 300);
@@ -110,31 +128,47 @@ end
 
 function PT:PetBattleStop()
 	self:GetTooltip("EnemySkills"):Release();
-	
 	_G.WatchFrame:Show();
 end
 
 function PT:UpdateEnemySkills(tip)
 	tip:Clear();
-	tip:SetColumnLayout(2, "LEFT", "LEFT");
+	tip:SetColumnLayout(2 + #petAbilitys, "LEFT", "LEFT", "CENTER", "CENTER", "CENTER");
 	
-	_G.wipe(abilityIDs);
-	_G.wipe(abilityLevels);
+	line = tip:AddLine("", "");
+	for _, pet in ipairs(petAbilitys) do
+		tip:SetCell(line, 2+_, "|T"..pet.icon..":22:22|t");
+	end
 	
-	local id, name, icon, maxCD, desc;
+	local line;
+	local id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints;
 	
-	for i = 1, 3 do
-		local species = _G.C_PetBattles.GetPetSpeciesID(_G.LE_BATTLE_PET_ENEMY, i);
+	local modifier;
+	
+	for i, enemy in ipairs(enemyAbilitys) do
+		if( i ~= 1 ) then
+			tip:AddSeparator();
+		end
 		
-		_G.C_PetJournal.GetPetAbilityList(species, abilityIDs, abilityLevels);
+		line = tip:AddLine(
+			type_icon(enemy.type, 22),
+			(COLOR_GOLD):format(enemy.name)
+		);
+		for _, pet in ipairs(petAbilitys) do
+			--modifier = self:Compare(pet.type, enemy.type);
+			modifier = self:Compare(enemy.type, pet.type);
+			tip:SetCell(line, 2+_, damage_icon(modifier, 22));
+		end
 		
-		for _, ability in pairs(abilityIDs) do
-			id, name, icon, maxCD, desc = C_PetBattles.GetAbilityInfoByID(ability);
+		for j, ability in ipairs(enemy) do
+			id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints = _G.C_PetBattles.GetAbilityInfoByID(ability);
 			
-			tip:AddLine(
-				"|T"..icon..":24:24|t",
-				name
-			);
+			line = tip:AddLine("|T"..icon..":22:22|t", "  "..name);
+			for _, pet in ipairs(petAbilitys) do
+				--modifier = self:Compare(pet.type, petType);
+				modifier = self:Compare(petType, pet.type);
+				tip:SetCell(line, 2+_, damage_icon(modifier, 22));
+			end
 		end
 	end
 end
@@ -173,21 +207,21 @@ local function GameTooltip_hook(self)
 			);
 			
 			-- Ability1 Check
-			modifier, name = PT:ComparyByAbilityID(ability1, enemyType);
+			modifier, name = PT:CompareByAbilityID(ability1, enemyType);
 			self:AddDoubleLine(
 				"|cffffffff- "..name.."|r",
 				damage_icon(modifier, 14)
 			);
 			
 			-- Ability2 Check
-			modifier, name = PT:ComparyByAbilityID(ability2, enemyType);
+			modifier, name = PT:CompareByAbilityID(ability2, enemyType);
 			self:AddDoubleLine(
 				"|cffffffff- "..name.."|r",
 				damage_icon(modifier, 14)
 			);
 			
 			-- Ability3 Check
-			modifier, name = PT:ComparyByAbilityID(ability3, enemyType);
+			modifier, name = PT:CompareByAbilityID(ability3, enemyType);
 			self:AddDoubleLine(
 				"|cffffffff- "..name.."|r",
 				damage_icon(modifier, 14)
