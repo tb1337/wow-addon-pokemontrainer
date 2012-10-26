@@ -5,14 +5,9 @@
 local AddonName, PT = ...;
 LibStub("AceEvent-3.0"):Embed(PT);
 
--- local L = LibStub("AceLocale-3.0"):GetLocale(AddonName);
+local L = LibStub("AceLocale-3.0"):GetLocale(AddonName);
 
 local _G = _G;
-
-_G.PT=PT;
-
--- pets nach stufe und qualität sortieren
--- Vorschläge, welches Setup das Pet schlagen könnte
 
 -------------------------------
 -- Registering with iLib
@@ -26,20 +21,22 @@ LibStub("iLib"):Register(AddonName, nil, PT);
 
 local COLOR_GOLD = "|cfffed100%s|r";
 
+local OwnedPets = {};
+
 ------------------
 -- Boot
 ------------------
 
 function PT:Boot()
-	-- We require the PetJournal for many API functions
-	if( not _G.IsAddOnLoaded("Blizzard_PetJournal") ) then
-		_G.LoadAddOn("Blizzard_PetJournal");
-	end
-	
+	-- for the skill frames
 	self:RegisterEvent("PET_BATTLE_OPENING_DONE", "PetBattleStart");
 	self:RegisterEvent("PET_BATTLE_OVER", "PetBattleStop");
 	self:RegisterEvent("PET_BATTLE_CLOSE", "PetBattleStop");
 	self:RegisterEvent("PET_BATTLE_PET_CHANGED", "PetBattleChanged");
+	
+	-- for the hooked tooltips
+	self:RegisterEvent("PET_JOURNAL_LIST_UPDATE", "UpdateOwnedPets");
+	self:RegisterEvent("UPDATE_MOUSEOVER_UNIT", "PetTooltip");
 end
 PT:RegisterEvent("PLAYER_ENTERING_WORLD", "Boot");
 
@@ -64,6 +61,11 @@ local function damage_icon(modifier, size)
 	else
 		return "|TInterface\\PetBattles\\BattleBar-AbilityBadge-Neutral:"..size..":"..size.."|t";
 	end
+end
+
+local function quality_color(index, name)
+	local r, g, b, hex = _G.GetItemQualityColor(_G.C_PetBattles.GetBreedQuality(2, index) - 1);
+	return ("|c"..hex.."%s|r"):format(name);
 end
 
 function PT:Compare(petType, enemyType)
@@ -114,15 +116,24 @@ local function scan_pets(player, t, tID, tLvl)
 end
 
 function PT:PetBattleStart()
+	-- We require the PetJournal for many API functions
+	if( not _G.IsAddOnLoaded("Blizzard_PetJournal") ) then
+		_G.LoadAddOn("Blizzard_PetJournal");
+	end
+	
 	scan_pets(_G.LE_BATTLE_PET_ALLY, petAbilitys, skillIDs, skillLevels);
 	scan_pets(_G.LE_BATTLE_PET_ENEMY, enemyAbilitys, enemyIDs, enemyLevels);
 
 	local tip = self:GetTooltip("EnemySkills", "UpdateEnemySkills");
 	tip:SetPoint("TOPRIGHT", _G.UIParent, "RIGHT", 0, 300);
+	tip:SetFrameStrata("BACKGROUND");
+	tip:SetScale(1);
 	tip:Show();
 	
 	tip = self:GetTooltip("PlayerSkills", "UpdatePlayerSkills");
 	tip:SetPoint("TOPLEFT", _G.UIParent, "LEFT", 0, 300);
+	tip:SetFrameStrata("BACKGROUND");
+	tip:SetScale(1);
 	tip:Show();
 	
 	_G.WatchFrame:Hide();
@@ -170,7 +181,8 @@ function PT:UpdateEnemySkills(tip)
 		
 		line = tip:AddLine(
 			type_icon(enemy.type, 22),
-			(COLOR_GOLD):format(enemy.name)
+			--(COLOR_GOLD):format(enemy.name)
+			quality_color(i, enemy.name)
 		);
 		for _, pet in ipairs(petAbilitys) do
 			modifier = self:Compare(enemy.type, pet.type);
@@ -184,7 +196,7 @@ function PT:UpdateEnemySkills(tip)
 		for j, ability in ipairs(enemy) do
 			id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints = _G.C_PetBattles.GetAbilityInfoByID(ability);
 			
-			line = tip:AddLine("|T"..icon..":22:22|t", "  "..name);
+			line = tip:AddLine("|T"..icon..":22:22|t", "  "..(COLOR_GOLD):format(name));
 			for _, pet in ipairs(petAbilitys) do
 				modifier = self:Compare(petType, pet.type);
 				tip:SetCell(line, 2+_, damage_icon(modifier, 22));
@@ -228,7 +240,8 @@ function PT:UpdatePlayerSkills(tip)
 		
 		line = tip:AddLine(
 			type_icon(pet.type, 22),
-			(COLOR_GOLD):format(pet.name)
+			--(COLOR_GOLD):format(pet.name)
+			quality_color(i, pet.name)
 		);
 		for _, enemy in ipairs(enemyAbilitys) do
 			modifier = self:Compare(pet.type, enemy.type);
@@ -242,7 +255,7 @@ function PT:UpdatePlayerSkills(tip)
 		for j, ability in ipairs(pet) do
 			id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints = _G.C_PetBattles.GetAbilityInfoByID(ability);
 			
-			line = tip:AddLine("|T"..icon..":22:22|t", "  "..name);
+			line = tip:AddLine("|T"..icon..":22:22|t", "  "..(COLOR_GOLD):format(name));
 			for _, enemy in ipairs(enemyAbilitys) do
 				modifier = self:Compare(petType, enemy.type);
 				tip:SetCell(line, 2+_, damage_icon(modifier, 22));
@@ -257,58 +270,89 @@ end
 ---------------------------------------------------------
 -- GAME TOOLTIP
 ---------------------------------------------------------
-
-local function GameTooltip_hook(self)
-	local name, unit = self:GetUnit();
 	
+function PT:UpdateOwnedPets()
+	_G.wipe(OwnedPets);
+	
+	local numPets, numOwned = _G.C_PetJournal.GetNumPets(false);
+	local _, rarity, petID, name;
+	
+	for i = 1, numOwned do
+		petID, _, _, _, _, _, _, name = _G.C_PetJournal.GetPetInfoByIndex(i, false);
+		
+		if( not petID ) then
+			return;
+		end
+		_, _, _, _, rarity = _G.C_PetJournal.GetPetStats(petID);
+		
+		if( not OwnedPets[name] or OwnedPets[name] < rarity ) then
+			OwnedPets[name] = rarity;
+		end
+	end	
+end
+
+function PT:PetTooltip()
+	local name, unit = _G.GameTooltip:GetUnit();
 	if( not _G.UnitIsWildBattlePet(unit) ) then
 		return;
 	end
+	
+	-- We require the PetJournal for many API functions
+	if( not _G.IsAddOnLoaded("Blizzard_PetJournal") ) then
+		_G.LoadAddOn("Blizzard_PetJournal");
+	end
+	
+	if( not _G["PetCaught"] ) then
+		if( OwnedPets[name] ) then
+			local c = _G.ITEM_QUALITY_COLORS[OwnedPets[name] -1];
+			_G.GameTooltip:AddLine("|TInterface\\RAIDFRAME\\ReadyCheck-Ready:14:14|t "..L["Already caught"], c.r, c.g, c.b);
+		else
+			_G.GameTooltip:AddLine("|TInterface\\RAIDFRAME\\ReadyCheck-NotReady:14:14|t "..L["Not caught"], 1, 0, 0);
+		end
+	end
+	
 	local enemyType = _G.UnitBattlePetType(unit);
-	
-	_G[self:GetName().."TextLeft2"]:SetText(_G[self:GetName().."TextLeft2"]:GetText().." "..type_icon(enemyType, 18, 0, 2));
-	
-	local _, petID, ability1, ability2, ability3, locked, customName, lvl, petName, petType;
-	local modifier, name;
+	local modifier, _, petID, ability1, ability2, ability3, locked, customName, lvl, petName, petType;
 	
 	for i = 1, 3 do
 		petID, ability1, ability2, ability3, locked = _G.C_PetJournal.GetPetLoadOutInfo(i);
 		
 		if( not locked and petID > 0 ) then
-			self:AddLine(" ");
+			_G.GameTooltip:AddLine(" ");
 			
 			_, customName, lvl, _, _, _, petName, _, petType, _ = _G.C_PetJournal.GetPetInfoByPetID(petID);
 			petName = customName and customName.." (|cffffffff"..petName.."|r)" or petName;
 			
 			-- Type Check
 			modifier = PT:Compare(petType, enemyType);
-			self:AddDoubleLine(
-				type_icon(petType, 14).." "..petName..", L"..lvl.."",
+			_G.GameTooltip:AddDoubleLine(
+				type_icon(petType, 14).." "..petName.." ("..lvl..")",
 				damage_icon(modifier, 14)
 			);
 			
 			-- Ability1 Check
 			modifier, name = PT:CompareByAbilityID(ability1, enemyType);
-			self:AddDoubleLine(
+			_G.GameTooltip:AddDoubleLine(
 				"|cffffffff- "..name.."|r",
 				damage_icon(modifier, 14)
 			);
 			
 			-- Ability2 Check
 			modifier, name = PT:CompareByAbilityID(ability2, enemyType);
-			self:AddDoubleLine(
+			_G.GameTooltip:AddDoubleLine(
 				"|cffffffff- "..name.."|r",
 				damage_icon(modifier, 14)
 			);
 			
 			-- Ability3 Check
 			modifier, name = PT:CompareByAbilityID(ability3, enemyType);
-			self:AddDoubleLine(
+			_G.GameTooltip:AddDoubleLine(
 				"|cffffffff- "..name.."|r",
 				damage_icon(modifier, 14)
 			);
 			
 		end
-	end -- end for
+	end
+	
+	_G.GameTooltip:Show();
 end
-GameTooltip:HookScript("OnTooltipSetUnit", GameTooltip_hook);
