@@ -39,6 +39,7 @@ local dummyBattleStarted = false;
 function PT:CancelDummyBattle()
 	self:PetBattleStop();
 	dummyBattleStarted = false;
+	PT.dummyTimer = nil;
 end
 
 local function initializeDummyBattleFrames(info, value)
@@ -53,6 +54,9 @@ local function initializeDummyBattleFrames(info, value)
 	end
 	
 	PT:PetBattleStart();
+	if( PT.dummyTimer ) then
+		PT:CancelTimer(PT.dummyTimer);
+	end
 	dummyBattleStarted = true;
 	
 	PT.dummyTimer = PT:ScheduleTimer("CancelDummyBattle", 5);
