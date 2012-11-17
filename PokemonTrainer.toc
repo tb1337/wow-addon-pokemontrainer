@@ -1,6 +1,6 @@
 ## Interface: 50001
 ## Title: Pokemon Trainer
-## Version: 0.7.0
+## Version: 0.8.0
 ## Notes: The pet battle addon!
 ## Author: grdn
 ## SavedVariables: PokemonTrainerDB
