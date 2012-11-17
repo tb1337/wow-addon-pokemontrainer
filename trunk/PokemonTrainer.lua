@@ -20,6 +20,7 @@ LibStub("iLib"):Register(AddonName, nil, PT);
 -- Variables
 ----------------------
 
+local COLOR_RED = "|cffff0000%s|r";
 local COLOR_GOLD = "|cfffed100%s|r";
 
 local OwnedPets = {};
@@ -36,6 +37,7 @@ function PT:Boot()
 	self:RegisterEvent("PET_BATTLE_OVER", "PetBattleStop");
 	self:RegisterEvent("PET_BATTLE_CLOSE", "PetBattleStop");
 	self:RegisterEvent("PET_BATTLE_PET_CHANGED", "PetBattleChanged");
+	self:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE", "PetBattleChanged");
 	
 	-- for the hooked tooltips
 	self:RegisterEvent("PET_JOURNAL_LIST_UPDATE", "UpdateOwnedPets");
@@ -71,6 +73,14 @@ end
 local function quality_color(owner, index, name)
 	local r, g, b, hex = _G.GetItemQualityColor(_G.C_PetBattles.GetBreedQuality(owner, index) - 1);
 	return ("|c"..hex.."%s|r"):format(name);
+end
+
+local function format_cooldown(name, id, avail, cdleft)
+	if( id and not avail and cdleft > 0) then
+		return (COLOR_RED):format(name.." ("..cdleft..")");
+	end
+	
+	return (COLOR_GOLD):format(name);
 end
 
 function PT:Compare(petType, enemyType)
@@ -194,6 +204,7 @@ function PT:UpdateEnemySkills(tip)
 	
 	local id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints;
 	local modifier;
+	local avail, cdleft, _;
 	
 	for i, enemy in ipairs(enemyAbilitys) do
 		if( i ~= 1 ) then
@@ -205,6 +216,7 @@ function PT:UpdateEnemySkills(tip)
 			--(COLOR_GOLD):format(enemy.name)
 			quality_color(_G.LE_BATTLE_PET_ENEMY, i, enemy.name)
 		);
+		
 		for _, pet in ipairs(petAbilitys) do
 			modifier = self:Compare(enemy.type, pet.type);
 			tip:SetCell(line, 2+_, damage_icon(modifier, 22));
@@ -216,8 +228,20 @@ function PT:UpdateEnemySkills(tip)
 		
 		for j, ability in ipairs(enemy) do
 			id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints = _G.C_PetBattles.GetAbilityInfoByID(ability);
+			avail, cdleft, _ = _G.C_PetBattles.GetAbilityState(_G.LE_BATTLE_PET_ENEMY, i, j);
 			
-			line = tip:AddLine("|T"..icon..":22:22|t", "  "..(COLOR_GOLD):format(name));
+			line = tip:AddLine("|T"..icon..":22:22|t", "  "..format_cooldown(name, id, avail, cdleft));--(COLOR_GOLD):format(name));
+			
+			--if( id ) then   
+			--	if( avail ) then
+			--		tip:SetLineColor(line, 0, 0, 0, 0);
+			--		tip:SetCell(line, 2, "  "..(COLOR_GOLD):format(name));
+			--	elseif( not avail and cdleft > 0 ) then
+			--		tip:SetLineColor(line, 1, 0, 0, 0.5);
+			--		tip:SetCell(line, 2, "  "..(COLOR_GOLD):format(name.." (cd: "..cdleft..")"));
+			--	end
+			--end
+			
 			for _, pet in ipairs(petAbilitys) do
 				modifier = self:Compare(petType, pet.type);
 				tip:SetCell(line, 2+_, damage_icon(modifier, 22));
@@ -253,6 +277,7 @@ function PT:UpdatePlayerSkills(tip)
 	
 	local id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints;
 	local modifier;
+	local avail, cdleft, _;
 	
 	for i, pet in ipairs(petAbilitys) do
 		if( i ~= 1 ) then
@@ -275,8 +300,20 @@ function PT:UpdatePlayerSkills(tip)
 		
 		for j, ability in ipairs(pet) do
 			id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints = _G.C_PetBattles.GetAbilityInfoByID(ability);
+			avail, cdleft, _= _G.C_PetBattles.GetAbilityState(_G.LE_BATTLE_PET_ALLY, i, j);
 			
-			line = tip:AddLine("|T"..icon..":22:22|t", "  "..(COLOR_GOLD):format(name));
+			line = tip:AddLine("|T"..icon..":22:22|t", "  "..format_cooldown(name, id, avail, cdleft));--(COLOR_GOLD):format(name));
+			
+			--if( id ) then   
+			--	if( avail ) then
+			--		tip:SetLineColor(line, 0, 0, 0, 0);
+			--		tip:SetCell(line, 2, "  "..(COLOR_GOLD):format(name));
+			--	elseif( not avail and cdleft > 0 ) then
+			--		tip:SetLineColor(line, 1, 0, 0, 0.5);
+			--		tip:SetCell(line, 2, "  "..(COLOR_GOLD):format(name.." (cd: "..cdleft..")"));
+			--	end
+			--end
+			
 			for _, enemy in ipairs(enemyAbilitys) do
 				modifier = self:Compare(petType, enemy.type);
 				tip:SetCell(line, 2+_, damage_icon(modifier, 22));
