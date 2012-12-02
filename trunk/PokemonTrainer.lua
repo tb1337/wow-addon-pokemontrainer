@@ -258,9 +258,13 @@ function PT:UpdateTooltip(tip, side)
 				tip:SetCell(line, 2 + k, damage_icon(modifier, 22));
 			end
 			
-			tip:SetLineScript(line, "OnEnter", function (anchor, info)
+			tip:SetLineScript(line, "OnEnter", function (anchor)
                     _G.PetBattleAbilityTooltip_SetAuraID(side, i, ability);
-                    _G.PetBattleAbilityTooltip_Show("TOPLEFT", anchor, "TOPRIGHT", 10, 2);
+                    if (isme) then
+                        _G.PetBattleAbilityTooltip_Show("TOPLEFT", anchor, "TOPRIGHT", 10, 2);
+                    else
+                        _G.PetBattleAbilityTooltip_Show("TOPRIGHT", anchor, "TOPLEFT", -10, 2);
+                    end
                 end);
 			tip:SetLineScript(line, "OnLeave", function ()
                     _G.PetBattlePrimaryAbilityTooltip:Hide();
