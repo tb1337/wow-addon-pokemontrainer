@@ -2,9 +2,8 @@
 -- Setting up scope, upvalues and libs
 -----------------------------------
 
-local AddonName, PT = ...;
-LibStub("AceEvent-3.0"):Embed(PT);
-LibStub("AceTimer-3.0"):Embed(PT);
+local AddonName = ...;
+local PT = LibStub("AceAddon-3.0"):NewAddon(select(2, ...), AddonName, "AceEvent-3.0", "AceTimer-3.0")
 
 local L = LibStub("AceLocale-3.0"):GetLocale(AddonName);
 
@@ -17,11 +16,15 @@ local _G = _G;
 LibStub("iLib"):Register(AddonName, nil, PT);
 
 ----------------------
--- Variables
+-- Constants
 ----------------------
 
 local COLOR_RED = "|cffff0000%s|r";
 local COLOR_GOLD = "|cfffed100%s|r";
+
+----------------------
+-- Variables
+----------------------
 
 local OwnedPets = {};
 
@@ -29,7 +32,7 @@ local OwnedPets = {};
 -- Boot
 ------------------
 
-function PT:Boot()
+function PT:OnEnable()
 	self.db = LibStub("AceDB-3.0"):New("PokemonTrainerDB", self:CreateDB(), "Default").profile;
 	
 	-- for the skill frames
@@ -42,16 +45,34 @@ function PT:Boot()
 	-- for the hooked tooltips
 	self:RegisterEvent("PET_JOURNAL_LIST_UPDATE", "UpdateOwnedPets");
 	self:RegisterEvent("UPDATE_MOUSEOVER_UNIT", "PetTooltip");
-	
-	self:UnregisterEvent("PLAYER_ENTERING_WORLD");
 end
-PT:RegisterEvent("PLAYER_ENTERING_WORLD", "Boot");
 
 ---------------------
 -- Utility
 ---------------------
 
-function type_icon(petType, size, offx, offy)
+local function GetDifficultyColor(levelDiff)
+  local color
+  if ( levelDiff >= 5 ) then
+    color = _G.QuestDifficultyColors["impossible"];
+  elseif ( levelDiff >= 3 ) then
+    color = _G.QuestDifficultyColors["verydifficult"];
+  elseif ( levelDiff >= -2 ) then
+    color = _G.QuestDifficultyColors["difficult"];
+  elseif ( -levelDiff <= 3 ) then
+    color = _G.QuestDifficultyColors["standard"];
+  else
+    color = _G.QuestDifficultyColors["trivial"];
+  end
+  return color.r, color.g, color.b;
+end
+
+local function level_color(level, compare_level)
+    local r,g,b = GetDifficultyColor(compare_level - level)
+    return ("|cff%02x%02x%02x%s|r"):format(r*255,g*255,b*255,level)
+end
+
+local function type_icon(petType, size, offx, offy)
 	if not size then size = 14 end
 	if not offx then offx = 0 end
 	if not offy then offy = 0 end
@@ -76,7 +97,7 @@ local function quality_color(owner, index, name)
 end
 
 local function format_cooldown(name, id, avail, cdleft)
-	if( id and not avail and cdleft > 0) then
+	if( id and not avail and cdleft ~= nil ) then
 		return (COLOR_RED):format(name.." ("..cdleft..")");
 	end
 	
@@ -103,19 +124,14 @@ end
 -- BATTLE FRAME
 ---------------------------------------------------------
 
-local enemyAbilitys = {};
-local petAbilitys = {};
-PT.petAbilitys = petAbilitys;
-PT.enemyAbilitys = enemyAbilitys;
-
-local function scan_pets(player, t)--, tID, tLvl)
-	local num = _G.C_PetBattles.GetNumPets(player);
-	local species, petName, petIcon, petType, level, abilityID;
+local function scan_pets(player)
+    local t = {}
+	local num = _G.C_PetBattles.GetNumPets(player)
 	
 	for i = 1, num do
-		species = _G.C_PetBattles.GetPetSpeciesID(player, i);
-		petName, petIcon, petType = _G.C_PetJournal.GetPetInfoBySpeciesID(species);
-		level = _G.C_PetBattles.GetLevel(player, i);
+		local species = _G.C_PetBattles.GetPetSpeciesID(player, i);
+		local petName, petIcon, petType = _G.C_PetJournal.GetPetInfoBySpeciesID(species);
+		local level = _G.C_PetBattles.GetLevel(player, i);
 		
 		t[i] = {
 			name = petName,
@@ -125,24 +141,25 @@ local function scan_pets(player, t)--, tID, tLvl)
 		};
 		
 		for j = 1, (level >= 4 and 3 or level >= 2 and 2 or 1) do
-			abilityID = _G.C_PetBattles.GetAbilityInfo(player, i, j);
-			table.insert(t[i], abilityID);
+			t[i][j] = _G.C_PetBattles.GetAbilityInfo(player, i, j);
 		end
 	end
+    return t
 end
 
-function PT:ScanDummyPets(player, t)--, tID, tLvl)
+function PT:ScanDummyPets(player)
+    t = {}
 	for i = 1, 3 do
 		t[i] = {
 			name = "Pet Dummy "..i,
 			icon = "Interface\\RAIDFRAME\\ReadyCheck-NotReady",
 			type = 1,
+            [1] = 812,
+            [2] = 812,
+            [3] = 812,
 		};
-		
-		for j = 1, 3 do
-			table.insert(t[i], 812);
-		end
 	end
+    return t
 end
 
 function PT:PetBattleStart()
@@ -151,9 +168,6 @@ function PT:PetBattleStart()
 		_G.LoadAddOn("Blizzard_PetJournal");
 	end
 	
-	scan_pets(_G.LE_BATTLE_PET_ALLY, petAbilitys);--, skillIDs, skillLevels);
-	scan_pets(_G.LE_BATTLE_PET_ENEMY, enemyAbilitys);--, enemyIDs, enemyLevels);
-
 	local tip = self:GetTooltip("EnemySkills", "UpdateEnemySkills");
 	tip:SetPoint("TOPRIGHT", _G.UIParent, "TOPRIGHT", 0, -self.db.BattlePositionY);
 	tip:SetFrameStrata("BACKGROUND");
@@ -166,14 +180,14 @@ function PT:PetBattleStart()
 	tip:SetScale(self.db.BattleFrameScale);
 	tip:Show();
 	
-	_G.WatchFrame:Hide();
+	-- _G.WatchFrame:Hide();
 end
 
 function PT:PetBattleStop()
 	self:GetTooltip("EnemySkills"):Release();
 	self:GetTooltip("PlayerSkills"):Release();
 	
-	_G.WatchFrame:Show();
+	-- _G.WatchFrame:Show();
 end
 
 function PT:PetBattleChanged()
@@ -188,147 +202,85 @@ local function enemySkill_OnLeave()
 	_G.PetBattlePrimaryAbilityTooltip:Hide();
 end
 
-function PT:UpdateEnemySkills(tip)
+function PT:UpdateTooltip(tip, side)
 	tip:Clear();
-	tip:SetColumnLayout(2 + #petAbilitys, "LEFT", "LEFT", "CENTER", "CENTER", "CENTER");
+    
+    local isme = side == _G.LE_BATTLE_PET_ALLY;
+    local versus = isme and _G.LE_BATTLE_PET_ENEMY or _G.LE_BATTLE_PET_ALLY
+    
+    local displayAbilities = scan_pets(side)
+    local compareAbilities = scan_pets(versus)
+    
+	tip:SetColumnLayout(2 + #compareAbilities, "LEFT", "LEFT", "CENTER", "CENTER", "CENTER");
 	
 	local line = tip:AddLine("", "");
-	for _, pet in ipairs(petAbilitys) do
-		tip:SetCell(line, 2+_, "|T"..pet.icon..":22:22|t");
-		if( _ == _G.C_PetBattles.GetActivePet(_G.LE_BATTLE_PET_ALLY) ) then
-			tip:SetColumnColor(2+_, 0, 1, 0, 0.5);
+	for i, pet in ipairs(compareAbilities) do
+		tip:SetCell(line, 2 + i, "|T"..pet.icon..":22:22|t");
+		if (i == _G.C_PetBattles.GetActivePet(versus)) then
+            if (isme) then
+                tip:SetColumnColor(2 + i, 1, 0, 0, 0.5);
+            else
+                tip:SetColumnColor(2 + i, 0, 1, 0, 0.5);
+            end
 		else
-			tip:SetColumnColor(2+_, 0, 0, 0, 0);
+			tip:SetColumnColor(2 + i, 0, 0, 0, 0);
 		end
 	end
 	
-	local id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints;
-	local modifier;
-	local avail, cdleft, _;
-	
-	for i, enemy in ipairs(enemyAbilitys) do
-		if( i ~= 1 ) then
+	for i, pet in ipairs(displayAbilities) do
+		if (i ~= 1) then
 			tip:AddSeparator();
 		end
 		
-		line = tip:AddLine(
-			type_icon(enemy.type, 22),
-			--(COLOR_GOLD):format(enemy.name)
-			quality_color(_G.LE_BATTLE_PET_ENEMY, i, enemy.name)
-		);
+		line = tip:AddLine(type_icon(pet.type, 22), quality_color(side, i, pet.name));
 		
-		for _, pet in ipairs(petAbilitys) do
-			modifier = self:Compare(enemy.type, pet.type);
-			tip:SetCell(line, 2+_, damage_icon(modifier, 22));
+		for j, enemy in ipairs(compareAbilities) do
+			local modifier = self:Compare(pet.type, enemy.type);
+			tip:SetCell(line, 2 + j, damage_icon(modifier, 22));
 		end
 
-		if( i == _G.C_PetBattles.GetActivePet(_G.LE_BATTLE_PET_ENEMY) ) then
-			tip:SetLineColor(line, 1, 0, 0, 0.5);
-		end
-		
-		for j, ability in ipairs(enemy) do
-			id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints = _G.C_PetBattles.GetAbilityInfoByID(ability);
-			avail, cdleft, _ = _G.C_PetBattles.GetAbilityState(_G.LE_BATTLE_PET_ENEMY, i, j);
-			
-			line = tip:AddLine("|T"..icon..":22:22|t", "  "..format_cooldown(name, id, avail, cdleft));--(COLOR_GOLD):format(name));
-			
-			--if( id ) then   
-			--	if( avail ) then
-			--		tip:SetLineColor(line, 0, 0, 0, 0);
-			--		tip:SetCell(line, 2, "  "..(COLOR_GOLD):format(name));
-			--	elseif( not avail and cdleft > 0 ) then
-			--		tip:SetLineColor(line, 1, 0, 0, 0.5);
-			--		tip:SetCell(line, 2, "  "..(COLOR_GOLD):format(name.." (cd: "..cdleft..")"));
-			--	end
-			--end
-			
-			for _, pet in ipairs(petAbilitys) do
-				modifier = self:Compare(petType, pet.type);
-				tip:SetCell(line, 2+_, damage_icon(modifier, 22));
-			end
-			
-			tip:SetLineScript(line, "OnEnter", enemySkill_OnEnter, {i, ability});
-			tip:SetLineScript(line, "OnLeave", enemySkill_OnLeave);
-		end
-	end
-end
-
-local function playerSkill_OnEnter(anchor, info)
-	_G.PetBattleAbilityTooltip_SetAuraID(_G.LE_BATTLE_PET_ALLY, info[1], info[2]);
-	_G.PetBattleAbilityTooltip_Show("TOPLEFT", anchor, "TOPRIGHT", 10, 2);
-end
-local function playerSkill_OnLeave()
-	_G.PetBattlePrimaryAbilityTooltip:Hide();
-end
-
-function PT:UpdatePlayerSkills(tip)
-	tip:Clear();
-	tip:SetColumnLayout(2 + #enemyAbilitys, "LEFT", "LEFT", "CENTER", "CENTER", "CENTER");
-	
-	local line = tip:AddLine("", "");
-	for _, enemy in ipairs(enemyAbilitys) do
-		tip:SetCell(line, 2+_, "|T"..enemy.icon..":22:22|t");
-		if( _ == _G.C_PetBattles.GetActivePet(_G.LE_BATTLE_PET_ENEMY) ) then
-			tip:SetColumnColor(2+_, 1, 0, 0, 0.5);
-		else
-			tip:SetColumnColor(2+_, 0, 0, 0, 0);
-		end
-	end
-	
-	local id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints;
-	local modifier;
-	local avail, cdleft, _;
-	
-	for i, pet in ipairs(petAbilitys) do
-		if( i ~= 1 ) then
-			tip:AddSeparator();
-		end
-		
-		line = tip:AddLine(
-			type_icon(pet.type, 22),
-			--(COLOR_GOLD):format(pet.name)
-			quality_color(_G.LE_BATTLE_PET_ALLY, i, pet.name)
-		);
-		for _, enemy in ipairs(enemyAbilitys) do
-			modifier = self:Compare(pet.type, enemy.type);
-			tip:SetCell(line, 2+_, damage_icon(modifier, 22));
-		end
-
-		if( i == _G.C_PetBattles.GetActivePet(_G.LE_BATTLE_PET_ALLY) ) then
-			tip:SetLineColor(line, 0, 1, 0, 0.5);
+		if (i == _G.C_PetBattles.GetActivePet(side)) then
+            if (isme) then
+                tip:SetLineColor(line, 0, 1, 0, 0.5);
+            else
+                tip:SetLineColor(line, 1, 0, 0, 0.5);
+            end
 		end
 		
 		for j, ability in ipairs(pet) do
-			id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints = _G.C_PetBattles.GetAbilityInfoByID(ability);
-			avail, cdleft, _= _G.C_PetBattles.GetAbilityState(_G.LE_BATTLE_PET_ALLY, i, j);
+			local id, name, icon, maxCD, desc, turns, petType, noStrongWeakHints = _G.C_PetBattles.GetAbilityInfoByID(ability);
+			local avail, cdleft, _ = _G.C_PetBattles.GetAbilityState(side, i, j);
 			
-			line = tip:AddLine("|T"..icon..":22:22|t", "  "..format_cooldown(name, id, avail, cdleft));--(COLOR_GOLD):format(name));
+			line = tip:AddLine("|T"..icon..":22:22|t", "  "..format_cooldown(name, id, avail, cdleft));
 			
-			--if( id ) then   
-			--	if( avail ) then
-			--		tip:SetLineColor(line, 0, 0, 0, 0);
-			--		tip:SetCell(line, 2, "  "..(COLOR_GOLD):format(name));
-			--	elseif( not avail and cdleft > 0 ) then
-			--		tip:SetLineColor(line, 1, 0, 0, 0.5);
-			--		tip:SetCell(line, 2, "  "..(COLOR_GOLD):format(name.." (cd: "..cdleft..")"));
-			--	end
-			--end
-			
-			for _, enemy in ipairs(enemyAbilitys) do
-				modifier = self:Compare(petType, enemy.type);
-				tip:SetCell(line, 2+_, damage_icon(modifier, 22));
+			for k, pet in ipairs(compareAbilities) do
+				local modifier = self:Compare(petType, pet.type);
+				tip:SetCell(line, 2 + k, damage_icon(modifier, 22));
 			end
 			
-			tip:SetLineScript(line, "OnEnter", playerSkill_OnEnter, {i, ability});
-			tip:SetLineScript(line, "OnLeave", playerSkill_OnLeave);
+			tip:SetLineScript(line, "OnEnter", function (anchor, info)
+                    _G.PetBattleAbilityTooltip_SetAuraID(side, i, ability);
+                    _G.PetBattleAbilityTooltip_Show("TOPLEFT", anchor, "TOPRIGHT", 10, 2);
+                end);
+			tip:SetLineScript(line, "OnLeave", function ()
+                    _G.PetBattlePrimaryAbilityTooltip:Hide();
+                end);
 		end
 	end
+end
+
+function PT:UpdateEnemySkills(tip)
+    self:UpdateTooltip(tip, _G.LE_BATTLE_PET_ENEMY)
+end
+
+function PT:UpdatePlayerSkills(tip)
+    self:UpdateTooltip(tip, _G.LE_BATTLE_PET_ALLY)
 end
 
 ---------------------------------------------------------
 -- GAME TOOLTIP
 ---------------------------------------------------------
-	
+
 function PT:UpdateOwnedPets()
 	_G.wipe(OwnedPets);
 	
@@ -370,22 +322,21 @@ function PT:PetTooltip()
 	end
 	
 	if( self.db.TooltipShowProsCons ) then
-		local enemyType = _G.UnitBattlePetType(unit);
+		local enemyType, enemyLevel = _G.UnitBattlePetType(unit), _G.UnitBattlePetLevel(unit)
 		local modifier, _, petID, ability1, ability2, ability3, locked, customName, lvl, petName, petType;
 		
 		for i = 1, 3 do
 			petID, ability1, ability2, ability3, locked = _G.C_PetJournal.GetPetLoadOutInfo(i);
-			
-			if( not locked and petID > 0 ) then
+			if( not locked and petID ~= nil ) then
 				_G.GameTooltip:AddLine(" ");
 				
-				_, customName, lvl, _, _, _, petName, _, petType, _ = _G.C_PetJournal.GetPetInfoByPetID(petID);
+				_, customName, lvl, _, _, _, _, petName, _, petType, _ = _G.C_PetJournal.GetPetInfoByPetID(petID);
 				petName = customName and customName.." (|cffffffff"..petName.."|r)" or petName;
 				
 				-- Type Check
 				modifier = PT:Compare(petType, enemyType);
 				_G.GameTooltip:AddDoubleLine(
-					type_icon(petType, 14).." "..petName.." ("..lvl..")",
+					type_icon(petType, 14).." "..petName.." ("..level_color(lvl, enemyLevel)..")",
 					damage_icon(modifier, 14)
 				);
 				

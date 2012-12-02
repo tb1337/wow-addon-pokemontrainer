@@ -1,8 +1,8 @@
-## Interface: 50001
+## Interface: 50100
 ## Title: Pokemon Trainer
-## Version: 0.8.0
+## Version: 0.9.0
 ## Notes: The pet battle addon!
-## Author: grdn
+## Author: grdn, edited by Possible
 ## SavedVariables: PokemonTrainerDB
 ## OptionalDeps: Ace3, iLib
 
@@ -12,6 +12,7 @@ Libs\LibStub\Libstub.lua
 
 Libs\iLib\lib.xml
 
+Libs\AceAddon-3.0\AceAddon-3.0.xml
 Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.xml
