@@ -26,7 +26,7 @@ local COLOR_GOLD = "|cfffed100%s|r";
 -- Variables
 ----------------------
 
-local OwnedPets = {};
+-- OwnedPets removed
 
 ------------------
 -- Boot
@@ -43,7 +43,7 @@ function PT:OnEnable()
 	self:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE", "PetBattleChanged");
 	
 	-- for the hooked tooltips
-	self:RegisterEvent("PET_JOURNAL_LIST_UPDATE", "UpdateOwnedPets");
+	--self:RegisterEvent("PET_JOURNAL_LIST_UPDATE", "UpdateOwnedPets");
 	self:RegisterEvent("UPDATE_MOUSEOVER_UNIT", "PetTooltip");
 end
 
@@ -281,25 +281,25 @@ end
 -- GAME TOOLTIP
 ---------------------------------------------------------
 
-function PT:UpdateOwnedPets()
-	_G.wipe(OwnedPets);
+--function PT:UpdateOwnedPets()
+--	_G.wipe(OwnedPets);
 	
-	local numPets, numOwned = _G.C_PetJournal.GetNumPets(false);
-	local _, rarity, petID, name;
+--	local numPets, numOwned = _G.C_PetJournal.GetNumPets(false);
+--	local _, rarity, petID, name;
 	
-	for i = 1, numOwned do
-		petID, _, _, _, _, _, _, name = _G.C_PetJournal.GetPetInfoByIndex(i, false);
+--	for i = 1, numOwned do
+--		petID, _, _, _, _, _, _, name = _G.C_PetJournal.GetPetInfoByIndex(i, false);
 		
-		if( not petID ) then
-			return;
-		end
-		_, _, _, _, rarity = _G.C_PetJournal.GetPetStats(petID);
+--		if( not petID ) then
+--			return;
+--		end
+--		_, _, _, _, rarity = _G.C_PetJournal.GetPetStats(petID);
 		
-		if( not OwnedPets[name] or OwnedPets[name] < rarity ) then
-			OwnedPets[name] = rarity;
-		end
-	end	
-end
+--		if( not OwnedPets[name] or OwnedPets[name] < rarity ) then
+--			OwnedPets[name] = rarity;
+--		end
+--	end	
+--end
 
 function PT:PetTooltip()
 	local name, unit = _G.GameTooltip:GetUnit();
@@ -312,14 +312,14 @@ function PT:PetTooltip()
 		_G.LoadAddOn("Blizzard_PetJournal");
 	end
 	
-	if( not _G["PetCaught"] and self.db.TooltipShowCaught ) then
-		if( OwnedPets[name] ) then
-			local c = _G.ITEM_QUALITY_COLORS[OwnedPets[name] -1];
-			_G.GameTooltip:AddLine("|TInterface\\RAIDFRAME\\ReadyCheck-Ready:14:14|t "..L["Already caught"], c.r, c.g, c.b);
-		else
-			_G.GameTooltip:AddLine("|TInterface\\RAIDFRAME\\ReadyCheck-NotReady:14:14|t "..L["Not caught"], 1, 0, 0);
-		end
-	end
+	--if( not _G["PetCaught"] and self.db.TooltipShowCaught ) then
+	--	if( OwnedPets[name] ) then
+	--		local c = _G.ITEM_QUALITY_COLORS[OwnedPets[name] -1];
+	--		_G.GameTooltip:AddLine("|TInterface\\RAIDFRAME\\ReadyCheck-Ready:14:14|t "..L["Already caught"], c.r, c.g, c.b);
+	--	else
+	--		_G.GameTooltip:AddLine("|TInterface\\RAIDFRAME\\ReadyCheck-NotReady:14:14|t "..L["Not caught"], 1, 0, 0);
+	--	end
+	--end
 	
 	if( self.db.TooltipShowProsCons ) then
 		local enemyType, enemyLevel = _G.UnitBattlePetType(unit), _G.UnitBattlePetLevel(unit)

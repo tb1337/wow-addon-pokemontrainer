@@ -23,7 +23,7 @@ function PT:CreateDB()
 	PT.CreateDB = nil;
 	
 	return { profile = {
-		TooltipShowCaught = true,
+		--TooltipShowCaught = true,
 		TooltipShowProsCons = true,
 		BattlePositionY = 300,
 		BattleFrameScale = 1,
@@ -81,12 +81,12 @@ cfg = {
 				order = 1,
 				inline = true,
 				args = {
-					TooltipShowCaught = {
-						type = "toggle",
-						name = "Display whether the pet is already caught or not",
-						width = "full",
-						order = 1,
-					},
+					--TooltipShowCaught = {
+					--	type = "toggle",
+					--	name = "Display whether the pet is already caught or not",
+					--	width = "full",
+					--	order = 1,
+					--},
 					TooltipShowProsCons = {
 						type = "toggle",
 						name = "Display the pros and cons of your setup against the wild pet",

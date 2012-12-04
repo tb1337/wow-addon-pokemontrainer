@@ -2,7 +2,7 @@
 ## Title: Pokemon Trainer
 ## Version: 5.1-beta2
 ## Notes: The pet battle addon!
-## Author: grdn, edited by Possible
+## Author: grdn, Possible
 ## SavedVariables: PokemonTrainerDB
 ## OptionalDeps: Ace3, iLib
 
