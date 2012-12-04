@@ -27,6 +27,8 @@ function PT:CreateDB()
 		TooltipShowProsCons = true,
 		BattlePositionY = 300,
 		BattleFrameScale = 1,
+        AuctionIconDisplay = true,
+        AuctionIconKnownColor = {0.1, 1.0, 0.1, 1.0},
 	}};
 end
 
@@ -121,6 +123,40 @@ cfg = {
 					},
 				},
 			},
+            GroupOther = {
+                type = "group",
+                name = "Miscellaneous Options",
+                order = 10,
+                inline = true,
+                args = {
+                    AuctionIconDisplay = {
+                        type = "toggle",
+                        name = "Color Auction-Pets",
+                        width = "double",
+                        desc = "Colors the Icon of already known Pets in the Auction-List",
+                        order = 1,
+                        set = function(opt, v)
+                            PT.db[opt[#opt]] = v
+                            if (not v) then
+                                PT:DisableModule("AuctionSearch")
+                            else
+                                PT:EnableModule("AuctionSearch")
+                            end
+                        end,
+                    },
+                    AuctionIconKnownColor = {
+                        type = "color",
+                        name = "Known Color",
+                        hasAlpha = false,
+                        get = function(opt)
+                            return unpack(PT.db[opt[#opt]])
+                        end,
+                        set = function(opt, ...)
+                            PT.db[opt[#opt]] = {...}
+                        end
+                    }
+                },
+            },
 		},
 };
 
