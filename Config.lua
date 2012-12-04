@@ -47,8 +47,9 @@ end
 local function initializeDummyBattleFrames(info, value)
 	PT.db[info[#info]] = value;
 	
-	PT:ScanDummyPets(_G.LE_BATTLE_PET_ALLY, PT.petAbilitys);
-	PT:ScanDummyPets(_G.LE_BATTLE_PET_ENEMY, PT.enemyAbilitys);
+	-- feature killed with 5.1 update o_o
+	--PT:ScanDummyPets(_G.LE_BATTLE_PET_ALLY, PT.petAbilitys);
+	--PT:ScanDummyPets(_G.LE_BATTLE_PET_ENEMY, PT.enemyAbilitys);
 	
 	if( dummyBattleStarted ) then
 		PT:PetBattleStop();
