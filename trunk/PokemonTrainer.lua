@@ -179,15 +179,11 @@ function PT:PetBattleStart()
 	tip:SetFrameStrata("BACKGROUND");
 	tip:SetScale(self.db.BattleFrameScale);
 	tip:Show();
-	
-	-- _G.WatchFrame:Hide();
 end
 
 function PT:PetBattleStop()
 	self:GetTooltip("EnemySkills"):Release();
 	self:GetTooltip("PlayerSkills"):Release();
-	
-	-- _G.WatchFrame:Show();
 end
 
 function PT:PetBattleChanged()
