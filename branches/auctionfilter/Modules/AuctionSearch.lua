@@ -8,7 +8,10 @@ local Auction = LibStub("LibAuction-0.1")
 _G.t = mod
 
 function mod:OnEnable()
-    Auction:Init()
+    if (not PT.db.AuctionIconDisplay or self:CheckAutoDisable()) then
+        return self:Disable()
+    end
+
     if (IsAddOnLoaded("Blizzard_AuctionUI")) then
         self:RegisterHooks()
     else
@@ -27,6 +30,13 @@ function mod:OnDisable()
         self.gui_select:Release()
         _G.IsUsableCheckButton:Show()
     end
+end
+
+function mod:CheckAutoDisable()
+    if (IsAddOnLoaded("Auc-Advanced")) then
+        return true
+    end
+    return false
 end
 
 function mod:RegisterHooks()
@@ -52,7 +62,7 @@ function mod:AuctionFrameBrowse_Update()
             if (self:HasPetBySpeciesID(tonumber(speciesID))) then
             --if (self:CountPetByName(name) > 0) then
                 local iconTexture = _G["BrowseButton"..i.."ItemIconTexture"];
-                iconTexture:SetVertexColor(0.1, 1.0, 0.1);
+                iconTexture:SetVertexColor(unpack(PT.db.AuctionIconKnownColor));
             end
         end
     end
