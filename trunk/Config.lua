@@ -133,8 +133,21 @@ cfg = {
                         type = "toggle",
                         name = "Color Auction-Pets",
                         width = "double",
-                        desc = "Colors the Icon of already known Pets in the Auction-List",
+                        desc = function()
+                            if (PT:GetModule("AuctionSearch"):CheckAutoDisable()) then
+                                return "Not compatible with Addons like Auctioneer"
+                            else
+                                return "Colors the Icon of already known Pets in the Auction-List"
+                            end
+                        end,
+                        descStyle = "inline",
+                        disabled = function()
+                            return PT:GetModule("AuctionSearch"):CheckAutoDisable()
+                        end,
                         order = 1,
+                        get = function(opt)
+                            return PT.db[opt[#opt]] and not PT:GetModule("AuctionSearch"):CheckAutoDisable()
+                        end,
                         set = function(opt, v)
                             PT.db[opt[#opt]] = v
                             if (not v) then

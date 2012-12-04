@@ -5,7 +5,7 @@ local mod = PT:NewModule("AuctionSearch", "AceHook-3.0", "AceEvent-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
 
 function mod:OnEnable()
-    if (not PT.db.AuctionIconDisplay) then
+    if (not PT.db.AuctionIconDisplay or self:CheckAutoDisable()) then
         return self:Disable()
     end
 
@@ -23,6 +23,13 @@ end
 function mod:OnDisable()
     mod:UnregisterEvent("ADDON_LOADED")
     self:UnhookAll()
+end
+
+function mod:CheckAutoDisable()
+    if (IsAddOnLoaded("Auc-Advanced")) then
+        return true
+    end
+    return false
 end
 
 function mod:RegisterHooks()
