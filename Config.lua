@@ -27,6 +27,8 @@ function PT:CreateDB()
 		TooltipShowProsCons = true,
 		BattlePositionY = 300,
 		BattleFrameScale = 1,
+        AuctionIconDisplay = true,
+        AuctionIconKnownColor = {0.1, 1.0, 0.1, 1.0},
 	}};
 end
 
@@ -121,6 +123,53 @@ cfg = {
 					},
 				},
 			},
+            GroupOther = {
+                type = "group",
+                name = "Miscellaneous Options",
+                order = 10,
+                inline = true,
+                args = {
+                    AuctionIconDisplay = {
+                        type = "toggle",
+                        name = "Color Auction-Pets",
+                        width = "double",
+                        desc = function()
+                            if (PT:GetModule("AuctionSearch"):CheckAutoDisable()) then
+                                return "Not compatible with Addons like Auctioneer"
+                            else
+                                return "Colors the Icon of already known Pets in the Auction-List"
+                            end
+                        end,
+                        descStyle = "inline",
+                        disabled = function()
+                            return PT:GetModule("AuctionSearch"):CheckAutoDisable()
+                        end,
+                        order = 1,
+                        get = function(opt)
+                            return PT.db[opt[#opt]] and not PT:GetModule("AuctionSearch"):CheckAutoDisable()
+                        end,
+                        set = function(opt, v)
+                            PT.db[opt[#opt]] = v
+                            if (not v) then
+                                PT:DisableModule("AuctionSearch")
+                            else
+                                PT:EnableModule("AuctionSearch")
+                            end
+                        end,
+                    },
+                    AuctionIconKnownColor = {
+                        type = "color",
+                        name = "Known Color",
+                        hasAlpha = false,
+                        get = function(opt)
+                            return unpack(PT.db[opt[#opt]])
+                        end,
+                        set = function(opt, ...)
+                            PT.db[opt[#opt]] = {...}
+                        end
+                    }
+                },
+            },
 		},
 };
 
