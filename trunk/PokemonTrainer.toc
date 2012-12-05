@@ -1,6 +1,6 @@
 ## Interface: 50100
 ## Title: Pokemon Trainer
-## Version: 5.1-beta2
+## Version: 5.1-beta4
 ## Notes: The pet battle addon!
 ## Author: grdn, Possible
 ## SavedVariables: PokemonTrainerDB
