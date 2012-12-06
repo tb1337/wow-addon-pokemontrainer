@@ -124,8 +124,8 @@ end
 -- BATTLE FRAME
 ---------------------------------------------------------
 
-local function scan_pets(player)
-    local t = {}
+local function scan_pets(player, intoTable)
+    local t = intoTable or {}
 	local num = _G.C_PetBattles.GetNumPets(player)
 	
 	for i = 1, num do
@@ -162,12 +162,18 @@ function PT:ScanDummyPets(player)
     return t
 end
 
+local playerAbilities, enemyAbilities = {}, {};
+
 function PT:PetBattleStart()
 	-- We require the PetJournal for many API functions
 	if( not _G.IsAddOnLoaded("Blizzard_PetJournal") ) then
 		_G.LoadAddOn("Blizzard_PetJournal");
 	end
 	
+    -- pre-cache the skills in lokal tables to pass the data to UpdateTooltip
+    scan_pets(_G.LE_BATTLE_PET_ALLY, --[[into]] playerAbilities)
+    scan_pets(_G.LE_BATTLE_PET_ENEMY, --[[into]] enemyAbilities)
+    
 	local tip = self:GetTooltip("EnemySkills", "UpdateEnemySkills");
 	tip:SetPoint("TOPRIGHT", _G.UIParent, "TOPRIGHT", 0, -self.db.BattlePositionY);
 	tip:SetFrameStrata("BACKGROUND");
@@ -182,8 +188,18 @@ function PT:PetBattleStart()
 end
 
 function PT:PetBattleStop()
+    _G.wipe(playerAbilities); -- remove table content for clean start on next battle. the table address remains the same
+    _G.wipe(enemyAbilities);
 	self:GetTooltip("EnemySkills"):Release();
 	self:GetTooltip("PlayerSkills"):Release();
+end
+
+function PT:UpdatePlayerSkills(tip)
+    self:UpdateTooltip(tip, _G.LE_BATTLE_PET_ALLY, playerAbilities, enemyAbilities)
+end
+
+function PT:UpdateEnemySkills(tip)
+    self:UpdateTooltip(tip, _G.LE_BATTLE_PET_ENEMY, enemyAbilities, playerAbilities)
 end
 
 function PT:PetBattleChanged()
@@ -198,14 +214,19 @@ local function enemySkill_OnLeave()
 	_G.PetBattlePrimaryAbilityTooltip:Hide();
 end
 
-function PT:UpdateTooltip(tip, side)
+function PT:UpdateTooltip(tip, side, displayAbilities, compareAbilities)
 	tip:Clear();
     
     local isme = side == _G.LE_BATTLE_PET_ALLY;
     local versus = isme and _G.LE_BATTLE_PET_ENEMY or _G.LE_BATTLE_PET_ALLY
     
-    local displayAbilities = scan_pets(side)
-    local compareAbilities = scan_pets(versus)
+    -- the given cached tables are optional, without we're gonna fetch them (unused, but nice to have)
+    if (type(displayAbilities) ~= "table") then
+        displayAbilities = scan_pets(side)
+    end
+    if (type(compareAbilities) ~= "table") then
+        compareAbilities = scan_pets(versus)
+    end
     
 	tip:SetColumnLayout(2 + #compareAbilities, "LEFT", "LEFT", "CENTER", "CENTER", "CENTER");
 	
@@ -267,14 +288,6 @@ function PT:UpdateTooltip(tip, side)
                 end);
 		end
 	end
-end
-
-function PT:UpdateEnemySkills(tip)
-    self:UpdateTooltip(tip, _G.LE_BATTLE_PET_ENEMY)
-end
-
-function PT:UpdatePlayerSkills(tip)
-    self:UpdateTooltip(tip, _G.LE_BATTLE_PET_ALLY)
 end
 
 ---------------------------------------------------------
