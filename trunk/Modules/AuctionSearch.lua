@@ -43,10 +43,10 @@ function mod:AuctionFrameBrowse_Update()
         --if (hasAllInfo and itemId == 82800) then
         local speciesID = self:ParseBattlePetLink(GetAuctionItemLink("list", offset + i))
         if (speciesID ~= nil) then
-            if (self:HasPetBySpeciesID(tonumber(speciesID))) then
+            if (PT.OwnedPets[speciesID] ~= nil) then
+            --if (self:HasPetBySpeciesID(tonumber(speciesID))) then
             --if (self:CountPetByName(name) > 0) then
-                local iconTexture = _G["BrowseButton"..i.."ItemIconTexture"];
-                iconTexture:SetVertexColor(unpack(PT.db.AuctionIconKnownColor));
+                _G["BrowseButton"..i.."ItemIconTexture"]:SetVertexColor(unpack(PT.db.AuctionIconKnownColor));
             end
         end
     end
@@ -57,12 +57,12 @@ function mod:ParseBattlePetLink(link)
     if (link == nil) then
         return nil
     end
-    --local speciesID, level, quality, health, power, speed = string.match(link, "|Hbattlepet:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):%d+|h")
-    return string.match(link, "|Hbattlepet:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):%d+|h")
-    --return speciesID, level, quality, health, power, speed
+    --return string.match(link, "|Hbattlepet:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):%d+|h")
+    local speciesID, level, quality, health, power, speed = string.match(link, "|Hbattlepet:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):%d+|h")
+    return tonumber(speciesID), tonumber(level), tonumber(quality), tonumber(health), tonumber(power), tonumber(speed)
 end
 
-function mod:CountPetByName(searchName)
+--[[function mod:CountPetByName(searchName)
     local count = 0;
     for i,petid in LibPetJournal:IteratePetIDs() do 
         local speciesID, customName, level, xp, maxXp, displayID, _, name, icon,
@@ -82,4 +82,4 @@ function mod:HasPetBySpeciesID(searchSpeciesID)
         end
     end
     return false
-end
+end]]

@@ -6,6 +6,7 @@ local AddonName = ...;
 local PT = LibStub("AceAddon-3.0"):NewAddon(select(2, ...), AddonName, "AceEvent-3.0", "AceTimer-3.0")
 
 local L = LibStub("AceLocale-3.0"):GetLocale(AddonName);
+local LibPetJournal = LibStub("LibPetJournal-2.0");
 
 local _G = _G;
 
@@ -26,26 +27,7 @@ local COLOR_GOLD = "|cfffed100%s|r";
 -- Variables
 ----------------------
 
--- OwnedPets removed
-
-------------------
--- Boot
-------------------
-
-function PT:OnEnable()
-	self.db = LibStub("AceDB-3.0"):New("PokemonTrainerDB", self:CreateDB(), "Default").profile;
-	
-	-- for the skill frames
-	self:RegisterEvent("PET_BATTLE_OPENING_START", "PetBattleStart");
-	self:RegisterEvent("PET_BATTLE_OVER", "PetBattleStop");
-	self:RegisterEvent("PET_BATTLE_CLOSE", "PetBattleStop");
-	self:RegisterEvent("PET_BATTLE_PET_CHANGED", "PetBattleChanged");
-	self:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE", "PetBattleChanged");
-	
-	-- for the hooked tooltips
-	--self:RegisterEvent("PET_JOURNAL_LIST_UPDATE", "UpdateOwnedPets");
-	self:RegisterEvent("UPDATE_MOUSEOVER_UNIT", "PetTooltip");
-end
+PT.OwnedPets = {}
 
 ---------------------
 -- Utility
@@ -108,6 +90,25 @@ local function format_cooldown(name, id, avail, cdleft)
 	return (COLOR_GOLD):format(name);
 end
 
+local function UpdateOwnedPets()
+	_G.wipe(PT.OwnedPets);
+
+	local numPets, numOwned = _G.C_PetJournal.GetNumPets(false);
+	local _, rarity, petID, name;
+
+    --[[
+    for i, petID in LibPetJournal:IteratePetIDs() do
+		_, _, _, _, rarity = _G.C_PetJournal.GetPetStats(petID);
+	
+		if( not PT.OwnedPets[petID] or PT.OwnedPets[petID] < rarity ) then
+			PT.OwnedPets[petID] = rarity;
+		end
+	end]]
+    for i, speciesID in LibPetJournal:IterateSpeciesIDs() do
+        PT.OwnedPets[speciesID] = true
+    end
+end
+
 function PT:Compare(petType, enemyType)
 	if( not petType or not enemyType ) then
 		return 1;
@@ -122,6 +123,25 @@ function PT:CompareByAbilityID(abilityID, enemyType)
 	else
 		return self:Compare(petType, enemyType), name, icon;
 	end
+end
+
+------------------
+-- Boot
+------------------
+
+function PT:OnEnable()
+	self.db = LibStub("AceDB-3.0"):New("PokemonTrainerDB", self:CreateDB(), "Default").profile;
+	
+	-- for the skill frames
+	self:RegisterEvent("PET_BATTLE_OPENING_START", "PetBattleStart");
+	self:RegisterEvent("PET_BATTLE_OVER", "PetBattleStop");
+	self:RegisterEvent("PET_BATTLE_CLOSE", "PetBattleStop");
+	self:RegisterEvent("PET_BATTLE_PET_CHANGED", "PetBattleChanged");
+	self:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE", "PetBattleChanged");
+	
+	-- for the hooked tooltips
+	LibPetJournal:RegisterCallback("PetListUpdated", UpdateOwnedPets);
+	self:RegisterEvent("UPDATE_MOUSEOVER_UNIT", "PetTooltip");
 end
 
 ---------------------------------------------------------
@@ -298,26 +318,6 @@ end
 ---------------------------------------------------------
 -- GAME TOOLTIP
 ---------------------------------------------------------
-
---function PT:UpdateOwnedPets()
---	_G.wipe(OwnedPets);
-	
---	local numPets, numOwned = _G.C_PetJournal.GetNumPets(false);
---	local _, rarity, petID, name;
-	
---	for i = 1, numOwned do
---		petID, _, _, _, _, _, _, name = _G.C_PetJournal.GetPetInfoByIndex(i, false);
-		
---		if( not petID ) then
---			return;
---		end
---		_, _, _, _, rarity = _G.C_PetJournal.GetPetStats(petID);
-		
---		if( not OwnedPets[name] or OwnedPets[name] < rarity ) then
---			OwnedPets[name] = rarity;
---		end
---	end	
---end
 
 function PT:PetTooltip()
 	local name, unit = _G.GameTooltip:GetUnit();
