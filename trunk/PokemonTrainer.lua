@@ -97,8 +97,12 @@ local function quality_color(owner, index, name)
 end
 
 local function format_cooldown(name, id, avail, cdleft)
-	if( id and not avail and cdleft ~= nil ) then
-		return (COLOR_RED):format(name.." ("..cdleft..")");
+	if( id and not avail) then
+        if (cdleft ~= nil and cdleft > 0) then -- the ability can be unuseable without cooldown, under unknown circumstates the cdleft may be nil (may be was the missing table wipe)
+            return (COLOR_RED):format(name.." ("..cdleft..")");
+        else
+            return (COLOR_RED):format(name);
+        end
 	end
 	
 	return (COLOR_GOLD):format(name);
@@ -130,9 +134,10 @@ local function scan_pets(player, intoTable)
 	
 	for i = 1, num do
 		local species = _G.C_PetBattles.GetPetSpeciesID(player, i);
-		local petName, petIcon, petType = _G.C_PetJournal.GetPetInfoBySpeciesID(species);
+		local speciesName, petIcon, petType = _G.C_PetJournal.GetPetInfoBySpeciesID(species);
 		local level = _G.C_PetBattles.GetLevel(player, i);
-		
+        local petName = _G.C_PetBattles.GetName(player, i) -- gets the custom name, and also works for boss pets
+        
 		t[i] = {
 			name = petName,
 			icon = petIcon,
