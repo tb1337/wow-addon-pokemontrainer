@@ -148,6 +148,62 @@ end
 -- BATTLE FRAME
 ---------------------------------------------------------
 
+
+local cellAppendProvider, cellPrototype, baseCellPrototype = LibStub("LibQTip-1.0"):CreateCellProvider()
+function cellPrototype:InitializeCell()
+    --[[self.fontString = self:CreateFontString()
+    self.fontString:SetAllPoints(self)
+    self.fontString:SetFontObject(GameTooltipText)
+    self.r, self.g, self.b = 1, 1, 1]]
+end
+function cellPrototype:SetupCell(tooltip, value, justification, font, r, g, b)
+    if (type(value) == "table") then
+        value:SetParent(self)
+        value:SetPoint("TOPLEFT", self)
+        return value:GetWidth(), value:GetHeight()
+    else
+        return baseCellPrototype.SetupCell(self, tooltip, value, justification, font, r, g, b)
+    end
+end
+cellPrototype.ReleaseCell = InitializeCell;
+
+--[[local ]]speed_indicators = {}
+local function get_speed_indicator_frame(player, pet, enemy)
+    local idx = (player * 100) + (pet * 10) + enemy
+    if (speed_indicators[idx] == nil) then
+        local frame = CreateFrame("Frame")
+        frame:SetWidth(22);
+        frame:SetHeight(22);
+        
+        frame.underlay = frame:CreateTexture(nil, "ARTWORK", "MainPet-LevelBubble")
+        frame.underlay:SetWidth(22);
+        frame.underlay:SetHeight(22);
+        frame.underlay:SetVertexColor(0.5, 0.5, 0.5, 1);
+        frame.underlay:SetPoint("CENTER")
+        
+        frame.icon = frame:CreateTexture(nil, "OVERLAY");
+        frame.icon:SetWidth(14);
+        frame.icon:SetHeight(14);
+        frame.icon:SetTexture("Interface\\PetBattles\\PetBattle-StatIcons");
+        frame.icon:SetTexCoord(0, 0.5, 0.5, 1);
+        frame.icon:SetPoint("CENTER")
+        
+        speed_indicators[idx] = frame;
+    end
+    return speed_indicators[idx];
+end
+local function has_flight_bonus_active(side, pet)
+    --[[return _G.C_PetBattles.GetPetType(side, i) == 3 and -- Is Flight-Pet
+                _G.C_PetBattles.GetHealth(side, i) > (_G.C_PetBattles.GetMaxHealth(side, i) * 0.5) and -- Has Flight-Buff
+                (mySpeed / 1.5) < hisSpeed;]]
+    for i = 1, _G.C_PetBattles.GetNumAuras(side, pet) do
+        if (_G.C_PetBattles.GetAuraInfo(side, pet, i) == 239) then -- http://www.wowhead.com/petability=239
+            return true
+        end
+    end
+    return false
+end
+
 local function scan_pets(player, intoTable)
     local t = intoTable or {}
 	local num = _G.C_PetBattles.GetNumPets(player)
@@ -239,6 +295,8 @@ local function enemySkill_OnLeave()
 	_G.PetBattlePrimaryAbilityTooltip:Hide();
 end
 
+
+
 function PT:UpdateTooltip(tip, side, displayAbilities, compareAbilities)
 	tip:Clear();
     
@@ -276,9 +334,27 @@ function PT:UpdateTooltip(tip, side, displayAbilities, compareAbilities)
 		
 		line = tip:AddLine(type_icon(pet.type, 22), quality_color(side, i, pet.name));
 		
+        local mySpeed = _G.C_PetBattles.GetSpeed(side, i)
 		for j, enemy in ipairs(compareAbilities) do
-			local modifier = self:Compare(pet.type, enemy.type);
-			tip:SetCell(line, 2 + j, damage_icon(modifier, 22));
+            local frame = get_speed_indicator_frame(side, i, j)
+            local vsSpeed = _G.C_PetBattles.GetSpeed(versus, j);
+            if (mySpeed > vsSpeed) then
+                if (has_flight_bonus_active(side, i)) then
+                    frame.icon:SetVertexColor(0.1,0.9,0.1, 1)
+                else
+                    frame.icon:SetVertexColor(1,1,1, 1)
+                end
+            elseif (mySpeed == vsSpeed) then
+                frame.icon:SetVertexColor(0.3,0.3,0.3, 1);
+            else
+                frame.icon:SetVertexColor(0.7,0.1,0.1, 1);
+            end
+            
+            tip:SetCell(line, 2 + j, frame, cellAppendProvider); -- Sets frame-parent to cell
+            frame:SetPoint("CENTER");
+            
+			--[[local modifier = self:Compare(pet.type, enemy.type);
+			tip:SetCell(line, 2 + j, damage_icon(modifier, 22));]]
 		end
 
 		if (i == _G.C_PetBattles.GetActivePet(side)) then
