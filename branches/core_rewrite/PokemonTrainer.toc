@@ -1,16 +1,17 @@
 ## Interface: 50100
 ## Title: Pokemon Trainer
-## Version: 0.8.3
+## Version: 0.9.0
 ## Notes: The pet battle addon!
 ## Author: grdn, Possible
 ## SavedVariables: PokemonTrainerDB
-## OptionalDeps: Ace3, iLib, LibPetJournal-2.0
+## OptionalDeps: Ace3, iLib, LibTourist-3.0, LibPetJournal-2.0
 
 # Libraries
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
 Libs\LibStub\Libstub.lua
 
 Libs\iLib\lib.xml
+Libs\LibTourist-3.0\lib.xml
 Libs\LibPetJournal-2.0\LibPetJournal-2.0.lua
 
 Libs\AceAddon-3.0\AceAddon-3.0.xml
@@ -26,6 +27,13 @@ Libs\AceTimer-3.0\AceTimer-3.0.xml
 Locales\Locales.xml
 
 # Main
-PokemonTrainer.lua
+Core.lua
 Config.lua
-Modules\AuctionSearch.lua
+
+# Combat Displays
+BattleFrames.xml
+TooltipFrames.lua
+
+# Misc
+Misc\AuctionSearch.lua
+Misc\WildPetTooltip.lua
