@@ -21,7 +21,6 @@ LibStub("iLib"):Register(AddonName, nil, PT);
 -- Variables
 ----------------------
 
-PT.OwnedPets  = {}; -- is this really needed here?
 PT.PlayerInfo = {};
 PT.EnemyInfo  = {};
 
@@ -37,136 +36,25 @@ PT.BONUS_SPEED_SLOWER = 0;
 
 local pets_scanned = false; -- Currently not sure if we ever need this. true when initially scanned the pets, false if not. resetted in PT:PetBattleStop
 
--- dev data
---@do-not-package@
-do
-	local mt = {
-		__index = function(t, k)
-			if( k == "dead" ) then
-				return t.hp <= 0;
-			elseif( k == "hpP" ) then
-				return t.hp / t.hpM;
-			end
-		end,
-	};
-	
-	PT.PlayerInfo = {
-		numPets = 3,
-		activePet = 2,
-		[1] = {
-			ab1 = 115,
-			ab2 = 611,
-			ab3 = 595,
-			icon = "INTERFACE\\ICONS\\INV_PET_CELESTIALDRAGON.BLP",
-			level = 16,
-			name = "Himmelsdrache",
-			numAbilities = 3,
-			quality = 6 - 1,
-			species = 255,
-			speed = 142,
-			hp = 49,
-			hpM = 100,
-			type = 3, --2,
-		},
-		[2] = {
-			ab1 = 219,
-			ab2 = 223,
-			ab3 = 226,
-			icon = "INTERFACE\\ICONS\\INV_MISC_PET_03.BLP",
-			level = 17,
-			name = "Pandarenm\195\182nch",
-			numAbilities = 3,
-			quality = 5 - 1,
-			species = 248,
-			speed = 197,
-			hp = 100,
-			hpM = 100,
-			type = 1,
-		},
-		[3] = {
-			ab1 = 812,
-			ab2 = 811,
-			ab3 = 503,
-			icon = "INTERFACE\\ICONS\\ACHIEVEMENT_BOSS_RAGNAROS.BLP",
-			level = 16,
-			name = "Mini-Ragnaros",
-			numAbilities = 3,
-			quality = 4 - 1,
-			species = 297,
-			speed = 135,
-			hp = 100,
-			hpM = 100,
-			type = 7,
-		},
-	};
-	
-	PT.EnemyInfo = {
-		numPets = 2,
-		activePet = 1,
-		[1] = {
-			ab1 = 380,
-			ab2 = 339,
-			ab3 = 383,
-			icon = "INTERFACE\\ICONS\\ABILITY_HUNTER_PET_SPIDER.BLP",
-			level = 14,
-			name = "Aschenspinnling",
-			numAbilities = 3,
-			quality = 3 - 1,
-			species = 427,
-			speed = 145,
-			hp = 100,
-			hpM = 100,
-			type = 8,
-		},
-		[2] = {
-			ab1 = 113,
-			ab2 = 310,
-			ab3 = 179,
-			icon = "INTERFACE\\ICONS\\ABILITY_HUNTER_PET_CRAB.BLP",
-			level = 14,
-			name = "Lavakrebs",
-			numAbilities = 3,
-			quality = 2 - 1,
-			species = 423,
-			speed = 105,
-			hp = 100,
-			hpM = 100,
-			type = 7,
-		},
-		[3] = {
-			ab1 = 115,
-			ab2 = 611,
-			ab3 = 595,
-			icon = "INTERFACE\\ICONS\\INV_PET_CELESTIALDRAGON.BLP",
-			level = 16,
-			name = "Himmelsdrache",
-			numAbilities = 3,
-			quality = 1 - 1,
-			species = 255,
-			speed = 156,
-			hp = 100,
-			hpM = 100,
-			type = 2,
-		},
-	};
-	
-	setmetatable(PT.PlayerInfo[1], mt);
-	setmetatable(PT.PlayerInfo[2], mt);
-	setmetatable(PT.PlayerInfo[3], mt);
-	setmetatable(PT.EnemyInfo[1], mt);
-	setmetatable(PT.EnemyInfo[2], mt);
-	setmetatable(PT.EnemyInfo[3], mt);
-end
---     top secret. just kidding. :D
---@end-do-not-package@
--- end dev data
-
 ------------------
 -- Boot
 ------------------
 
+function PT:OnInitialize()
+	self.db = LibStub("AceDB-3.0"):New("PokemonTrainerDB", { profile = {  } }, "Default"); -- currently no "core" settings
+	
+	-- We require the PetJournal for many API functions
+	if( not _G.IsAddOnLoaded("Blizzard_PetJournal") ) then
+		_G.LoadAddOn("Blizzard_PetJournal");
+	end
+end
+
 function PT:OnEnable()
-	self.db = LibStub("AceDB-3.0"):New("PokemonTrainerDB", self:CreateDB(), "Default").profile;
+	LibStub("AceConfig-3.0"):RegisterOptionsTable(AddonName, PT.OpenOptions);
+	LibStub("AceConfigDialog-3.0"):AddToBlizOptions(AddonName);
+	
+	_G.SlashCmdList["PT"] = function() _G.InterfaceOptionsFrame_OpenToCategory(AddonName); end
+	_G["SLASH_PT1"] = "/pt";
 	
 	-- for the skill frames
 	--self:RegisterEvent("PET_BATTLE_OPENING_START", "ScanPets");
@@ -174,10 +62,6 @@ function PT:OnEnable()
 	--self:RegisterEvent("PET_BATTLE_PET_CHANGED", "PetBattleChanged");
 	--self:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE", "PetBattleRoundUp");
 	self:RegisterEvent("PET_BATTLE_OVER", "PetBattleStop");
-	
-	-- for the hooked tooltips
-	--LibPetJournal:RegisterCallback("PetListUpdated", UpdateOwnedPets);
-	--self:RegisterEvent("UPDATE_MOUSEOVER_UNIT", "PetTooltip");
 end
 
 -------------------------
@@ -208,7 +92,13 @@ end
 -- RETURN
 -- Texture Path
 function PT:GetTypeBonusIcon(petType, enemyType, noStrongWeak)
-	local modifier = self:GetTypeBonus(petType, enemyType, noStrongWeak);
+	local modifier = petType; -- if the second arg is nil, this method treats petType as the modifier to prevent double calling :GetTypeBonus
+	
+	if( enemyType ) then
+		modifier = self:GetTypeBonus(petType, enemyType, noStrongWeak);
+	end
+	
+	assert(type(modifier) == "number");
 	
 	if( modifier > 1 ) then
 		return "Interface\\PetBattles\\BattleBar-AbilityBadge-Strong";
@@ -403,4 +293,85 @@ end
 function PT:RoundUpPets()
 	roundup_pets(PT.PLAYER, self.PlayerInfo);
 	roundup_pets(PT.ENEMY , self.EnemyInfo);
+end
+
+-----------------------------
+-- Configuration stuff
+-----------------------------
+
+local options;
+function PT:OpenOptions()
+	options = {
+		name = L["Pokemon Trainer Options"].."    "..(PT.dev and "|cffff0000Developer Version|r" or "|cffffffffv".._G.GetAddOnMetadata(AddonName, "Version").."|r"),
+		type = "group",
+		args = {
+			display = {
+				type = "select",
+				name = L["Preferred combat display"],
+				order = 1,
+				get = function()
+					return PT.db:GetNamespace("TooltipCombatDisplay").profile.enabled and 2 or 1;
+				end,
+				set = function(_, value)
+					if( value == 2 ) then
+						PT.db:GetNamespace("FrameCombatDisplay").profile.enabled = false;
+						PT.db:GetNamespace("TooltipCombatDisplay").profile.enabled = true;
+						PT:GetModule("FrameCombatDisplay"):Disable();
+						PT:GetModule("TooltipCombatDisplay"):Enable();
+					else
+						PT.db:GetNamespace("FrameCombatDisplay").profile.enabled = true;
+						PT.db:GetNamespace("TooltipCombatDisplay").profile.enabled = false;
+						PT:GetModule("FrameCombatDisplay"):Enable();
+						PT:GetModule("TooltipCombatDisplay"):Disable();
+					end
+				end,
+				values = {
+					[1] = L["Display: Frames"],
+					[2] = L["Display: Tooltip"],
+				},
+			},
+			spacer = { type = "description", name = " ", order = 50 },
+		},
+	};
+	
+	-- This code snippet is written by ckknight and the Chinchilla team
+	-- It is great and fits our needs, so we do not re-invent the wheel
+	local t;
+	for key, module in PT:IterateModules() do
+		t = module.GetOptions and module:GetOptions() or {};
+		
+		for option, args in pairs(t) do
+			if( type(args.disabled) == "nil" ) then
+				args.disabled = function() return not module:IsEnabled(); end
+			end
+		end
+		
+		if( not module.noEnableButton ) then
+			t.enabled = {
+				type = "toggle",
+				name = L["Enable"],
+				desc = L["Enable this module."],
+				get = function()
+					return module:IsEnabled();
+				end,
+				set = function(_, value)
+					module.db.profile.enabled = not not value; -- to ensure a boolean
+					
+					if value then
+						return module:Enable();
+					else
+						return module:Disable();
+					end
+				end,
+				order = 0,
+				width = "full",
+			};
+			t.spacer = { type = "description", name = " ", order = 0.1 }; -- spacer between the Enable toggle button and the acual options
+		end
+		
+		options.args[key] = { type = "group", name = module.displayName, desc = module.desc, handler = module, order = module.order or -1, args = t }
+	end
+	
+	PT.OpenOptions = nil; -- this function is needed once and gets deleted
+	return options;
 end
