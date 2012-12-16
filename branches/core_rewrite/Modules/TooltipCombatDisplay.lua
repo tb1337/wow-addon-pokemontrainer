@@ -25,11 +25,11 @@ module.noEnableButton = true;
 function module:OnInitialize()
 	self.db = PT.db:RegisterNamespace("TooltipCombatDisplay", {
 		profile = {
-			enabled = false,
+			
 		},
 	});
 
-	if( not self.db.profile.enabled ) then
+	if( PT.db.profile.activeBattleDisplay ~= 2 ) then
 		self:SetEnabledState(false);
 	end
 end

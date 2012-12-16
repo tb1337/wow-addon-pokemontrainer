@@ -137,7 +137,7 @@
 	
 	<Frame name="PTFrameHeaderTemplate" virtual="true">
 		<Frames>
-			<Button name="$parentEnemy1" inherits="PTButtonEnemyTemplate">
+			<Button parentKey="Enemy1" inherits="PTButtonEnemyTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
@@ -146,18 +146,18 @@
 					</Anchor>
 				</Anchors>
 			</Button>
-			<Button name="$parentEnemy2" inherits="PTButtonEnemyTemplate">
+			<Button parentKey="Enemy2" inherits="PTButtonEnemyTemplate">
 				<Anchors>
-					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentEnemy1">
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeKey="$parent.Enemy1">
 						<Offset>
 							<AbsDimension x="3" y="0" />
 						</Offset>
 					</Anchor>
 				</Anchors>
 			</Button>
-			<Button name="$parentEnemy3" inherits="PTButtonEnemyTemplate">
+			<Button parentKey="Enemy3" inherits="PTButtonEnemyTemplate">
 				<Anchors>
-					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentEnemy2">
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeKey="$parent.Enemy2">
 						<Offset>
 							<AbsDimension x="3" y="0" />
 						</Offset>
@@ -202,13 +202,55 @@
 				</Scripts>
 			</AnimationGroup>
 		</Animations>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture parentKey="Type" inherits="PTButtonTemplate">
+					<TexCoords left="0.79687500" right="0.49218750" top="0.50390625" bottom="0.65625000" />
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="0" y="1" />
+					</Anchors>
+				</Texture>
+				<Texture parentKey="SpeedBG1" inherits="PTTextureBonusTemplate">
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Type" relativePoint="RIGHT" x="3" y="0" />
+				</Anchors>
+				</Texture>
+				<Texture parentKey="SpeedBG2" inherits="PTTextureBonusTemplate">
+					<Anchors>
+				<Anchor point="LEFT" relativeKey="$parent.SpeedBG1" relativePoint="RIGHT" x="3" y="0" />
+					</Anchors>
+				</Texture>
+				<Texture parentKey="SpeedBG3" inherits="PTTextureBonusTemplate">
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.SpeedBG2" relativePoint="RIGHT" x="3" y="0" />
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Speed1" inherits="PTTextureSpeedTemplate">
+					<Anchors>
+						<Anchor point="CENTER" relativeKey="$parent.SpeedBG1" />
+					</Anchors>
+				</Texture>
+				<Texture parentKey="Speed2" inherits="PTTextureSpeedTemplate">
+					<Anchors>
+						<Anchor point="CENTER" relativeKey="$parent.SpeedBG2" />
+					</Anchors>
+				</Texture>
+				<Texture parentKey="Speed3" inherits="PTTextureSpeedTemplate">
+					<Anchors>
+						<Anchor point="CENTER" relativeKey="$parent.SpeedBG3" />
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
 		<Frames>
-			<Button name="$parentButton" hidden="false">
+			<Button parentKey="Button" hidden="false">
 				<Size>
 					<AbsDimension x="30" y="30" />
 				</Size>
 				<Anchors>
-					<Anchor point="TOPRIGHT" relativeKey="$parent" relativePoint="TOPLEFT" x="-6" y="-1" />
+					<Anchor point="TOPRIGHT" relativeKey="$parent" relativePoint="TOPLEFT" x="-6" y="0" />
 				</Anchors>
 				<Layers>
 					<Layer level="BACKGROUND">
@@ -234,74 +276,39 @@
 							</Anchors>
 						</Texture>
 					</Layer>
-					<Layer level="ARTWORK">
-						<Texture name="$parentType" inherits="PTButtonTemplate">
-							<TexCoords left="0.79687500" right="0.49218750" top="0.50390625" bottom="0.65625000" />
-							<Anchors>
-								<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="6" y="1" />
-							</Anchors>
-						</Texture>
-						<Texture parentKey="underlay1" inherits="PTTextureBonusTemplate">
-							<Anchors>
-								<Anchor point="LEFT" relativeTo="$parentType" relativePoint="RIGHT" x="3" y="0" />
-							</Anchors>
-						</Texture>
-						<Texture parentKey="underlay2" inherits="PTTextureBonusTemplate">
-							<Anchors>
-								<Anchor point="LEFT" relativeKey="$parent.underlay1" relativePoint="RIGHT" x="3" y="0" />
-							</Anchors>
-						</Texture>
-						<Texture parentKey="underlay3" inherits="PTTextureBonusTemplate">
-							<Anchors>
-								<Anchor point="LEFT" relativeKey="$parent.underlay2" relativePoint="RIGHT" x="3" y="0" />
-							</Anchors>
-						</Texture>
-					</Layer>
 					<Layer level="OVERLAY">
 						<FontString parentKey="Level" inherits="SystemFont_Outline" justifyH="LEFT" justifyV="TOP">
 							<Anchors>
 								<Anchor point="TOP" relativePoint="BOTTOM" y="-2" />
 							</Anchors>
 						</FontString>
-						<Texture parentKey="Bonus1" inherits="PTTextureSpeedTemplate">
-							<Anchors>
-								<Anchor point="CENTER" relativeKey="$parent.underlay1" />
-							</Anchors>
-						</Texture>
-						<Texture parentKey="Bonus2" inherits="PTTextureSpeedTemplate">
-							<Anchors>
-								<Anchor point="CENTER" relativeKey="$parent.underlay2" />
-							</Anchors>
-						</Texture>
-						<Texture parentKey="Bonus3" inherits="PTTextureSpeedTemplate">
-							<Anchors>
-								<Anchor point="CENTER" relativeKey="$parent.underlay3" />
-							</Anchors>
-						</Texture>
 					</Layer>
 				</Layers>
 			</Button>
-			<Button name="$parentAbility1" id="1" inherits="PTButtonAbilityTemplate">
+			
+			<Button parentKey="Ability1" id="1" inherits="PTButtonAbilityTemplate">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentButtonType">
+					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.Type">
 						<Offset>
 							<AbsDimension x="0" y="-2" />
 						</Offset>
 					</Anchor>
 				</Anchors>
 			</Button>
-			<Button name="$parentAbility2" id="2" inherits="PTButtonAbilityTemplate">
+			
+			<Button parentKey="Ability2" id="2" inherits="PTButtonAbilityTemplate">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentAbility1">
+					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.Ability1">
 						<Offset>
 							<AbsDimension x="0" y="-2" />
 						</Offset>
 					</Anchor>
 				</Anchors>
 			</Button>
-			<Button name="$parentAbility3" id="3" inherits="PTButtonAbilityTemplate">
+			
+			<Button parentKey="Ability3" id="3" inherits="PTButtonAbilityTemplate">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentAbility2">
+					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.Ability2">
 						<Offset>
 							<AbsDimension x="0" y="-2" />
 						</Offset>
@@ -327,13 +334,6 @@
 				</Texture>
 			</Layer>
 		</Layers>
-		<Anchors>
-			<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="UIParent">
-				<Offset>
-					<AbsDimension x="300" y="-150" />
-				</Offset>
-			</Anchor>
-		</Anchors>
 		<Scripts>
 			<OnLoad>
 				PT.BattleFrame_OnLoad(self);
@@ -401,7 +401,28 @@
 		</Frames>
 	</Frame>
 	
-	<Frame name="PTPlayer" hidden="true" inherits="PTFrameTemplate" />
-	<Frame name="PTEnemy"  hidden="true" inherits="PTFrameTemplate" />
-
+	<!-- Player Frame -->
+	<Frame name="PTPlayer" hidden="true" inherits="PTFrameTemplate">
+		<Anchors>
+			<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="UIParent">
+				<Offset>
+					<AbsDimension x="200" y="-150" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+	</Frame>
+	
+	<!-- Enemy Frame -->
+	<Frame name="PTEnemy"  hidden="true" inherits="PTFrameTemplate">
+		<Anchors>
+			<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" relativeTo="UIParent">
+				<Offset>
+					<AbsDimension x="-200" y="-150" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+	</Frame>
+	
+	
+	
 </Ui>

@@ -15,6 +15,7 @@ L["Preferred combat display"] = true
 L["Display: Frames"] = true
 L["True frame based combat display for Pet Battles and the next generation of Pokemon Trainer. Disable it if you want to use the tooltip based combat display."] = true
 L["Edit positions"] = true
+L["You can now move the frames by dragging them around."] = true
 L["Mirror frames"] = true
 L["When moving a battle frame, the enemy frame gets mirrored to the opposite side of the screen."] = true
 L["Frame-related options"] = true

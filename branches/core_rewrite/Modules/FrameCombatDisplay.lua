@@ -35,7 +35,6 @@ local SPACE_HORIZONTAL = 3;
 function module:OnInitialize()
 	self.db = PT.db:RegisterNamespace("FrameCombatDisplay", {
 		profile = {
-			enabled = true,
 			resize = true,
 			bg = false,
 			bg_r = 0.44,
@@ -59,13 +58,13 @@ function module:OnInitialize()
 		},
 	});
 
-	if( not self.db.profile.enabled ) then
+	if( PT.db.profile.activeBattleDisplay ~= 1 ) then
 		self:SetEnabledState(false);
 	end
 	
 	-- This is a small "positioning" window which is shown when repositioning the battle frames
 	LibStub("AceConfig-3.0"):RegisterOptionsTable(AddonName.."_"..self:GetName(), self.GetPositionOptions);
-	LibStub("AceConfigDialog-3.0"):SetDefaultSize(AddonName.."_"..self:GetName(), 374, 100);
+	LibStub("AceConfigDialog-3.0"):SetDefaultSize(AddonName.."_"..self:GetName(), 374, 160);
 end
 
 function module:OnEnable()
@@ -84,7 +83,7 @@ function module:OnEnable()
 		for pet = 1, #frame.petFrames do
 			for ab = 1, PT.MAX_PET_ABILITY do
 				-- for every ability button
-				_G[frame.petFrames[pet]:GetName().."Ability"..ab]:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
+				_G[frame.petFrames[pet]:GetName()]["Ability"..ab]:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
 			end
 		end
 		
@@ -113,7 +112,7 @@ function module:OnDisable()
 		for pet = 1, #frame.petFrames do
 			for ab = 1, PT.MAX_PET_ABILITY do
 				-- for every ability button
-				_G[frame.petFrames[pet]:GetName().."Ability"..ab]:UnregisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
+				_G[frame.petFrames[pet]:GetName()]["Ability"..ab]:UnregisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
 			end
 		end
 	end
@@ -238,14 +237,14 @@ local function BattleFrame_SetColumnVisibility(f, column, func)
 	-- we just need the frame name here
 	f = f:GetName();
 	
-	call_tfunc(f.."HeaderEnemy"..column, func);
+	call_tfunc(f.."Header.Enemy"..column, func);
 	
 	for pet = 1, 3 do
-		call_tfunc(f.."Pet"..pet.."Button.Bonus"..column, func);
-		call_tfunc(f.."Pet"..pet.."Button.underlay"..column, func);
-		call_tfunc(f.."Pet"..pet.."Ability1.Bonus"..column, func);
-		call_tfunc(f.."Pet"..pet.."Ability2.Bonus"..column, func);
-		call_tfunc(f.."Pet"..pet.."Ability3.Bonus"..column, func);
+		call_tfunc(f.."Pet"..pet..".Speed"..column, func);
+		call_tfunc(f.."Pet"..pet..".SpeedBG"..column, func);
+		call_tfunc(f.."Pet"..pet..".Ability1.Bonus"..column, func);
+		call_tfunc(f.."Pet"..pet..".Ability2.Bonus"..column, func);
+		call_tfunc(f.."Pet"..pet..".Ability3.Bonus"..column, func);
 	end
 end
 
@@ -253,7 +252,7 @@ local function BattleFrame_SetRowVisibility(self, pet, ab, func)
 	local f = self:GetName();
 	
 	for i = 1, self.enemy.numPets do
-		call_tfunc(f.."Pet"..pet.."Ability"..ab, func);
+		call_tfunc(f.."Pet"..pet..".Ability"..ab, func);
 	end
 end
 
@@ -268,17 +267,17 @@ function PT.BattleFrame_Initialize(self)
 	for pet = 1, PT.MAX_COMBAT_PETS do
 		if( pet <= self.player.numPets ) then
 			-- setting up pet icons
-			_G[self:GetName().."Pet"..pet.."Button"].Icon:SetTexture(self.player[pet].icon);
-			_G[self:GetName().."Pet"..pet.."ButtonType"]:SetTexture(PT:GetTypeIcon(self.player[pet].type));
-			_G[enemy:GetName().."HeaderEnemy"..pet].Icon:SetTexture(self.player[pet].icon);
+			_G[self:GetName().."Pet"..pet].Button.Icon:SetTexture(self.player[pet].icon);
+			_G[self:GetName().."Pet"..pet].Type:SetTexture(PT:GetTypeIcon(self.player[pet].type));
+			_G[enemy:GetName().."Header"]["Enemy"..pet].Icon:SetTexture(self.player[pet].icon);
 			
 			-- encolor pet icon borders
 			color = _G.ITEM_QUALITY_COLORS[self.player[pet].quality or 0];
-			_G[self:GetName().."Pet"..pet.."Button"].Border:SetVertexColor(color.r, color.g, color.b, 1);
-			_G[enemy:GetName().."HeaderEnemy"..pet].Border:SetVertexColor(color.r, color.g, color.b, 1);
+			_G[self:GetName().."Pet"..pet].Button.Border:SetVertexColor(color.r, color.g, color.b, 1);
+			_G[enemy:GetName().."Header"]["Enemy"..pet].Border:SetVertexColor(color.r, color.g, color.b, 1);
 			
 			-- set level strings
-			_G[self:GetName().."Pet"..pet.."Button"].Level:SetText( self.player[pet].level );
+			_G[self:GetName().."Pet"..pet].Button.Level:SetText( self.player[pet].level );
 			
 			-- display pet column on enemy frame
 			BattleFrame_SetColumnVisibility(enemy, pet, "Show");
@@ -313,7 +312,7 @@ function PT.BattleFrame_SetupAbilityButtons(self, pet)
 			abID, abName, abIcon = _G.C_PetBattles.GetAbilityInfoByID( self.player[pet]["ab"..ab] );
 			
 			-- set ability icon
-			_G[self:GetName().."Pet"..pet.."Ability"..ab]:SetNormalTexture(abIcon);
+			_G[self:GetName().."Pet"..pet]["Ability"..ab]:SetNormalTexture(abIcon);
 			
 			-- show ability row on self
 			BattleFrame_SetRowVisibility(self, pet, ab, "Show");
@@ -331,7 +330,7 @@ function PT.BattleFrame_SetupVulnerabilityButtons(self, pet, ab)
 	local abID, abName, abIcon, abMaxCD, abDesc, abNumTurns, abType, noStrongWeak = _G.C_PetBattles.GetAbilityInfoByID( self.player[pet]["ab"..ab] );
 	
 	for enemPet = 1, self.enemy.numPets do
-		_G[self:GetName().."Pet"..pet.."Ability"..ab]["Bonus"..enemPet]:SetTexture( PT:GetTypeBonusIcon(abType, self.enemy[enemPet].type, noStrongWeak) );
+		_G[self:GetName().."Pet"..pet]["Ability"..ab]["Bonus"..enemPet]:SetTexture( PT:GetTypeBonusIcon(abType, self.enemy[enemPet].type, noStrongWeak) );
 	end
 end
 
@@ -346,14 +345,14 @@ function PT.BattleFrame_UpdateBattleButtons(self)
 			speed, better_with_flying = PT:GetSpeedBonus( self.player[pet], self.enemy[enemPet] );
 			
 			if( speed == PT.BONUS_SPEED_FASTER ) then -- faster
-				_G[self:GetName().."Pet"..pet.."Button"]["Bonus"..enemPet]:SetVertexColor(1, 1, 0, 1);
+				_G[self:GetName().."Pet"..pet]["Speed"..enemPet]:SetVertexColor(1, 1, 0, 1);
 			elseif( speed == PT.BONUS_SPEED_EQUAL ) then -- equal
-				_G[self:GetName().."Pet"..pet.."Button"]["Bonus"..enemPet]:SetVertexColor(0.6, 0.6, 0.6, 1);
+				_G[self:GetName().."Pet"..pet]["Speed"..enemPet]:SetVertexColor(0.6, 0.6, 0.6, 1);
 			elseif( speed == PT.BONUS_SPEED_SLOWER ) then -- slower
 				if( better_with_flying ) then -- would be faster with active flying bonus
-					_G[self:GetName().."Pet"..pet.."Button"]["Bonus"..enemPet]:SetVertexColor(1, 0, 0, 1);
+					_G[self:GetName().."Pet"..pet]["Speed"..enemPet]:SetVertexColor(1, 0, 0, 1);
 				else
-					_G[self:GetName().."Pet"..pet.."Button"]["Bonus"..enemPet]:SetVertexColor(0.1, 0.1, 0.1, 1);
+					_G[self:GetName().."Pet"..pet]["Speed"..enemPet]:SetVertexColor(0.1, 0.1, 0.1, 1);
 				end
 			end
 		end -- end for enemPet
@@ -365,15 +364,15 @@ function PT.BattleFrame_UpdateHealthState(self)
 	
 	for pet = 1, self.player.numPets do
 		if( self.player[pet].dead ) then
-			_G[self:GetName().."Pet"..pet.."Button"].Dead:Show();
-			_G[self:GetName().."Pet"..pet.."Button"].Border:Hide();
-			_G[enemy:GetName().."HeaderEnemy"..pet].Dead:Show();
-			_G[enemy:GetName().."HeaderEnemy"..pet].Border:Hide();
+			_G[self:GetName().."Pet"..pet].Button.Dead:Show();
+			_G[self:GetName().."Pet"..pet].Button.Border:Hide();
+			_G[enemy:GetName().."Header"]["Enemy"..pet].Dead:Show();
+			_G[enemy:GetName().."Header"]["Enemy"..pet].Border:Hide();
 		else
-			_G[self:GetName().."Pet"..pet.."Button"].Dead:Hide();
-			_G[self:GetName().."Pet"..pet.."Button"].Border:Show();
-			_G[enemy:GetName().."HeaderEnemy"..pet].Dead:Hide();
-			_G[enemy:GetName().."HeaderEnemy"..pet].Border:Show();
+			_G[self:GetName().."Pet"..pet].Button.Dead:Hide();
+			_G[self:GetName().."Pet"..pet].Button.Border:Show();
+			_G[enemy:GetName().."Header"]["Enemy"..pet].Dead:Hide();
+			_G[enemy:GetName().."Header"]["Enemy"..pet].Border:Show();
 		end
 	end
 end
@@ -389,7 +388,7 @@ function PT.BattleFrame_UpdateActivePetHighlight(self)
 		-- sets the level color in relation to the active enemy pet
 		-- UPDATE NOTICE: there must be an option to reverse the coloring since it may be confusing
 		r, g, b = PT:GetDifficultyColor(self.enemy[self.enemy.activePet], self.player[pet]);
-		_G[self:GetName().."Pet"..pet.."Button"].Level:SetTextColor(r, g, b, 1);
+		_G[self:GetName().."Pet"..pet]["Button"].Level:SetTextColor(r, g, b, 1);
 		
 		-- set alpha
 		if( module.db.profile.nactivealpha_use ) then
@@ -543,7 +542,9 @@ do
 			do_mirror(self, 0);
 		end
 		
+		-- set to true so the UI saves and restores their positions automatically
 		self:SetUserPlaced(true);
+		get_enemy(self):SetUserPlaced(true);
 	end
 	
 	-- fake AceGUI widget with custom close callback, which acts as our container
@@ -589,16 +590,62 @@ do
 			name = L["Edit positions"],
 			type = "group",
 			args = {
+				info = {
+					type = "description",
+					name = L["You can now move the frames by dragging them around."],
+					order = 1,
+				},
+				spacer1 = { type = "description", name = "", order = 1.1 },
 				mirror = {
 					type = "toggle",
 					name = L["Mirror frames"],
 					desc = L["When moving a battle frame, the enemy frame gets mirrored to the opposite side of the screen."],
-					order = 3,
+					order = 2,
 					get = function()
 						return mirror;
 					end,
 					set = function(_, value)
 						mirror = value;
+					end,
+				},
+				spacer2 = { type = "description", name = "", order = 2.1 },
+				bg = {
+					type = "toggle",
+					name = L["Override color"],
+					desc = L["Battle frames are usually colored black. Enable to set your own color."],
+					order = 3,
+					get = function()
+						return module.db.profile.bg;
+					end,
+					set = function(_, value)
+						module.db.profile.bg = value;
+						
+						-- encolor background
+						if( module.db.profile.bg ) then
+							_G.PTPlayer.bg:SetTexture(module.db.profile.bg_r, module.db.profile.bg_g, module.db.profile.bg_b, module.db.profile.bg_a);
+							_G.PTEnemy.bg:SetTexture(module.db.profile.bg_r, module.db.profile.bg_g, module.db.profile.bg_b, module.db.profile.bg_a);
+						else
+							_G.PTPlayer.bg:SetTexture(0, 0, 0, 0.4);
+							_G.PTEnemy.bg:SetTexture(0, 0, 0, 0.4);
+						end
+					end,
+				},
+				bg_color = {
+					type = "color",
+					name = _G.COLOR,
+					order = 4,
+					hasAlpha = true,
+					get = function()
+						return module.db.profile.bg_r, module.db.profile.bg_g, module.db.profile.bg_b, module.db.profile.bg_a;
+					end,
+					set = function(_, r, g, b, a)
+						module.db.profile.bg_r = r;
+						module.db.profile.bg_g = g;
+						module.db.profile.bg_b = b;
+						module.db.profile.bg_a = a;
+						
+						_G.PTPlayer.bg:SetTexture(r, g, b, a);
+						_G.PTEnemy.bg:SetTexture(r, g, b, a);
 					end,
 				},
 			},
@@ -642,45 +689,6 @@ function module:GetOptions()
 					name = L["Edit positions"],
 					order = 2,
 					func = OpenPositioning,
-				},
-				bg = {
-					type = "toggle",
-					name = L["Override color"],
-					desc = L["Battle frames are usually colored black. Enable to set your own color."],
-					order = 3,
-					get = function()
-						return self.db.profile.bg;
-					end,
-					set = function(_, value)
-						self.db.profile.bg = value;
-						
-						-- encolor background
-						if( self.db.profile.bg ) then
-							_G.PTPlayer.bg:SetTexture(self.db.profile.bg_r, self.db.profile.bg_g, self.db.profile.bg_b, self.db.profile.bg_a);
-							_G.PTEnemy.bg:SetTexture(self.db.profile.bg_r, self.db.profile.bg_g, self.db.profile.bg_b, self.db.profile.bg_a);
-						else
-							_G.PTPlayer.bg:SetTexture(0, 0, 0, 0.4);
-							_G.PTEnemy.bg:SetTexture(0, 0, 0, 0.4);
-						end
-					end,
-				},
-				bg_color = {
-					type = "color",
-					name = _G.COLOR,
-					order = 4,
-					hasAlpha = true,
-					get = function()
-						return self.db.profile.bg_r, self.db.profile.bg_g, self.db.profile.bg_b, self.db.profile.bg_a;
-					end,
-					set = function(_, r, g, b, a)
-						self.db.profile.bg_r = r;
-						self.db.profile.bg_g = g;
-						self.db.profile.bg_b = b;
-						self.db.profile.bg_a = a;
-						
-						_G.PTPlayer.bg:SetTexture(r, g, b, a);
-						_G.PTEnemy.bg:SetTexture(r, g, b, a);
-					end,
 				},
 			},
 		},
