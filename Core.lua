@@ -41,7 +41,7 @@ local pets_scanned = false; -- Currently not sure if we ever need this. true whe
 ------------------
 
 function PT:OnInitialize()
-	self.db = LibStub("AceDB-3.0"):New("PokemonTrainerDB", { profile = {  } }, "Default"); -- currently no "core" settings
+	self.db = LibStub("AceDB-3.0"):New("PokemonTrainerDB", { profile = { activeBattleDisplay = 1 } }, "Default");
 	
 	-- We require the PetJournal for many API functions
 	if( not _G.IsAddOnLoaded("Blizzard_PetJournal") ) then
@@ -310,25 +310,23 @@ function PT:OpenOptions()
 				name = L["Preferred combat display"],
 				order = 1,
 				get = function()
-					return PT.db:GetNamespace("TooltipCombatDisplay").profile.enabled and 2 or 1;
+					return PT.db.profile.activeBattleDisplay;
 				end,
 				set = function(_, value)
 					if( value == 2 ) then
-						PT.db:GetNamespace("FrameCombatDisplay").profile.enabled = false;
-						PT.db:GetNamespace("TooltipCombatDisplay").profile.enabled = true;
 						PT:GetModule("FrameCombatDisplay"):Disable();
 						PT:GetModule("TooltipCombatDisplay"):Enable();
 					else
-						PT.db:GetNamespace("FrameCombatDisplay").profile.enabled = true;
-						PT.db:GetNamespace("TooltipCombatDisplay").profile.enabled = false;
 						PT:GetModule("FrameCombatDisplay"):Enable();
 						PT:GetModule("TooltipCombatDisplay"):Disable();
 					end
+					PT.db.profile.activeBattleDisplay = value;
 				end,
 				values = {
 					[1] = L["Display: Frames"],
 					[2] = L["Display: Tooltip"],
 				},
+				disabled = _G.C_PetBattles.IsInBattle,
 			},
 			spacer = { type = "description", name = " ", order = 50 },
 		},

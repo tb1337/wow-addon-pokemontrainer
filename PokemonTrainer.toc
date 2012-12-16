@@ -29,8 +29,8 @@ Libs\AceTimer-3.0\AceTimer-3.0.xml
 Locales\Locales.xml
 
 # Main
-Developer.lua
 Core.lua
+Developer.lua
 
 # Combat Displays
 Modules\FrameCombatDisplay.xml
