@@ -17,7 +17,7 @@ LibStub("iLib"):EmbedTooltipFunctions(module, module.name);
 
 module.order = 2;
 module.displayName = function() return (module:IsEnabled() and "|cff00ff00%s|r" or "|cffff0000%s|r"):format(L["Display: Tooltip"]) end
-module.desc = L["LibQTip based combat display for Pet Battles. Disable it if you want to use the frame based combat display."];
+module.desc = L["LibQTip based combat display for Pet Battles and the old way of displaying things.. Disable it if you want to use the frame based combat display."];
 module.noEnableButton = true;
 
 local COLOR_RED = "|cffff0000%s|r";
@@ -32,7 +32,9 @@ local icon_size = 22;
 function module:OnInitialize()
 	self.db = PT.db:RegisterNamespace("TooltipCombatDisplay", {
 		profile = {
-			
+			pos_x = 0,
+			pos_y = -300,
+			scale = 1,
 		},
 	});
 
@@ -74,15 +76,15 @@ do
 		end -- dev stuff
 		
 		tip = self:GetTooltip("Player", update_player);
-		tip:SetPoint("TOPLEFT", _G.UIParent, "TOPLEFT", 0, -300);---self.db.BattlePositionY);
+		tip:SetPoint("TOPLEFT", _G.UIParent, "TOPLEFT", self.db.profile.pos_x, -self.db.profile.pos_y);
 		tip:SetFrameStrata("LOW");
-		--tip:SetScale(self.db.BattleFrameScale);
+		tip:SetScale(self.db.profile.scale);
 		tip:Show();
 		
 		tip = self:GetTooltip("Enemy", update_enemy);
-		tip:SetPoint("TOPRIGHT", _G.UIParent, "TOPRIGHT", 0, -300);---self.db.BattlePositionY);
+		tip:SetPoint("TOPRIGHT", _G.UIParent, "TOPRIGHT", -self.db.profile.pos_x, -self.db.profile.pos_y);
 		tip:SetFrameStrata("LOW");
-		--tip:SetScale(self.db.BattleFrameScale);
+		tip:SetScale(self.db.profile.scale);
 		tip:Show();
 	end
 end
@@ -151,7 +153,7 @@ function cell_prototype:SetupCell(tooltip, speed, justification, font, r, g, b)
 		self.icon:SetVertexColor(1, 0, 0, 1);
 	end
 			
-	return self.bg:GetWidth(), self.bg:GetHeight();
+	return icon_size, icon_size;
 end
 
 -----------------------------------
@@ -237,12 +239,7 @@ function module:UpdateTooltip(tip, side, player, enemy)
 			tip:SetLineScript(line, "OnEnter", tooltip_ability_show, {side, pet, ab}); -- creates 18 tables (=2 sides, 3 pets, 3 abilities)
 			tip:SetLineScript(line, "OnLeave", tooltip_ability_hide);
 		end
-	end
-	
-	-------------------------------------------------------------------------------------------------------------------------------------------------
-	-- tricky xD
-	do return end
-	
+	end	
 	
 end
 
@@ -250,8 +247,68 @@ end
 -- Option Table
 ----------------------
 
-function module:GetOptions()
+local timer;
+local function dummy_tooltip_hide()
+	module:PetBattleStop();
+	timer = nil;
+end
+
+local function dummy_tooltip_show()
+	module:PetBattleStart("NOSCAN");
+	
+	if( timer ) then
+		LibStub("AceTimer-3.0").CancelTimer(module, timer);
+	end
+	timer = LibStub("AceTimer-3.0").ScheduleTimer(module, dummy_tooltip_hide, 5);
+end
+
+function module:GetOptions()	
 	return {
-		
+		scale = {
+			type = "range",
+			name = L["Frame scale"],
+			order = 1,
+			min = 0.5,
+			max = 2,
+			step = 0.05,
+			get = function()
+				return module.db.profile.scale;
+			end,
+			set = function(_, value)
+				module.db.profile.scale = value;
+				dummy_tooltip_show();
+			end,
+		},
+		spacer = { type = "description", name = "", order = 1.1 },
+		pos_x = {
+			type = "range",
+			name = L["Horizontal position"],
+			order = 2,
+			min = 1, 
+			max = math.floor((_G.GetScreenWidth() * _G.UIParent:GetScale() / module.db.profile.scale) / 2),
+			step = 1,
+			get = function()
+				return module.db.profile.pos_x;
+			end,
+			set = function(_, value)
+				module.db.profile.pos_x = value;
+				dummy_tooltip_show();
+			end,
+		},
+		pos_y = {
+			type = "range",
+			name = L["Vertical position"],
+			order = 3,
+			min = 1,
+			max = math.floor(_G.GetScreenHeight() * _G.UIParent:GetScale() / module.db.profile.scale),
+			step = 1,
+			get = function()
+				return module.db.profile.pos_y;
+			end,
+			set = function(_, value)
+				module.db.profile.pos_y = value;
+				dummy_tooltip_show();
+			end,
+		},
 	};
 end

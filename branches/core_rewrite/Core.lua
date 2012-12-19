@@ -339,6 +339,9 @@ function PT:OpenOptions()
 			end
 		end
 		
+		t.descr = { type = "description", name = module.desc, order = 0.1 };
+		t._spacer1 = { type = "description", name = " ", order = 0.2 };
+		
 		if( not module.noEnableButton ) then
 			t.enabled = {
 				type = "toggle",
@@ -356,10 +359,10 @@ function PT:OpenOptions()
 						return module:Disable();
 					end
 				end,
-				order = 0,
+				order = 0.3,
 				width = "full",
 			};
-			t.spacer = { type = "description", name = " ", order = 0.1 }; -- spacer between the Enable toggle button and the acual options
+			t._spacer2 = { type = "description", name = " ", order = 0.4 }; -- spacer between the Enable toggle button and the acual options
 		end
 		
 		options.args[key] = { type = "group", name = module.displayName, desc = module.desc, handler = module, order = module.order or -1, args = t }
