@@ -35,12 +35,14 @@ local SPACE_HORIZONTAL = 3;
 function module:OnInitialize()
 	self.db = PT.db:RegisterNamespace("FrameCombatDisplay", {
 		profile = {
+			peticon_PTPlayer = "TOPLEFT",
+			peticon_PTEnemy = "TOPRIGHT",
 			resize = true,
 			bg = false,
-			bg_r = 0.44,
-			bg_g = 0.70,
-			bg_b = 0.23,
-			bg_a = 0.35,
+			bg_r = 0.30,
+			bg_g = 0.30,
+			bg_b = 0.30,
+			bg_a = 0.48,
 			reorganize_use = true,
 			reorganize_ani = true,
 			nactivealpha_use = true,
@@ -64,7 +66,7 @@ function module:OnInitialize()
 	
 	-- This is a small "positioning" window which is shown when repositioning the battle frames
 	LibStub("AceConfig-3.0"):RegisterOptionsTable(AddonName.."_"..self:GetName(), self.GetPositionOptions);
-	LibStub("AceConfigDialog-3.0"):SetDefaultSize(AddonName.."_"..self:GetName(), 374, 160);
+	LibStub("AceConfigDialog-3.0"):SetDefaultSize(AddonName.."_"..self:GetName(), 400, 200);
 end
 
 function module:OnEnable()
@@ -85,13 +87,6 @@ function module:OnEnable()
 				-- for every ability button
 				_G[frame.petFrames[pet]:GetName()]["Ability"..ab]:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
 			end
-		end
-		
-		-- encolor background
-		if( self.db.profile.bg ) then
-			frame.bg:SetTexture(self.db.profile.bg_r, self.db.profile.bg_g, self.db.profile.bg_b, self.db.profile.bg_a);
-		else
-			frame.bg:SetTexture(0, 0, 0, 0.4);
 		end
 	end
 end
@@ -167,26 +162,45 @@ end
 -- On Loading and Events
 -------------------------------
 
-function PT.BattleFrame_OnLoad(self)
-	self:SetID( self:GetName() == FRAME_PLAYER and PT.PLAYER or PT.ENEMY );
-	
-	-- we store the table ID's for further use
-	if( self:GetID() == PT.PLAYER ) then
-		self.player = PT.PlayerInfo;
-		self.enemy  = PT.EnemyInfo;
-	else
-		self.player = PT.EnemyInfo;
-		self.enemy  = PT.PlayerInfo;
+do
+	-- we keep calling frame:FadeIn and frame:FadeOut instead of frame:Show and frame:Hide
+	local function FadeIn(self)
+		self:SetAlpha(0);
+		self:Show();
+		self.animShow:Play();
 	end
 	
-	-- animations
-	self.petFrames = {
-		_G[self:GetName().."Pet1"],
-		_G[self:GetName().."Pet2"],
-		_G[self:GetName().."Pet3"],
-	};
+	local function FadeOut(self)
+		self.animHide:Play();
+	end
+	
+	-- called by xml
+	function PT.BattleFrame_OnLoad(self)
+		self:SetID( self:GetName() == FRAME_PLAYER and PT.PLAYER or PT.ENEMY );
+		
+		-- we store the table ID's for further use
+		if( self:GetID() == PT.PLAYER ) then
+			self.player = PT.PlayerInfo;
+			self.enemy  = PT.EnemyInfo;
+		else
+			self.player = PT.EnemyInfo;
+			self.enemy  = PT.PlayerInfo;
+		end
+		
+		-- animations
+		self.petFrames = {
+			_G[self:GetName().."Pet1"],
+			_G[self:GetName().."Pet2"],
+			_G[self:GetName().."Pet3"],
+		};
+		
+		-- add our Fade functions to the frame objects
+		self.FadeIn = FadeIn;
+		self.FadeOut = FadeOut;
+	end
 end
 
+-- called by xml
 function PT.BattleFrame_OnEvent(self, event, ...)	
 	if( event == "PET_BATTLE_OPENING_START" ) then
 		PT:ScanPets();
@@ -195,9 +209,9 @@ function PT.BattleFrame_OnEvent(self, event, ...)
 		PT.BattleFrame_UpdateBattleButtons(self);
 		PT.BattleFrame_UpdateActivePetHighlight(self);
 		BattleFrame_Pets_Reorganize_Init(self, false);
-		self:Show();
+		self:FadeIn();
 	elseif( event == "PET_BATTLE_OVER" ) then
-		self:Hide();
+		self:FadeOut();
 	elseif( event == "PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE" ) then
 		PT:RoundUpPets();
 		PT.BattleFrame_UpdateBattleButtons(self);
@@ -220,7 +234,8 @@ function PT.BattleFrame_OnEvent(self, event, ...)
 			PT.BattleFrame_UpdateHealthState(self);
 		end
 	else
-		print(self:GetName(), event, ...);
+		-- this should never happen. god, please.
+		print("Uncatched event on frame: "..self:GetName(), event, ...);
 	end
 end
 
@@ -260,6 +275,7 @@ end
 -- Battle Frame: Initialize
 ----------------------------------
 
+-- called by EH when a battle starts
 function PT.BattleFrame_Initialize(self)	
 	local enemy = get_enemy(self);
 	local color;
@@ -413,10 +429,25 @@ function BattleFrame_Pets_Reorganize_Exec(self, animate) -- self is PT master fr
 		end
 		
 		if( animate ) then
-			f["animShow"..(f:GetID() == self.player.activePet and "" or "_h")]:Play();
+			--f["animShow"..(f:GetID() == self.player.activePet and "" or "_h")]:Play();
+			f.animShow:Play();
 		else
 			PT.BattleFrame_Pet_ShowFinished(f.animShow); -- dummy
 		end
+	end
+end
+
+-- little sort function which sorts the pet frames, dead pets are displayed last
+local function pets_sort_dead_last(pet1, pet2)
+	local dead1 = pet1:GetParent().player[pet1:GetID()].dead;
+	local dead2 = pet2:GetParent().player[pet2:GetID()].dead;
+	
+	if( dead1 and not dead2 ) then
+		return false;
+	elseif( dead2 and not dead1 ) then
+		return true;
+	else
+		return pet1:GetID() > pet2:GetID(); -- fall back to pet ID (1, 2, 3)
 	end
 end
 
@@ -438,7 +469,8 @@ function BattleFrame_Pets_Reorganize_Init(self, animate) -- self is PT master fr
 	
 	for i,f in ipairs(self.petFrames) do
 		if( animate ) then
-			f["animHide"..(f:GetID() == active and "" or "_h")]:Play();
+			--f["animHide"..(f:GetID() == active and "" or "_h")]:Play();
+			f.animHide:Play();
 		end
 		
 		if( f:GetID() == active ) then
@@ -447,6 +479,7 @@ function BattleFrame_Pets_Reorganize_Init(self, animate) -- self is PT master fr
 	end
 	
 	local frame = table.remove(self.petFrames, rem);
+	table.sort(self.petFrames, pets_sort_dead_last); -- simply sort the other two pets for dead
 	table.insert(self.petFrames, 1, frame);
 	
 	if( not animate ) then
@@ -476,184 +509,238 @@ function PT.BattleFrame_Pet_ShowFinished(self) -- self is animation frame
 	parent:SetAlpha( parent:GetID() == parent:GetParent().player.activePet and 1 or alpha );
 end
 
--------------------
--- Drag&Drop
--------------------
+-- called by xml
+function PT.BattleFrame_Pet_WhilePlaying(self) -- self is animation frame
+	local parent = self:GetParent();
+	if( module.db.profile.nactivealpha_use and parent:GetID() ~= parent:GetParent().player.activePet ) then
+		if( module.db.profile.nactivealpha <= parent:GetAlpha() ) then
+			self:Stop();
+		end
+	end
+end
 
--- Well, this Drag&Drop code is coded a little bit nooby, but it really is worth it.
--- I'm currently too lazy to code my own position frame etc., so I used AceGUI instead.
--- ToDo: eventually rework the OnUpdate handler since its really expensive in CPU usage.
+-------------------------------------------------------
+-- Misc option setting apply functions and stuff
+-------------------------------------------------------
 
-local OpenPositioning;
-do	
-	local mirror = true;
-	local mirrors = {
-		TOPLEFT = "TOPRIGHT",
-		TOPRIGHT = "TOPLEFT",
-		LEFT = "RIGHT",
-		RIGHT = "LEFT",
-		BOTTOMLEFT = "BOTTOMRIGHT",
-		BOTTOMRIGHT = "BOTTOMLEFT",
-		CENTER = "CENTER",
-		TOP = "TOP",
-		BOTTOM = "BOTTOM",
+-- also used by drag&drop
+local mirrors = {
+	TOPLEFT = "TOPRIGHT",
+	TOPRIGHT = "TOPLEFT",
+	LEFT = "RIGHT",
+	RIGHT = "LEFT",
+	BOTTOMLEFT = "BOTTOMRIGHT",
+	BOTTOMRIGHT = "BOTTOMLEFT",
+	CENTER = "CENTER",
+	TOP = "TOP",
+	BOTTOM = "BOTTOM",
+};
+
+-- called by Positioning and BattleFrame_OnShow (xml)
+-- this function must be placed here to have access to
+function PT.BattleFrame_Option_PetIconSide(self)
+	local icon;
+	local value = module.db.profile["peticon_"..self:GetName()];
+	
+	for pet = 1, PT.MAX_COMBAT_PETS do
+		icon = _G[self:GetName().."Pet"..pet].Button;
+		icon:ClearAllPoints();
+		icon:SetPoint(mirrors[value], icon:GetParent(), value, (value == "TOPLEFT" and -6 or 4), 0);
+	end
+end
+
+-- called by recoloring and BattleFrame_OnShow (xml)
+function PT.BattleFrame_Option_MasterBackground(self)
+	if( module.db.profile.bg ) then
+		self.bg:SetTexture(module.db.profile.bg_r, module.db.profile.bg_g, module.db.profile.bg_b, module.db.profile.bg_a);
+	else
+		self.bg:SetTexture(0, 0, 0, 0.4);
+	end
+end
+
+-----------------------------------
+-- Drag&Drop and Positioning
+-----------------------------------
+
+-- Well, this Drag&Drop code is coded a little bit nooby, but it is really worth it.
+-- I'm currently too lazy to code my own position frame etc., so I used a dirty self-implementation of AceGUI instead.
+-- Blame me at wow-addons@grdn.eu or by PM :)
+
+-- enemy frame mirrors the positions of the dragged frame
+local mirror = true;
+local function do_mirror(self, elapsed)
+	-- throttle onUpdate calls
+	self.dragElapsed = self.dragElapsed + elapsed;
+	if( self.dragElapsed < 0.0417 ) then -- 24 times a second, should be almost fluent
+		return;
+	end		
+	self.dragElapsed = 0;
+	
+	local point, relativeTo, relativePoint, x, y = self:GetPoint();
+	
+	-- re-position the enemy frame
+	local enemy = get_enemy(self);
+	enemy:ClearAllPoints();
+	enemy:SetPoint(mirrors[point], relativeTo, mirrors[point], -x, y);
+end
+
+-- called by xml
+function PT.BattleFrame_StartDrag(self) -- self is master frame
+	self:StartMoving();
+	
+	if( mirror ) then
+		self:SetScript("OnUpdate", do_mirror);
+	end
+end
+
+-- called by xml
+function PT.BattleFrame_StopDrag(self) -- self is master frame
+	self:StopMovingOrSizing();
+	
+	if( mirror ) then
+		self:SetScript("OnUpdate", nil);
+		do_mirror(self, 0);
+	end
+	
+	-- set to true so the UI saves and restores their positions automatically
+	self:SetUserPlaced(true);
+	get_enemy(self):SetUserPlaced(true);
+end
+
+-- fake AceGUI widget with custom close callback, which acts as our container
+-- we also must adjust little things so the container fit our needs.
+local container = LibStub("AceGUI-3.0"):Create("Frame");
+container:Hide(); -- damn auto show -.-
+container:EnableResize(false); -- resizing is not allowed!
+
+-- called when closing the little window
+container:SetCallback("OnClose", function(widget, event)
+	local appName = widget:GetUserData("appName");
+	LibStub("AceConfigDialog-3.0").OpenFrames[appName] = nil;
+	widget:Hide();
+	
+	-- unregister dragging mouse buttons
+	_G.PTPlayer:RegisterForDrag();
+	_G.PTEnemy:RegisterForDrag();
+	
+	-- hiding the frames during a battle is sort of annoying
+	if( not _G.C_PetBattles.IsInBattle() ) then
+		_G.PTPlayer:Hide();
+		_G.PTEnemy:Hide();
+		
+		-- when not in a battle, call /pt to re-open the options frame
+		pcall(_G.SlashCmdList["PT"]);
+	end
+end);
+
+-- called by the "edit positions" button in the config window
+local function OpenPositioning()
+	LibStub("AceConfigDialog-3.0"):Open("PokemonTrainer_FrameCombatDisplay", container); -- container == our custom AceGUI container
+	_G.InterfaceOptionsFrame:Hide();
+	
+	_G.PTPlayer:Show();
+	_G.PTEnemy:Show();
+	
+	-- left button for dragging should be enough, I think
+	_G.PTPlayer:RegisterForDrag("LeftButton");
+	_G.PTEnemy:RegisterForDrag("LeftButton");
+end
+
+-- called by :OnInitialize
+function module:GetPositionOptions()
+	local function get_pet_icon(info)
+		return module.db.profile["peticon_"..info.arg];
+	end
+	
+	local function set_pet_icon(info, value)
+		module.db.profile["peticon_"..info.arg] = value;
+		PT.BattleFrame_Option_PetIconSide(_G[info.arg]);
+	end
+	
+	local options = {
+		name = L["More settings"],
+		type = "group",
+		args = {
+			info = {
+				type = "description",
+				name = L["You can now move the frames by dragging them around."],
+				order = 1,
+			},
+			spacer1 = { type = "description", name = "", order = 1.1 },
+			mirror = {
+				type = "toggle",
+				name = L["Mirror frames"],
+				desc = L["When moving a battle frame, the enemy frame gets mirrored to the opposite side of the screen."],
+				order = 2,
+				get = function()
+					return mirror;
+				end,
+				set = function(_, value)
+					mirror = value;
+				end,
+			},
+			spacer2 = { type = "description", name = "", order = 2.1 },
+			bg = {
+				type = "toggle",
+				name = L["Override color"],
+				desc = L["Battle frames are usually colored black. Enable to set your own color."],
+				order = 3,
+				get = function()
+					return module.db.profile.bg;
+				end,
+				set = function(_, value)
+					module.db.profile.bg = value;
+					PT.BattleFrame_Option_MasterBackground(_G.PTPlayer);
+					PT.BattleFrame_Option_MasterBackground(_G.PTEnemy);
+				end,
+			},
+			bg_color = {
+				type = "color",
+				name = _G.COLOR,
+				order = 4,
+				hasAlpha = true,
+				get = function()
+					return module.db.profile.bg_r, module.db.profile.bg_g, module.db.profile.bg_b, module.db.profile.bg_a;
+				end,
+				set = function(_, r, g, b, a)
+					module.db.profile.bg_r = r;
+					module.db.profile.bg_g = g;
+					module.db.profile.bg_b = b;
+					module.db.profile.bg_a = a;
+					PT.BattleFrame_Option_MasterBackground(_G.PTPlayer);
+					PT.BattleFrame_Option_MasterBackground(_G.PTEnemy);
+				end,
+			},
+			spacer3 = { type = "description", name = "", order = 4.1 },
+			peticon1 = {
+				type = "select",
+				name = L["Player: pet icons"],
+				order = 5,
+				get = get_pet_icon,
+				set = set_pet_icon,
+				values = {
+					["TOPLEFT"] = L["Left"],
+					["TOPRIGHT"] = L["Right"],
+				},
+				arg = "PTPlayer",
+			},
+			peticon2 = {
+				type = "select",
+				name = L["Enemy: pet icons"],
+				order = 6,
+				get = get_pet_icon,
+				set = set_pet_icon,
+				values = {
+					["TOPLEFT"] = L["Left"],
+					["TOPRIGHT"] = L["Right"],
+				},
+				arg = "PTEnemy",
+			},
+		},
 	};
 	
-	-- enemy frame mirrors the positions of the dragged frame
-	local function do_mirror(self, elapsed)
-		-- throttle onUpdate calls
-		self.dragElapsed = self.dragElapsed + elapsed;
-		if( self.dragElapsed < 0.0417 ) then -- 24 times a second, should me almost fluent
-			return;
-		end		
-		self.dragElapsed = 0;
-		
-		-- the left icon is not allowed to get out of screen
-		local point, relativeTo, relativePoint, x, y = self:GetPoint();
-		if( x < 36 ) then
-			x = 36;
-			self:ClearAllPoints();
-			self:SetPoint(point, relativeTo, relativePoint, x, y);
-		end
-		
-		-- re-position the enemy frame
-		local enemy = get_enemy(self);
-		x = x - 34;
-		
-		enemy:ClearAllPoints();
-		enemy:SetPoint(mirrors[point], relativeTo, mirrors[point], -x, y);
-	end
-	
-	-- called by xml
-	function PT.BattleFrame_StartDrag(self) -- self is master frame
-		self:StartMoving();
-		
-		if( mirror ) then
-			self:SetScript("OnUpdate", do_mirror);
-		end
-	end
-	
-	-- called by xml
-	function PT.BattleFrame_StopDrag(self) -- self is master frame
-		self:StopMovingOrSizing();
-		
-		if( mirror ) then
-			self:SetScript("OnUpdate", nil);
-			do_mirror(self, 0);
-		end
-		
-		-- set to true so the UI saves and restores their positions automatically
-		self:SetUserPlaced(true);
-		get_enemy(self):SetUserPlaced(true);
-	end
-	
-	-- fake AceGUI widget with custom close callback, which acts as our container
-	local f = LibStub("AceGUI-3.0"):Create("Frame");
-	f:Hide(); -- damn auto show -.-
-	
-	-- called when closing the little window
-	f:SetCallback("OnClose", function(widget, event)
-		local appName = widget:GetUserData("appName");
-		LibStub("AceConfigDialog-3.0").OpenFrames[appName] = nil;
-		f:Hide();
-		
-		-- unregister dragging mouse buttons
-		_G.PTPlayer:RegisterForDrag();
-		_G.PTEnemy:RegisterForDrag();
-		
-		-- hiding the frames during a battle is sort of annoying
-		if( not _G.C_PetBattles.IsInBattle() ) then
-			_G.PTPlayer:Hide();
-			_G.PTEnemy:Hide();
-			
-			-- when not in a battle, call /pt to re-open the options frame
-			pcall(_G.SlashCmdList["PT"]);
-		end
-	end);
-	
-	-- called by the "edit positions" button in the config window
-	OpenPositioning = function()
-		LibStub("AceConfigDialog-3.0"):Open("PokemonTrainer_FrameCombatDisplay", f); -- f == our custom AceGUI container
-		_G.InterfaceOptionsFrame:Hide();
-		
-		_G.PTPlayer:Show();
-		_G.PTEnemy:Show();
-		
-		-- left button for dragging should be enough, I think
-		_G.PTPlayer:RegisterForDrag("LeftButton");
-		_G.PTEnemy:RegisterForDrag("LeftButton");
-	end
-	
-	-- called by :OnInitialize
-	function module:GetPositionOptions()
-		local options = {
-			name = L["Edit positions"],
-			type = "group",
-			args = {
-				info = {
-					type = "description",
-					name = L["You can now move the frames by dragging them around."],
-					order = 1,
-				},
-				spacer1 = { type = "description", name = "", order = 1.1 },
-				mirror = {
-					type = "toggle",
-					name = L["Mirror frames"],
-					desc = L["When moving a battle frame, the enemy frame gets mirrored to the opposite side of the screen."],
-					order = 2,
-					get = function()
-						return mirror;
-					end,
-					set = function(_, value)
-						mirror = value;
-					end,
-				},
-				spacer2 = { type = "description", name = "", order = 2.1 },
-				bg = {
-					type = "toggle",
-					name = L["Override color"],
-					desc = L["Battle frames are usually colored black. Enable to set your own color."],
-					order = 3,
-					get = function()
-						return module.db.profile.bg;
-					end,
-					set = function(_, value)
-						module.db.profile.bg = value;
-						
-						-- encolor background
-						if( module.db.profile.bg ) then
-							_G.PTPlayer.bg:SetTexture(module.db.profile.bg_r, module.db.profile.bg_g, module.db.profile.bg_b, module.db.profile.bg_a);
-							_G.PTEnemy.bg:SetTexture(module.db.profile.bg_r, module.db.profile.bg_g, module.db.profile.bg_b, module.db.profile.bg_a);
-						else
-							_G.PTPlayer.bg:SetTexture(0, 0, 0, 0.4);
-							_G.PTEnemy.bg:SetTexture(0, 0, 0, 0.4);
-						end
-					end,
-				},
-				bg_color = {
-					type = "color",
-					name = _G.COLOR,
-					order = 4,
-					hasAlpha = true,
-					get = function()
-						return module.db.profile.bg_r, module.db.profile.bg_g, module.db.profile.bg_b, module.db.profile.bg_a;
-					end,
-					set = function(_, r, g, b, a)
-						module.db.profile.bg_r = r;
-						module.db.profile.bg_g = g;
-						module.db.profile.bg_b = b;
-						module.db.profile.bg_a = a;
-						
-						_G.PTPlayer.bg:SetTexture(r, g, b, a);
-						_G.PTEnemy.bg:SetTexture(r, g, b, a);
-					end,
-				},
-			},
-		};
-		
-		module.GetPositionOptions = nil;
-		return options;
-	end
+	module.GetPositionOptions = nil;
+	return options;
 end
 
 ----------------------
@@ -686,7 +773,7 @@ function module:GetOptions()
 				},
 				drag = {
 					type = "execute",
-					name = L["Edit positions"],
+					name = L["More settings"],
 					order = 2,
 					func = OpenPositioning,
 				},
