@@ -166,13 +166,8 @@ function PT:GetAbilityCooldown(side, pet, ab)
 	local available, cdleft = _G.C_PetBattles.GetAbilityState(side, pet, ab);
 	
 	-- the API returns available = true/false and cdleft = 0/>0, but we want to make sure that this will actually happen
-	available = available == true;
-	
-	if( cdleft and cdleft > 0 ) then
-		available = false;
-	else
-		cdleft = 0;
-	end
+	available = not(cdleft and cdleft > 0);
+	cdleft = available and 0 or cdleft;
 	
 	return available, cdleft;
 end
