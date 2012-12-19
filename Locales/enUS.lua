@@ -46,7 +46,9 @@ L["Highlights ability buttons with a color when they are on cooldown."] = true
 
 -- module TooltipCombatDisplay
 L["Display: Tooltip"] = true
-L["LibQTip based combat display for Pet Battles. Disable it if you want to use the frame based combat display."] = true
+L["LibQTip based combat display for Pet Battles and the old way of displaying things.. Disable it if you want to use the frame based combat display."] = true
+L["Horizontal position"] = true
+L["Vertical position"] = true
 
 -- module WildPetTooltip
 L["Battle Pet Tooltip"] = true
