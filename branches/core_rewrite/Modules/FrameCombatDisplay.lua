@@ -37,7 +37,9 @@ function module:OnInitialize()
 		profile = {
 			peticon_PTPlayer = "TOPLEFT",
 			peticon_PTEnemy = "TOPRIGHT",
+			scale = 1,
 			resize = true,
+			animate_active = false,
 			bg = false,
 			bg_r = 0.30,
 			bg_g = 0.30,
@@ -45,7 +47,7 @@ function module:OnInitialize()
 			bg_a = 0.48,
 			reorganize_use = true,
 			reorganize_ani = true,
-			nactivealpha_use = true,
+			nactivealpha_use = false,
 			nactivealpha = 0.5,
 			cd_text = true,
 			cd_text_r = 1,
@@ -66,7 +68,7 @@ function module:OnInitialize()
 	
 	-- This is a small "positioning" window which is shown when repositioning the battle frames
 	LibStub("AceConfig-3.0"):RegisterOptionsTable(AddonName.."_"..self:GetName(), self.GetPositionOptions);
-	LibStub("AceConfigDialog-3.0"):SetDefaultSize(AddonName.."_"..self:GetName(), 400, 200);
+	LibStub("AceConfigDialog-3.0"):SetDefaultSize(AddonName.."_"..self:GetName(), 400, 230);
 end
 
 function module:OnEnable()
@@ -176,7 +178,8 @@ do
 	
 	-- called by xml
 	function PT.BattleFrame_OnLoad(self)
-		self:SetID( self:GetName() == FRAME_PLAYER and PT.PLAYER or PT.ENEMY );
+		local frame_name = self:GetName();
+		self:SetID( frame_name == FRAME_PLAYER and PT.PLAYER or PT.ENEMY );
 		
 		-- we store the table ID's for further use
 		if( self:GetID() == PT.PLAYER ) then
@@ -189,9 +192,9 @@ do
 		
 		-- animations
 		self.petFrames = {
-			_G[self:GetName().."Pet1"],
-			_G[self:GetName().."Pet2"],
-			_G[self:GetName().."Pet3"],
+			_G[frame_name.."Pet1"],
+			_G[frame_name.."Pet2"],
+			_G[frame_name.."Pet3"],
 		};
 		
 		-- add our Fade functions to the frame objects
@@ -202,6 +205,7 @@ end
 
 -- called by xml
 function PT.BattleFrame_OnEvent(self, event, ...)	
+print(event)
 	if( event == "PET_BATTLE_OPENING_START" ) then
 		PT:ScanPets();
 		BattleFrame_Resize(self);
@@ -234,8 +238,10 @@ function PT.BattleFrame_OnEvent(self, event, ...)
 			PT.BattleFrame_UpdateHealthState(self);
 		end
 	else
+		--@do-not-package@
 		-- this should never happen. god, please.
 		print("Uncatched event on frame: "..self:GetName(), event, ...);
+		--@end-do-not-package@
 	end
 end
 
@@ -280,20 +286,22 @@ function PT.BattleFrame_Initialize(self)
 	local enemy = get_enemy(self);
 	local color;
 	
+	local frame_name = self:GetName();
+	
 	for pet = 1, PT.MAX_COMBAT_PETS do
 		if( pet <= self.player.numPets ) then
 			-- setting up pet icons
-			_G[self:GetName().."Pet"..pet].Button.Icon:SetTexture(self.player[pet].icon);
-			_G[self:GetName().."Pet"..pet].Type:SetTexture(PT:GetTypeIcon(self.player[pet].type));
+			_G[frame_name.."Pet"..pet].Button.Icon:SetTexture(self.player[pet].icon);
+			_G[frame_name.."Pet"..pet].Type:SetTexture(PT:GetTypeIcon(self.player[pet].type));
 			_G[enemy:GetName().."Header"]["Enemy"..pet].Icon:SetTexture(self.player[pet].icon);
 			
 			-- encolor pet icon borders
 			color = _G.ITEM_QUALITY_COLORS[self.player[pet].quality or 0];
-			_G[self:GetName().."Pet"..pet].Button.Border:SetVertexColor(color.r, color.g, color.b, 1);
+			_G[frame_name.."Pet"..pet].Button.Border:SetVertexColor(color.r, color.g, color.b, 1);
 			_G[enemy:GetName().."Header"]["Enemy"..pet].Border:SetVertexColor(color.r, color.g, color.b, 1);
 			
 			-- set level strings
-			_G[self:GetName().."Pet"..pet].Button.Level:SetText( self.player[pet].level );
+			_G[frame_name.."Pet"..pet].Button.Level:SetText( self.player[pet].level );
 			
 			-- display pet column on enemy frame
 			BattleFrame_SetColumnVisibility(enemy, pet, "Show");
@@ -302,10 +310,10 @@ function PT.BattleFrame_Initialize(self)
 			PT.BattleFrame_SetupAbilityButtons(self, pet);
 			
 			-- display pet frame
-			_G[self:GetName().."Pet"..pet]:Show();
+			_G[frame_name.."Pet"..pet]:Show();
 		else
 			-- hide pet ability frame
-			_G[self:GetName().."Pet"..pet]:Hide();
+			_G[frame_name.."Pet"..pet]:Hide();
 			
 			-- hide pet column on enemy frame
 			BattleFrame_SetColumnVisibility(enemy, pet, "Hide");
@@ -354,6 +362,8 @@ function PT.BattleFrame_UpdateBattleButtons(self)
 	local speed, flying;
 	local available, cdleft;
 	
+	local frame_name = self:GetName();
+	
 	for pet = 1, self.player.numPets do
 		-- iterate through enemy pets and (re-)calculate speed bonuses
 		for enemPet = 1, self.enemy.numPets do
@@ -361,14 +371,14 @@ function PT.BattleFrame_UpdateBattleButtons(self)
 			speed, better_with_flying = PT:GetSpeedBonus( self.player[pet], self.enemy[enemPet] );
 			
 			if( speed == PT.BONUS_SPEED_FASTER ) then -- faster
-				_G[self:GetName().."Pet"..pet]["Speed"..enemPet]:SetVertexColor(1, 1, 0, 1);
+				_G[frame_name.."Pet"..pet]["Speed"..enemPet]:SetVertexColor(1, 1, 0, 1);
 			elseif( speed == PT.BONUS_SPEED_EQUAL ) then -- equal
-				_G[self:GetName().."Pet"..pet]["Speed"..enemPet]:SetVertexColor(0.6, 0.6, 0.6, 1);
+				_G[frame_name.."Pet"..pet]["Speed"..enemPet]:SetVertexColor(0.6, 0.6, 0.6, 1);
 			elseif( speed == PT.BONUS_SPEED_SLOWER ) then -- slower
 				if( better_with_flying ) then -- would be faster with active flying bonus
-					_G[self:GetName().."Pet"..pet]["Speed"..enemPet]:SetVertexColor(1, 0, 0, 1);
+					_G[frame_name.."Pet"..pet]["Speed"..enemPet]:SetVertexColor(1, 0, 0, 1);
 				else
-					_G[self:GetName().."Pet"..pet]["Speed"..enemPet]:SetVertexColor(0.1, 0.1, 0.1, 1);
+					_G[frame_name.."Pet"..pet]["Speed"..enemPet]:SetVertexColor(0.1, 0.1, 0.1, 1);
 				end
 			end
 		end -- end for enemPet
@@ -378,17 +388,20 @@ end
 function PT.BattleFrame_UpdateHealthState(self)
 	local enemy = get_enemy(self);
 	
+	local frame_name = self:GetName();
+	local enemy_name = enemy:GetName();
+	
 	for pet = 1, self.player.numPets do
 		if( self.player[pet].dead ) then
-			_G[self:GetName().."Pet"..pet].Button.Dead:Show();
-			_G[self:GetName().."Pet"..pet].Button.Border:Hide();
-			_G[enemy:GetName().."Header"]["Enemy"..pet].Dead:Show();
-			_G[enemy:GetName().."Header"]["Enemy"..pet].Border:Hide();
+			_G[frame_name.."Pet"..pet].Button.Dead:Show();
+			_G[frame_name.."Pet"..pet].Button.Border:Hide();
+			_G[enemy_name.."Header"]["Enemy"..pet].Dead:Show();
+			_G[enemy_name.."Header"]["Enemy"..pet].Border:Hide();
 		else
-			_G[self:GetName().."Pet"..pet].Button.Dead:Hide();
-			_G[self:GetName().."Pet"..pet].Button.Border:Show();
-			_G[enemy:GetName().."Header"]["Enemy"..pet].Dead:Hide();
-			_G[enemy:GetName().."Header"]["Enemy"..pet].Border:Show();
+			_G[frame_name.."Pet"..pet].Button.Dead:Hide();
+			_G[frame_name.."Pet"..pet].Button.Border:Show();
+			_G[enemy_name.."Header"]["Enemy"..pet].Dead:Hide();
+			_G[enemy_name.."Header"]["Enemy"..pet].Border:Show();
 		end
 	end
 end
@@ -400,18 +413,36 @@ end
 function PT.BattleFrame_UpdateActivePetHighlight(self)
 	local r, g, b;
 	
+	local frame_name = self:GetName();
+	
 	for pet = 1, self.player.numPets do
 		-- sets the level color in relation to the active enemy pet
 		-- UPDATE NOTICE: there must be an option to reverse the coloring since it may be confusing
 		r, g, b = PT:GetDifficultyColor(self.enemy[self.enemy.activePet], self.player[pet]);
-		_G[self:GetName().."Pet"..pet]["Button"].Level:SetTextColor(r, g, b, 1);
+		_G[frame_name.."Pet"..pet]["Button"].Level:SetTextColor(r, g, b, 1);
 		
 		-- set alpha
 		if( module.db.profile.nactivealpha_use ) then
-			_G[self:GetName().."Pet"..pet]:SetAlpha( not(pet == self.player.activePet) and module.db.profile.nactivealpha or 1 );
+			if( pet == self.player.activePet ) then
+				_G[frame_name.."Pet"..pet]:SetAlpha(1);
+			else
+				_G[frame_name.."Pet"..pet]:SetAlpha(module.db.profile.nactivealpha);
+			end
 		else
-			_G[self:GetName().."Pet"..pet]:SetAlpha(1);
+			_G[frame_name.."Pet"..pet]:SetAlpha(1);
 		end
+		
+		-- set active background highlight
+		if( module.db.profile.animate_active ) then
+			if( pet == self.player.activePet ) then
+				_G[frame_name.."Pet"..pet].activeBG.animActive:Play();
+			else
+				_G[frame_name.."Pet"..pet].activeBG.animActive:Stop();
+			end
+		else
+			_G[frame_name.."Pet"..pet].activeBG.animActive:Stop();
+		end
+		
 	end
 end
 
@@ -419,11 +450,13 @@ function BattleFrame_Pets_Reorganize_Exec(self, animate) -- self is PT master fr
 	animate = type(animate) == "nil" and true or false;
 	animate = animate and module.db.profile.reorganize_ani and true or false;
 	
+	local frame_name = self:GetName();
+	
 	for i,f in ipairs(self.petFrames) do
 		f:ClearAllPoints();
 		
 		if( i == 1 ) then
-			f:SetPoint("TOPLEFT", self:GetName().."Header", "BOTTOMLEFT", 0, -6);
+			f:SetPoint("TOPLEFT", frame_name.."Header", "BOTTOMLEFT", 0, -6);
 		else
 			f:SetPoint("TOPLEFT", self.petFrames[i - 1], "BOTTOMLEFT", 0, -SPACE_PETS);
 		end
@@ -558,6 +591,11 @@ function PT.BattleFrame_Option_MasterBackground(self)
 	end
 end
 
+-- called by xml and frame scaling options
+function PT.BattleFrame_Option_ApplyScale(self)
+	self:SetScale(module.db.profile.scale);
+end
+
 -----------------------------------
 -- Drag&Drop and Positioning
 -----------------------------------
@@ -679,7 +717,24 @@ function module:GetPositionOptions()
 					mirror = value;
 				end,
 			},
-			spacer2 = { type = "description", name = "", order = 2.1 },
+			scale = {
+				type = "range",
+				name = L["Frame scale"],
+				min = 0.5,
+				max = 2.0,
+				step = 0.05,
+				order = 2.1,
+				get = function()
+					return module.db.profile.scale;
+				end,
+				set = function(_, value)
+					module.db.profile.scale = value;
+					PT.BattleFrame_Option_ApplyScale(_G.PTPlayer);
+					PT.BattleFrame_Option_ApplyScale(_G.PTEnemy);
+					do_mirror(_G.PTEnemy, 1); -- for styling purposes, scaling smells
+				end,
+			},
+			spacer2 = { type = "description", name = "", order = 2.2 },
 			bg = {
 				type = "toggle",
 				name = L["Override color"],
@@ -749,7 +804,7 @@ end
 
 function module:GetOptions()
 	local function is_disabled(info, value)
-		return not module:IsEnabled() and true or not self.db.profile[info[#info - 1].."_use"];
+		return not module:IsEnabled() and true or not self.db.profile[info[#info].."_use"];
 	end
 	
 	return {
@@ -812,36 +867,64 @@ function module:GetOptions()
 				},
 			},
 		},
-		nactivealpha = {
-			name = L["Visibility of currently not active pets"],
+		activepets = {
+			name = L["Active and inactive pet highlightning"],
 			type = "group",
 			inline = true,
 			order = 4,
 			args = {
-				use = {
+				active = {
 					type = "toggle",
-					name = L["Enable"],
-					desc = L["Enable this if you want to change the visibility of not active pets. Set the new value on the right."],
+					name = L["Highlight background of active pets"],
+					desc = L["The background of currently active pets will glow, if this option is activated."],
 					order = 1,
+					get = function()
+						return self.db.profile.animate_active;
+					end,
+					set = function(_, value)
+						self.db.profile.animate_active = value;
+						-- update if currently in battle
+						if( _G.C_PetBattles.IsInBattle() ) then
+							PT.BattleFrame_UpdateActivePetHighlight(_G.PTPlayer);
+							PT.BattleFrame_UpdateActivePetHighlight(_G.PTEnemy);
+						end
+					end,
+					width = "full",
+				},
+				nactivealpha_use = {
+					type = "toggle",
+					name = L["Inactive pet alpha"],
+					desc = L["Enable if you want to override the alpha of inactive pets. Set the new value on the right."],
+					order = 2,
 					get = function()
 						return self.db.profile.nactivealpha_use;
 					end,
 					set = function(_, value)
 						self.db.profile.nactivealpha_use = value;
+						-- update if currently in battle
+						if( _G.C_PetBattles.IsInBattle() ) then
+							PT.BattleFrame_UpdateActivePetHighlight(_G.PTPlayer);
+							PT.BattleFrame_UpdateActivePetHighlight(_G.PTEnemy);
+						end
 					end,
 				},
-				value = {
+				nactivealpha = {
 					type = "range",
 					name = L["Value"],
 					min = 0.1,
 					max = 0.9,
 					step = 0.1,
-					order = 2,
+					order = 3,
 					get = function()
 						return self.db.profile.nactivealpha;
 					end,
 					set = function(_, value)
 						self.db.profile.nactivealpha = value;
+						-- update if currently in battle
+						if( _G.C_PetBattles.IsInBattle() ) then
+							PT.BattleFrame_UpdateActivePetHighlight(_G.PTPlayer);
+							PT.BattleFrame_UpdateActivePetHighlight(_G.PTEnemy);
+						end
 					end,
 					disabled = is_disabled,
 				},

@@ -193,6 +193,34 @@
 			</AnimationGroup>
 		</Animations>
 		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="activeBG" alpha="0">
+					<Color r="1" g="1" b="1" a="0.3" />
+					<Anchors>
+						<Anchor point="LEFT" x="-4" y="0" />
+						<Anchor point="RIGHT" x="2" y="0" />
+						<Anchor point="TOP" x="0" y="4" />
+						<Anchor point="BOTTOM" x="0" y="-4" />
+					</Anchors>
+					<Animations>
+						<AnimationGroup parentKey="animActive">
+							<Alpha change="1" duration="3" order="1" step="0.02" smoothing="IN_OUT" />
+							<Alpha change="-1" duration="3" order="2" step="0.02" smoothing="IN_OUT" />
+							<Scripts>
+								<OnPlay>
+									self:GetParent():SetAlpha(0);
+								</OnPlay>
+								<OnStop>
+									self:GetParent():SetAlpha(0);
+								</OnStop>
+								<OnFinished>
+									self:Play();
+								</OnFinished>
+							</Scripts>
+						</AnimationGroup>
+					</Animations>
+				</Texture>
+			</Layer>
 			<Layer level="ARTWORK">
 				<Texture parentKey="Type" inherits="PTButtonTemplate">
 					<TexCoords left="0.79687500" right="0.49218750" top="0.50390625" bottom="0.65625000" />
@@ -347,6 +375,7 @@
 				
 				PT.BattleFrame_Option_PetIconSide(self);
 				PT.BattleFrame_Option_MasterBackground(self);
+				PT.BattleFrame_Option_ApplyScale(self);
 			</OnShow>
 			<OnEvent>
 				PT.BattleFrame_OnEvent(self, event, ...)
