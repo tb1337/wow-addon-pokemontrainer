@@ -170,15 +170,7 @@
 	<Frame name="PTFramePetTemplate" virtual="true">
 		<Animations>
 			<AnimationGroup parentKey="animHide">
-				<Alpha change="-1" duration="0.5" order="1" />
-				<Scripts>
-					<OnFinished>
-						PT.BattleFrame_Pet_HideFinished(self);
-					</OnFinished>
-				</Scripts>
-			</AnimationGroup>
-			<AnimationGroup parentKey="animHide_h">
-				<Alpha change="-0.5" duration="0.66" order="1" />
+				<Alpha change="-1" duration="0.5" order="1" step="0.02" />
 				<Scripts>
 					<OnFinished>
 						PT.BattleFrame_Pet_HideFinished(self);
@@ -186,19 +178,17 @@
 				</Scripts>
 			</AnimationGroup>
 			<AnimationGroup parentKey="animShow">
-				<Alpha change="1" duration="0.5" order="1" />
+				<Alpha change="1" duration="0.5" order="1" step="0.02" />
 				<Scripts>
+					<OnStop>
+						PT.BattleFrame_Pet_ShowFinished(self);
+					</OnStop>
 					<OnFinished>
 						PT.BattleFrame_Pet_ShowFinished(self);
 					</OnFinished>
-				</Scripts>
-			</AnimationGroup>
-			<AnimationGroup parentKey="animShow_h">
-				<Alpha change="0.5" duration="0.66" order="1" />
-				<Scripts>
-					<OnFinished>
-						PT.BattleFrame_Pet_ShowFinished(self);
-					</OnFinished>
+					<OnUpdate>
+						PT.BattleFrame_Pet_WhilePlaying(self);
+					</OnUpdate>
 				</Scripts>
 			</AnimationGroup>
 		</Animations>
@@ -249,9 +239,6 @@
 				<Size>
 					<AbsDimension x="30" y="30" />
 				</Size>
-				<Anchors>
-					<Anchor point="TOPRIGHT" relativeKey="$parent" relativePoint="TOPLEFT" x="-6" y="0" />
-				</Anchors>
 				<Layers>
 					<Layer level="BACKGROUND">
 						<Texture parentKey="Icon" setAllPoints="true">
@@ -285,7 +272,6 @@
 					</Layer>
 				</Layers>
 			</Button>
-			
 			<Button parentKey="Ability1" id="1" inherits="PTButtonAbilityTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.Type">
@@ -295,7 +281,6 @@
 					</Anchor>
 				</Anchors>
 			</Button>
-			
 			<Button parentKey="Ability2" id="2" inherits="PTButtonAbilityTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.Ability1">
@@ -305,7 +290,6 @@
 					</Anchor>
 				</Anchors>
 			</Button>
-			
 			<Button parentKey="Ability3" id="3" inherits="PTButtonAbilityTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.Ability2">
@@ -322,6 +306,24 @@
 		<Size>
 			<AbsDimension x="98" y="319" />
 		</Size>
+		<Animations>
+			<AnimationGroup parentKey="animHide">
+				<Alpha change="-1" duration="1" order="1" step="0.02" />
+				<Scripts>
+					<OnFinished>
+						self:GetParent():Hide();
+					</OnFinished>
+				</Scripts>
+			</AnimationGroup>
+			<AnimationGroup parentKey="animShow">
+				<Alpha change="1" duration="1" order="1" step="0.02" />
+				<Scripts>
+					<OnFinished>
+						self:GetParent():SetAlpha(1);
+					</OnFinished>
+				</Scripts>
+			</AnimationGroup>
+		</Animations>
 		<Layers>
 			<Layer level="ARTWORK">
 				<Texture parentKey="bg">
@@ -342,6 +344,9 @@
 				self.dragElapsed = 0;
 				self.firstRound = 1;
 				self.animDone = 0;
+				
+				PT.BattleFrame_Option_PetIconSide(self);
+				PT.BattleFrame_Option_MasterBackground(self);
 			</OnShow>
 			<OnEvent>
 				PT.BattleFrame_OnEvent(self, event, ...)

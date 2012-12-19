@@ -14,10 +14,14 @@ L["Preferred combat display"] = true
 -- module FrameCombatDisplay
 L["Display: Frames"] = true
 L["True frame based combat display for Pet Battles and the next generation of Pokemon Trainer. Disable it if you want to use the tooltip based combat display."] = true
-L["Edit positions"] = true
+L["More settings"] = true
 L["You can now move the frames by dragging them around."] = true
 L["Mirror frames"] = true
 L["When moving a battle frame, the enemy frame gets mirrored to the opposite side of the screen."] = true
+L["Left"] = true
+L["Right"] = true
+L["Player: pet icons"] = true
+L["Enemy: pet icons"] = true
 L["Frame-related options"] = true
 L["Auto-resize"] = true
 L["Battle frames are getting resized when players have less than three pets."] = true
