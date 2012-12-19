@@ -15,7 +15,7 @@ _G.PT = PT;
 -- Registering with iLib
 -------------------------------
 
-LibStub("iLib"):Register(AddonName, nil, PT);
+LibStub("iLib"):Register(AddonName);
 
 ----------------------
 -- Variables
