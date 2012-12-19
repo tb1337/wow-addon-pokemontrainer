@@ -204,8 +204,7 @@ do
 end
 
 -- called by xml
-function PT.BattleFrame_OnEvent(self, event, ...)	
-print(event)
+function PT.BattleFrame_OnEvent(self, event, ...)
 	if( event == "PET_BATTLE_OPENING_START" ) then
 		PT:ScanPets();
 		BattleFrame_Resize(self);
@@ -368,14 +367,14 @@ function PT.BattleFrame_UpdateBattleButtons(self)
 		-- iterate through enemy pets and (re-)calculate speed bonuses
 		for enemPet = 1, self.enemy.numPets do
 			-- update speed buttons
-			speed, better_with_flying = PT:GetSpeedBonus( self.player[pet], self.enemy[enemPet] );
+			speed, flying = PT:GetSpeedBonus( self.player[pet], self.enemy[enemPet] );
 			
 			if( speed == PT.BONUS_SPEED_FASTER ) then -- faster
-				_G[frame_name.."Pet"..pet]["Speed"..enemPet]:SetVertexColor(1, 1, 0, 1);
+				_G[frame_name.."Pet"..pet]["Speed"..enemPet]:SetVertexColor(1, 1, 1, 1);
 			elseif( speed == PT.BONUS_SPEED_EQUAL ) then -- equal
 				_G[frame_name.."Pet"..pet]["Speed"..enemPet]:SetVertexColor(0.6, 0.6, 0.6, 1);
 			elseif( speed == PT.BONUS_SPEED_SLOWER ) then -- slower
-				if( better_with_flying ) then -- would be faster with active flying bonus
+				if( flying ) then -- would be faster with active flying bonus
 					_G[frame_name.."Pet"..pet]["Speed"..enemPet]:SetVertexColor(1, 0, 0, 1);
 				else
 					_G[frame_name.."Pet"..pet]["Speed"..enemPet]:SetVertexColor(0.1, 0.1, 0.1, 1);
