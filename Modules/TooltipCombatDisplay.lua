@@ -42,7 +42,6 @@ function module:OnEnable()
 	self:RegisterEvent("PET_BATTLE_PET_CHANGED", "PetBattleChanged");
 	self:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE", "PetBattleChanged");
 	
-	p(module.displayName(), "OnEnable");
 end
 
 function module:OnDisable()
