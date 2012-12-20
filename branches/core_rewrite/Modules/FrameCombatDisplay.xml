@@ -195,7 +195,6 @@
 		<Layers>
 			<Layer level="BACKGROUND">
 				<Texture parentKey="activeBG" alpha="0">
-					<Color r="1" g="1" b="1" a="0.3" />
 					<Anchors>
 						<Anchor point="LEFT" x="-4" y="0" />
 						<Anchor point="RIGHT" x="2" y="0" />
@@ -373,9 +372,7 @@
 				self.firstRound = 1;
 				self.animDone = 0;
 				
-				PT.BattleFrame_Option_PetIconSide(self);
-				PT.BattleFrame_Option_MasterBackground(self);
-				PT.BattleFrame_Option_ApplyScale(self);
+				PT.BattleFrame_Options_Apply(self);
 			</OnShow>
 			<OnEvent>
 				PT.BattleFrame_OnEvent(self, event, ...)
