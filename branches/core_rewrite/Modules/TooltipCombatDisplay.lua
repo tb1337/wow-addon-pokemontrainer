@@ -114,6 +114,11 @@ local function helper_pet_quality(pet)
 	return ("|cff%02x%02x%02x%s|r"):format(color.r * 255, color.g * 255, color.b * 255, pet.name);
 end
 
+local function helper_pet_level(pet, enemy)
+	local r, g, b = PT:GetDifficultyColor(enemy, pet);
+	return ("|cff%02x%02x%02x%s|r"):format(r * 255, g * 255, b * 255, pet.level);
+end
+
 local function helper_ability_cd(side, pet, ab, abName)
 	local available, cdleft = PT:GetAbilityCooldown(side, pet, ab);
 	
@@ -213,7 +218,10 @@ function module:UpdateTooltip(tip, side, player, enemy)
 			tip:AddSeparator();
 		end
 		
-		line = tip:AddLine( helper_pettype_icon(player[pet]), helper_pet_quality(player[pet]) );
+		line = tip:AddLine(
+			helper_pettype_icon(player[pet]),
+			helper_pet_quality(player[pet]).."  "..helper_pet_level(player[pet], enemy[enemy.activePet])
+		);
 		
 		for enemPet = 1, enemy.numPets do
 			speed, flying = PT:GetSpeedBonus( player[pet], enemy[enemPet] );
