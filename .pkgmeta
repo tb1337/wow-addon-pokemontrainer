@@ -6,8 +6,6 @@ externals:
     url: svn://svn.wowace.com/wow/callbackhandler/mainline/trunk
   Libs/LibStub:
     url: svn://svn.wowace.com/wow/libstub/mainline/trunk
-  Libs/LibTourist-3.0:
-    url: svn://svn.wowace.com/wow/libtourist-3-0/mainline/trunk
   Libs/LibPetJournal-2.0:
     url: http://hg.curseforge.net/wow/libpetjournal-2-0/mainline
   Libs/AceAddon-3.0:
@@ -32,5 +30,4 @@ externals:
 optional-dependencies:
   - ace3
   - ilib
-  - libtourist-3-0
   - libpetjournal-2-0

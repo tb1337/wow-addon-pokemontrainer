@@ -3,7 +3,7 @@
 -----------------------------------
 
 local AddonName = ...;
-local PT = LibStub("AceAddon-3.0"):NewAddon(select(2, ...), AddonName, "AceEvent-3.0", "AceTimer-3.0");
+local PT = LibStub("AceAddon-3.0"):NewAddon(select(2, ...), AddonName, "AceEvent-3.0");
 
 local L = LibStub("AceLocale-3.0"):GetLocale(AddonName);
 
@@ -135,6 +135,24 @@ function PT:GetSpeedBonus(pet1, pet2)
 	return result, better_with_flying;
 end
 
+-- COLORTABLE (comparision our level against enemy level)
+-- Our table differs from the blizzard pet level zone coloring (WorldMapFrame.lua)
+-- The reason is that we must play safe, that means Blizzards color table is weird while displaying pet battles.
+-- If the enemys level would be 2 higher than yours, it said the enemy has normal difficulty while you have hard difficulty.
+-- In my opinion, that is not right. My concept: normal<->normal, hard<->easy, easy<->hard, trivial<->very hard, very hard<->trivial
+--					we								|		blizzard
+-------------------------------------------------------------
+--	> 9												|		trivial (grey)
+--  > 4			trivial (grey)		|		
+--	> 3												|		easy (green)
+--	> 2			easy (green)			|		
+--	> 1												|		normal (yellow)
+--	==			normal (yellow)		|		
+--	< 1												|		hard (orange)
+--	< 2			hard (orange)			|		
+--	< 3												|		very hard (red)
+--	< 4			very hard (red)		|		
+-------------------------------------------------------------
 -- RETURN
 -- r, g, b:		self-explaining
 function PT:GetDifficultyColor(pet1, pet2)
@@ -148,11 +166,20 @@ function PT:GetDifficultyColor(pet1, pet2)
 	assert(type(pet1) == "number");
 	assert(type(pet2) == "number");
 	
-	-- at this point, we use the zone coloring provided by LibTourist, because it's Blizz-like
-	-- let Tourist do the math, we return the results :)
-	-- if the enemy pet is level 15, our "fake" zone is 15-15
-	local r, g, b = LibStub("LibTourist-3.0"):CalculateLevelColor(pet2, pet2, pet1);
-	return r, g, b;
+	if( (pet2 - pet1) <= -4 ) then
+		pet2 = pet2 - 4; -- leaps over the big range of green difficulties and colors it trivial
+	end
+	
+	local color;
+	if( pet1 < pet2 ) then
+		color = _G.GetRelativeDifficultyColor(pet1, pet2 + 1);
+	elseif( pet1 > pet2 ) then
+		color = _G.GetRelativeDifficultyColor(pet1 + 1, pet2);
+	else
+		color = _G.QuestDifficultyColors["difficult"];
+	end
+	
+	return color.r, color.g, color.b;
 end
 
 -- RETURN
