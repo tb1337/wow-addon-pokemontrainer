@@ -40,6 +40,9 @@ function module:OnInitialize()
 			scale = 1,
 			resize = true,
 			animate_active = false,
+			animate_active_r = 0.99,
+			animate_active_g = 0.82,
+			animate_active_b = 0,
 			bg = false,
 			bg_r = 0.30,
 			bg_g = 0.30,
@@ -133,10 +136,14 @@ local function BattleFrame_Resize(self)
 		return;
 	end
 	
-	local y = FRAME_LINE_HEIGHT; -- header frame  
+	local frame_name = self:GetName();
+	
 	local pet_y;
+	local y = FRAME_LINE_HEIGHT; -- header frame  
+	
+	local x = 1 + (self.enemy.numPets + 1) * (FRAME_BUTTON_WIDTH + SPACE_HORIZONTAL) - SPACE_HORIZONTAL;
    
-	for pet = 1, 3 do
+	for pet = 1, PT.MAX_COMBAT_PETS do
   	if( not(pet > self.player.numPets) ) then
     	pet_y = FRAME_LINE_HEIGHT; -- type and speed icons
          
@@ -145,11 +152,12 @@ local function BattleFrame_Resize(self)
 			end
          
 			y = y + pet_y + SPACE_PETS;
-			_G[self:GetName().."Pet"..pet]:SetHeight(pet_y);
+			_G[frame_name.."Pet"..pet]:SetWidth(x);
+			_G[frame_name.."Pet"..pet]:SetHeight(pet_y);
 		end
 	end
-   
-	self:SetWidth((self.enemy.numPets + 1) * (FRAME_BUTTON_WIDTH + SPACE_HORIZONTAL) - SPACE_HORIZONTAL);
+  
+	self:SetWidth(x);
 	self:SetHeight(y);
 end
 
@@ -568,30 +576,36 @@ local mirrors = {
 	BOTTOM = "BOTTOM",
 };
 
--- called by Positioning and BattleFrame_OnShow (xml)
--- this function must be placed here to have access to
-function PT.BattleFrame_Option_PetIconSide(self)
+-- called by xml and configuration window
+function PT.BattleFrame_Options_Apply(self)
+	local frame_name = self:GetName();
+	
 	local icon;
-	local value = module.db.profile["peticon_"..self:GetName()];
+	local value = module.db.profile["peticon_"..frame_name];
 	
 	for pet = 1, PT.MAX_COMBAT_PETS do
-		icon = _G[self:GetName().."Pet"..pet].Button;
+		-- adjust pet icon anchors
+		icon = _G[frame_name.."Pet"..pet].Button;
 		icon:ClearAllPoints();
 		icon:SetPoint(mirrors[value], icon:GetParent(), value, (value == "TOPLEFT" and -6 or 4), 0);
+		
+		-- adjust active highlight colors
+		_G[frame_name.."Pet"..pet].activeBG:SetTexture(
+			module.db.profile.animate_active_r,
+			module.db.profile.animate_active_g,
+			module.db.profile.animate_active_b,
+			0.2 -- the alpha is not adjustable
+		);
 	end
-end
-
--- called by recoloring and BattleFrame_OnShow (xml)
-function PT.BattleFrame_Option_MasterBackground(self)
+	
+	-- adjust frame background colors
 	if( module.db.profile.bg ) then
 		self.bg:SetTexture(module.db.profile.bg_r, module.db.profile.bg_g, module.db.profile.bg_b, module.db.profile.bg_a);
 	else
 		self.bg:SetTexture(0, 0, 0, 0.4);
 	end
-end
-
--- called by xml and frame scaling options
-function PT.BattleFrame_Option_ApplyScale(self)
+	
+	-- adjust frame scale
 	self:SetScale(module.db.profile.scale);
 end
 
@@ -691,7 +705,7 @@ function module:GetPositionOptions()
 	
 	local function set_pet_icon(info, value)
 		module.db.profile["peticon_"..info.arg] = value;
-		PT.BattleFrame_Option_PetIconSide(_G[info.arg]);
+		PT.BattleFrame_Options_Apply(_G[info.arg]);
 	end
 	
 	local options = {
@@ -728,8 +742,8 @@ function module:GetPositionOptions()
 				end,
 				set = function(_, value)
 					module.db.profile.scale = value;
-					PT.BattleFrame_Option_ApplyScale(_G.PTPlayer);
-					PT.BattleFrame_Option_ApplyScale(_G.PTEnemy);
+					PT.BattleFrame_Options_Apply(_G.PTPlayer);
+					PT.BattleFrame_Options_Apply(_G.PTEnemy);
 					do_mirror(_G.PTEnemy, 1); -- for styling purposes, scaling smells
 				end,
 			},
@@ -744,8 +758,8 @@ function module:GetPositionOptions()
 				end,
 				set = function(_, value)
 					module.db.profile.bg = value;
-					PT.BattleFrame_Option_MasterBackground(_G.PTPlayer);
-					PT.BattleFrame_Option_MasterBackground(_G.PTEnemy);
+					PT.BattleFrame_Options_Apply(_G.PTPlayer);
+					PT.BattleFrame_Options_Apply(_G.PTEnemy);
 				end,
 			},
 			bg_color = {
@@ -761,8 +775,8 @@ function module:GetPositionOptions()
 					module.db.profile.bg_g = g;
 					module.db.profile.bg_b = b;
 					module.db.profile.bg_a = a;
-					PT.BattleFrame_Option_MasterBackground(_G.PTPlayer);
-					PT.BattleFrame_Option_MasterBackground(_G.PTEnemy);
+					PT.BattleFrame_Options_Apply(_G.PTPlayer);
+					PT.BattleFrame_Options_Apply(_G.PTEnemy);
 				end,
 			},
 			spacer3 = { type = "description", name = "", order = 4.1 },
@@ -888,7 +902,21 @@ function module:GetOptions()
 							PT.BattleFrame_UpdateActivePetHighlight(_G.PTEnemy);
 						end
 					end,
-					width = "full",
+				},
+				active_color = {
+					type = "color",
+					name = _G.COLOR,
+					order = 1.1,
+					get = function()
+						return self.db.profile.animate_active_r, self.db.profile.animate_active_g, self.db.profile.animate_active_b;
+					end,
+					set = function(_, r, g, b, a)
+						self.db.profile.animate_active_r = r;
+						self.db.profile.animate_active_g = g;
+						self.db.profile.animate_active_b = b;
+						PT.BattleFrame_Options_Apply(_G.PTPlayer);
+						PT.BattleFrame_Options_Apply(_G.PTEnemy);
+					end,
 				},
 				nactivealpha_use = {
 					type = "toggle",
