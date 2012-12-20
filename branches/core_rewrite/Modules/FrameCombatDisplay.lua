@@ -3,9 +3,10 @@
 -----------------------------------
 
 local AddonName, PT = ...;
-local module = PT:NewModule("FrameCombatDisplay");
+local module = PT:NewModule("FrameCombatDisplay", "AceHook-3.0");
 
 local L = LibStub("AceLocale-3.0"):GetLocale(AddonName);
+local AceTimer = LibStub("AceTimer-3.0"); -- we don't embed it since its just used by some hooks
 
 local _G = _G;
 
@@ -21,12 +22,17 @@ module.noEnableButton = true;
 local FRAME_PLAYER = "PTPlayer";
 local FRAME_ENEMY  = "PTEnemy";
 
+local BattleFrames = {}; -- if a battle frame is loaded, it adds itself into this table (simply for iterating over battle frames)
+
 -- xml values
 local FRAME_BUTTON_WIDTH = 22;
 local FRAME_LINE_HEIGHT = 22;
 local SPACE_PETS = 5;
 local SPACE_ABILITIES = 2;
 local SPACE_HORIZONTAL = 3;
+
+local FONT_LEVEL_DEFAULT = 13;
+local FONT_LEVEL_ADJUST = 8;
 
 -------------------------
 -- Module Handling
@@ -77,9 +83,8 @@ end
 function module:OnEnable()
 	local frame;
 	
-	for i = 1, 2 do -- too lazy to put stuff into a separate function
-		frame = _G[i == 1 and FRAME_PLAYER or FRAME_ENEMY];
-		
+	-- register events
+	for _,frame in ipairs(BattleFrames) do
 		frame:RegisterEvent("PET_BATTLE_OPENING_START");
 		frame:RegisterEvent("PET_BATTLE_OVER");
 		frame:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
@@ -94,14 +99,21 @@ function module:OnEnable()
 			end
 		end
 	end
+	
+	-- setup hooks
+	self:SecureHookScript(_G.PetBattleFrame.BottomFrame.PetSelectionFrame, "OnShow", "Hook_PetSelection_Show");
+	self:SecureHookScript(_G.PetBattleFrame.BottomFrame.PetSelectionFrame, "OnHide", "Hook_PetSelection_Hide");
+	for pet = 1, PT.MAX_COMBAT_PETS do
+		self:SecureHookScript(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnEnter", "Hook_PetSelection_Pet_Enter");
+		self:SecureHookScript(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnLeave", "Hook_PetSelection_Pet_Leave");
+	end
 end
 
 function module:OnDisable()
 	local frame;
 	
-	for i = 1, 2 do -- too lazy to put stuff into a separate function
-		frame = _G[i == 1 and FRAME_PLAYER or FRAME_ENEMY];
-		
+	-- unregister events
+	for _,frame in ipairs(BattleFrames) do
 		frame:UnregisterEvent("PET_BATTLE_OPENING_START");
 		frame:UnregisterEvent("PET_BATTLE_OVER");
 		frame:UnregisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
@@ -115,6 +127,94 @@ function module:OnDisable()
 				_G[frame.petFrames[pet]:GetName()]["Ability"..ab]:UnregisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
 			end
 		end
+	end
+	
+	-- unhook hooks
+	self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame, "OnShow");
+	self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame, "OnHide");
+	for pet = 1, PT.MAX_COMBAT_PETS do
+		self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnEnter");
+		self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnLeave");
+	end
+end
+
+---------------
+-- Hooks
+---------------
+
+-- This chunk of hooks makes PT interacting with the default PetBattle UI Pet Selection Frame
+do
+	-- Sets all player levels to default size excepting the current pet
+	local function adjust_player_fonts(current_pet)
+		local font, size, outline;
+		local fs;
+		
+		for pet = 1, PT.PlayerInfo.numPets do
+			fs = _G["PTPlayerPet"..pet].Button.Level;
+			font, size, outline = fs:GetFont();
+			fs:SetFont(font, FONT_LEVEL_DEFAULT + (pet == current_pet and FONT_LEVEL_ADJUST or 0), outline);
+		end
+	end
+	
+	-- Sets all enemy levels to either default size or adjusted size
+	local function adjust_enemy_fonts(bigger)
+		local font, size, outline;
+		local fs;
+		
+		for pet = 1, PT.EnemyInfo.numPets do
+			fs = _G["PTEnemyPet"..pet].Button.Level;
+			font, size, outline = fs:GetFont();
+			fs:SetFont(font, FONT_LEVEL_DEFAULT + (bigger and FONT_LEVEL_ADJUST or 0), outline);
+		end
+	end
+	
+	-- colorizes all enemy levels based on the given level (= hovered player pet level)
+	local function adjust_color(level)
+		local r, g, b;
+		
+		for pet = 1, PT.EnemyInfo.numPets do
+			r, g, b = PT:GetDifficultyColor(level, PT.EnemyInfo[pet].level);
+			_G["PTEnemyPet"..pet].Button.Level:SetTextColor(r, g, b, 1);
+		end
+	end
+	
+	-- called when PetSelection is shown
+	function module:Hook_PetSelection_Show(frame)
+		adjust_enemy_fonts(true);
+		adjust_player_fonts(PT.PlayerInfo.activePet);
+	end
+	
+	-- called when PetSelection is hidden
+	function module:Hook_PetSelection_Hide(frame)
+		adjust_enemy_fonts(false);
+		adjust_player_fonts(-1); -- fake pet index to get all fonts smaller :D
+	end
+	
+	local timer;
+	
+	-- called when a pet is hovered on the PetSelection frame
+	function module:Hook_PetSelection_Pet_Enter(frame)
+		local pet = frame.petIndex;
+		adjust_color(PT.PlayerInfo[pet].level);
+		adjust_player_fonts(frame.petIndex);
+		
+		if( timer ) then
+			AceTimer.CancelTimer(module, timer);
+		end
+	end
+	
+	-- called when the timer hits null
+	local function real_leave()
+		local pet = PT.PlayerInfo.activePet;
+		adjust_color(PT.PlayerInfo[pet].level);
+		adjust_player_fonts(pet);
+		timer = nil;
+	end
+	
+	-- called when a pet is not hovered anymore on the PetSelection frame
+	-- the reason for the timer is a delayed reset to defaults
+	function module:Hook_PetSelection_Pet_Leave(frame)
+		timer = AceTimer.ScheduleTimer(module, real_leave, 0.2);
 	end
 end
 
@@ -197,6 +297,9 @@ do
 			self.player = PT.EnemyInfo;
 			self.enemy  = PT.PlayerInfo;
 		end
+		
+		-- add self to BattleFrames
+		table.insert(BattleFrames, self);
 		
 		-- animations
 		self.petFrames = {
