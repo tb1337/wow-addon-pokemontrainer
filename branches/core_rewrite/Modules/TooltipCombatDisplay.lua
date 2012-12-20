@@ -6,6 +6,7 @@ local AddonName, PT = ...;
 local module = PT:NewModule("TooltipCombatDisplay", "AceEvent-3.0");
 
 local L = LibStub("AceLocale-3.0"):GetLocale(AddonName);
+local AceTimer = LibStub("AceTimer-3.0"); -- we don't embed it since its just used by the config window...
 
 local _G = _G;
 
@@ -66,14 +67,15 @@ end
 -------------------------
 
 do
-	local function update_player(tip) module:UpdateTooltip(tip, PT.PLAYER, PT.PlayerInfo, PT.EnemyInfo) end
-	local function update_enemy(tip)  module:UpdateTooltip(tip, PT.ENEMY, PT.EnemyInfo, PT.PlayerInfo) end
+	local function update_player(tip) module:UpdateTooltip(tip, PT.PLAYER, PT.PlayerInfo, PT.EnemyInfo)  end
+	local function update_enemy(tip)  module:UpdateTooltip(tip, PT.ENEMY,  PT.EnemyInfo,  PT.PlayerInfo) end
 	
 	function module:PetBattleStart(event)
-		local tip;
 		if( event ~= "NOSCAN" ) then -- developer stuff
 			PT:ScanPets();
 		end -- dev stuff
+		
+		local tip;
 		
 		tip = self:GetTooltip("Player", update_player);
 		tip:SetPoint("TOPLEFT", _G.UIParent, "TOPLEFT", self.db.profile.pos_x, -self.db.profile.pos_y);
@@ -135,11 +137,11 @@ function cell_prototype:InitializeCell()
 	
 	local icon = self:CreateTexture(nil, "OVERLAY", "PTTextureSpeedTemplate");
 	self.icon = icon;
-	icon:ClearAllPoints(); -- there are preset points for some reason
-	icon:SetPoint("LEFT", self, "LEFT", 5, 0);
-	icon:SetPoint("RIGHT", self, "RIGHT", -5, 0);
-	icon:SetPoint("TOP", self, "TOP", 0, -5);
-	icon:SetPoint("BOTTOM", self, "BOTTOM", 0, 5);
+	icon:ClearAllPoints(); -- there are preset points cause of set in xml :D
+	icon:SetPoint("LEFT", 5, 0);
+	icon:SetPoint("RIGHT", -5, 0);
+	icon:SetPoint("TOP", 0, -5);
+	icon:SetPoint("BOTTOM", 0, 5);
 end
 
 function cell_prototype:SetupCell(tooltip, speed, justification, font, r, g, b)
@@ -253,13 +255,17 @@ local function dummy_tooltip_hide()
 	timer = nil;
 end
 
-local function dummy_tooltip_show()
+local function dummy_tooltip_show()	
 	module:PetBattleStart("NOSCAN");
 	
-	if( timer ) then
-		LibStub("AceTimer-3.0").CancelTimer(module, timer);
+	if( _G.C_PetBattles.IsInBattle() ) then
+		return;
 	end
-	timer = LibStub("AceTimer-3.0").ScheduleTimer(module, dummy_tooltip_hide, 5);
+	
+	if( timer ) then
+		AceTimer.CancelTimer(module, timer);
+	end
+	timer = AceTimer.ScheduleTimer(module, dummy_tooltip_hide, 5);
 end
 
 function module:GetOptions()	
