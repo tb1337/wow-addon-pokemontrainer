@@ -919,8 +919,8 @@ end
 ----------------------
 
 function module:GetOptions()
-	local function is_disabled(info, value)
-		return not module:IsEnabled() and true or not self.db.profile[info[#info].."_use"];
+	local function is_disabled(info)
+		return not module:IsEnabled() and true or not module.db.profile[info[#info].."_use"];
 	end
 	
 	return {
@@ -968,7 +968,7 @@ function module:GetOptions()
 						self.db.profile.reorganize_use = value;
 					end,
 				},
-				animate = {
+				reorganize = {
 					type = "toggle",
 					name = L["Animate reorganizing"],
 					desc = L["Reorganizing will take place with a cool animation."],
