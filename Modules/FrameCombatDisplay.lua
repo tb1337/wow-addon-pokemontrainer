@@ -333,7 +333,7 @@ function module.BattleFrame_OnEvent(self, event, ...)
 		module.BattleFrame_Initialize(self);
 		module.BattleFrame_UpdateBattleButtons(self);
 		module.BattleFrame_UpdateActivePetHighlight(self);
-		BattleFrame_Pets_Reorganize_Init(self, false);
+		module.BattleFrame_Pets_Reorganize_Init(self, false);
 		self:FadeIn();
 	elseif( event == "PET_BATTLE_OVER" ) then
 		self:FadeOut();
@@ -349,7 +349,7 @@ function module.BattleFrame_OnEvent(self, event, ...)
 			if( self.firstRound ) then
 				self.firstRound = nil;
 			else
-				BattleFrame_Pets_Reorganize_Init(self);
+				module.BattleFrame_Pets_Reorganize_Init(self);
 			end
 		end
 	elseif( event == "PET_BATTLE_HEALTH_CHANGED" or event == "PET_BATTLE_MAX_HEALTH_CHANGED" ) then
@@ -567,7 +567,7 @@ function module.BattleFrame_UpdateActivePetHighlight(self)
 	end
 end
 
-function BattleFrame_Pets_Reorganize_Exec(self, animate) -- self is PT master frame
+function module.BattleFrame_Pets_Reorganize_Exec(self, animate) -- self is PT master frame
 	animate = type(animate) == "nil" and true or false;
 	animate = animate and module.db.profile.reorganize_ani and true or false;
 	
@@ -605,7 +605,7 @@ local function pets_sort_dead_last(pet1, pet2)
 	end
 end
 
-function BattleFrame_Pets_Reorganize_Init(self, animate) -- self is PT master frame
+function module.BattleFrame_Pets_Reorganize_Init(self, animate) -- self is PT master frame
 	animate = (type(animate) == "nil" or animate == true) and true or false; -- nil/true = animate, false = do not animate
 	
 	-- may be disabled in configuration
@@ -637,7 +637,7 @@ function BattleFrame_Pets_Reorganize_Init(self, animate) -- self is PT master fr
 	table.insert(self.petFrames, 1, frame);
 	
 	if( not animate ) then
-		BattleFrame_Pets_Reorganize_Exec(self, animate);
+		module.BattleFrame_Pets_Reorganize_Exec(self, animate);
 	end
 end
 
@@ -652,7 +652,7 @@ function module.BattleFrame_Pet_HideFinished(self) -- self is animation frame
 	-- if all frames are hidden, the reorganizing shall begin
 	if( master.animDone == master.player.numPets ) then
 		master.animDone = 0;
-		BattleFrame_Pets_Reorganize_Exec(master);
+		module.BattleFrame_Pets_Reorganize_Exec(master);
 	end
 end
 
