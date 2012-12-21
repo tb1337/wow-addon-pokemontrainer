@@ -95,7 +95,7 @@
 				
 				_G.PetBattleAbilityTooltip_SetAbility(master:GetID(), parent:GetID(), self:GetID());
 				
-				if( PT.BattleFrame_GetTooltipPosition() ) then
+				if( PT:GetModule("FrameCombatDisplay").GetTooltipPosition() ) then
 					_G.PetBattleAbilityTooltip_Show("TOPLEFT", self, "RIGHT", 10, 0);
 				else
 					_G.PetBattleAbilityTooltip_Show("TOPRIGHT", self, "LEFT", -10, 0);
@@ -173,7 +173,7 @@
 				<Alpha change="-1" duration="0.5" order="1" step="0.02" />
 				<Scripts>
 					<OnFinished>
-						PT.BattleFrame_Pet_HideFinished(self);
+						PT:GetModule("FrameCombatDisplay").BattleFrame_Pet_HideFinished(self);
 					</OnFinished>
 				</Scripts>
 			</AnimationGroup>
@@ -181,13 +181,13 @@
 				<Alpha change="1" duration="0.5" order="1" step="0.02" />
 				<Scripts>
 					<OnStop>
-						PT.BattleFrame_Pet_ShowFinished(self);
+						PT:GetModule("FrameCombatDisplay").BattleFrame_Pet_ShowFinished(self);
 					</OnStop>
 					<OnFinished>
-						PT.BattleFrame_Pet_ShowFinished(self);
+						PT:GetModule("FrameCombatDisplay").BattleFrame_Pet_ShowFinished(self);
 					</OnFinished>
 					<OnUpdate>
-						PT.BattleFrame_Pet_WhilePlaying(self);
+						PT:GetModule("FrameCombatDisplay").BattleFrame_Pet_WhilePlaying(self);
 					</OnUpdate>
 				</Scripts>
 			</AnimationGroup>
@@ -365,23 +365,23 @@
 		</Layers>
 		<Scripts>
 			<OnLoad>
-				PT.BattleFrame_OnLoad(self);
+				PT:GetModule("FrameCombatDisplay").BattleFrame_OnLoad(self);
 			</OnLoad>
 			<OnShow>
 				self.dragElapsed = 0;
 				self.firstRound = 1;
 				self.animDone = 0;
 				
-				PT.BattleFrame_Options_Apply(self);
+				PT:GetModule("FrameCombatDisplay").BattleFrame_Options_Apply(self);
 			</OnShow>
 			<OnEvent>
-				PT.BattleFrame_OnEvent(self, event, ...)
+				PT:GetModule("FrameCombatDisplay").BattleFrame_OnEvent(self, event, ...)
 			</OnEvent>
 			<OnDragStart>
-				PT.BattleFrame_StartDrag(self);
+				PT:GetModule("FrameCombatDisplay").BattleFrame_StartDrag(self);
 			</OnDragStart>	
 			<OnDragStop>
-				PT.BattleFrame_StopDrag(self);
+				PT:GetModule("FrameCombatDisplay").BattleFrame_StopDrag(self);
 			</OnDragStop>			
 		</Scripts>
 		<Frames>

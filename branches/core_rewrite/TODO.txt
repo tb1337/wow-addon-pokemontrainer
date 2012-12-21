@@ -1,7 +1,5 @@
 grdn:
 - Permanently set an eye on the Core/pets_scanned var which has currently no need
-- Eventually move BattleFrame_GetTooltipPosition into Core if Possible needs it too
-- Permanently remove the contents of Developer.lua from public PT packages
 
 Possible:
 - 
