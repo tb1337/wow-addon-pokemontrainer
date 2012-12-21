@@ -127,13 +127,14 @@ function module:OnDisable()
 	end
 	
 	-- unhook hooks
-	self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame, "OnShow");
-	self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame, "OnHide");
-	for pet = 1, PT.MAX_COMBAT_PETS do
-		self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnEnter");
-		self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnLeave");
-		self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnClick");
-	end
+	self:UnhookAll();
+	--self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame, "OnShow");
+	--self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame, "OnHide");
+	--for pet = 1, PT.MAX_COMBAT_PETS do
+	--	self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnEnter");
+	--	self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnLeave");
+	--	self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnClick");
+	--end
 end
 
 ---------------
