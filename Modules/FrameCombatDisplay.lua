@@ -19,12 +19,12 @@ module.displayName = function() return (module:IsEnabled() and "|cff00ff00%s|r" 
 module.desc = L["True frame based combat display for Pet Battles and the next generation of Pokemon Trainer. Disable it if you want to use the tooltip based combat display."];
 module.noEnableButton = true;
 
-local FRAME_PLAYER = "PTPlayer";
-local FRAME_ENEMY  = "PTEnemy";
-
 local BattleFrames = {}; -- if a battle frame is loaded, it adds itself into this table (simply for iterating over battle frames)
 
 -- xml values
+local FRAME_PLAYER = "PTPlayer";
+local FRAME_ENEMY  = "PTEnemy";
+
 local FRAME_BUTTON_WIDTH = 22;
 local FRAME_LINE_HEIGHT = 22;
 local SPACE_PETS = 5;
@@ -242,15 +242,15 @@ local function BattleFrame_Resize(self)
 	local y = FRAME_LINE_HEIGHT; -- header frame  
 	
 	local x = 1 + (self.enemy.numPets + 1) * (FRAME_BUTTON_WIDTH + SPACE_HORIZONTAL) - SPACE_HORIZONTAL;
-   
+	
 	for pet = 1, PT.MAX_COMBAT_PETS do
   	if( not(pet > self.player.numPets) ) then
     	pet_y = FRAME_LINE_HEIGHT; -- type and speed icons
-         
+			
 			for ab = 1, self.player[pet].numAbilities do
       	pet_y = pet_y + FRAME_LINE_HEIGHT + SPACE_ABILITIES;
 			end
-         
+			
 			y = y + pet_y + SPACE_PETS;
 			_G[frame_name.."Pet"..pet]:SetWidth(x);
 			_G[frame_name.."Pet"..pet]:SetHeight(pet_y);
@@ -264,7 +264,7 @@ end
 -- returns true if on the left side of the screen, false otherwise
 -- called by xml for displaying tooltips
 -- EVENTUALLY convert this to a core function since Possible may need it too
-function PT.BattleFrame_GetTooltipPosition()
+function module.GetTooltipPosition()
 	return _G.GetCursorPosition() < (_G.GetScreenWidth() * _G.UIParent:GetEffectiveScale() / 2);
 end
 
@@ -285,7 +285,7 @@ do
 	end
 	
 	-- called by xml
-	function PT.BattleFrame_OnLoad(self)
+	function module.BattleFrame_OnLoad(self)
 		local frame_name = self:GetName();
 		self:SetID( frame_name == FRAME_PLAYER and PT.PLAYER or PT.ENEMY );
 		
@@ -315,24 +315,24 @@ do
 end
 
 -- called by xml
-function PT.BattleFrame_OnEvent(self, event, ...)
+function module.BattleFrame_OnEvent(self, event, ...)
 	if( event == "PET_BATTLE_OPENING_START" ) then
 		PT:ScanPets();
 		BattleFrame_Resize(self);
-		PT.BattleFrame_Initialize(self);
-		PT.BattleFrame_UpdateBattleButtons(self);
-		PT.BattleFrame_UpdateActivePetHighlight(self);
+		module.BattleFrame_Initialize(self);
+		module.BattleFrame_UpdateBattleButtons(self);
+		module.BattleFrame_UpdateActivePetHighlight(self);
 		BattleFrame_Pets_Reorganize_Init(self, false);
 		self:FadeIn();
 	elseif( event == "PET_BATTLE_OVER" ) then
 		self:FadeOut();
 	elseif( event == "PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE" ) then
 		PT:RoundUpPets();
-		PT.BattleFrame_UpdateBattleButtons(self);
+		module.BattleFrame_UpdateBattleButtons(self);
 		--PT.BattleFrame_UpdateActivePetHighlight(self);
 	elseif( event == "PET_BATTLE_PET_CHANGED" ) then
 		PT:RoundUpPets();
-		PT.BattleFrame_UpdateActivePetHighlight(self);
+		module.BattleFrame_UpdateActivePetHighlight(self);
 		
 		if( select(1, ...) == self:GetID() ) then
 			if( self.firstRound ) then
@@ -345,7 +345,7 @@ function PT.BattleFrame_OnEvent(self, event, ...)
 		local side, pet = ...;
 		if( side == self:GetID() and pet == self.player.activePet ) then
 			PT:RoundUpPets();
-			PT.BattleFrame_UpdateHealthState(self);
+			module.BattleFrame_UpdateHealthState(self);
 		end
 	else
 		--@do-not-package@
@@ -392,7 +392,7 @@ end
 ----------------------------------
 
 -- called by EH when a battle starts
-function PT.BattleFrame_Initialize(self)	
+function module.BattleFrame_Initialize(self)	
 	local enemy = get_enemy(self);
 	local color;
 	
@@ -417,7 +417,7 @@ function PT.BattleFrame_Initialize(self)
 			BattleFrame_SetColumnVisibility(enemy, pet, "Show");
 			
 			-- setup ability buttons
-			PT.BattleFrame_SetupAbilityButtons(self, pet);
+			module.BattleFrame_SetupAbilityButtons(self, pet);
 			
 			-- display pet frame
 			_G[frame_name.."Pet"..pet]:Show();
@@ -431,14 +431,14 @@ function PT.BattleFrame_Initialize(self)
 	end
 	
 	-- set health state
-	PT.BattleFrame_UpdateHealthState(self);
+	module.BattleFrame_UpdateHealthState(self);
 end
 
 ---------------------------------------------
 -- Battle Frame: Setup Ability Buttons
 ---------------------------------------------
 
-function PT.BattleFrame_SetupAbilityButtons(self, pet)
+function module.BattleFrame_SetupAbilityButtons(self, pet)
 	local abID, abName, abIcon;
 
 	for ab = 1, PT.MAX_PET_ABILITY do
@@ -452,7 +452,7 @@ function PT.BattleFrame_SetupAbilityButtons(self, pet)
 			BattleFrame_SetRowVisibility(self, pet, ab, "Show");
 			
 			-- setup vulnerability bonus buttons
-			PT.BattleFrame_SetupVulnerabilityButtons(self, pet, ab);
+			module.BattleFrame_SetupVulnerabilityButtons(self, pet, ab);
 		else
 			-- hide ability row on self
 			BattleFrame_SetRowVisibility(self, pet, ab, "Hide");
@@ -460,7 +460,7 @@ function PT.BattleFrame_SetupAbilityButtons(self, pet)
 	end
 end
 
-function PT.BattleFrame_SetupVulnerabilityButtons(self, pet, ab)
+function module.BattleFrame_SetupVulnerabilityButtons(self, pet, ab)
 	local abID, abName, abIcon, abMaxCD, abDesc, abNumTurns, abType, noStrongWeak = _G.C_PetBattles.GetAbilityInfoByID( self.player[pet]["ab"..ab] );
 	
 	for enemPet = 1, self.enemy.numPets do
@@ -468,7 +468,7 @@ function PT.BattleFrame_SetupVulnerabilityButtons(self, pet, ab)
 	end
 end
 
-function PT.BattleFrame_UpdateBattleButtons(self)
+function module.BattleFrame_UpdateBattleButtons(self)
 	local speed, flying;
 	local available, cdleft;
 	
@@ -495,7 +495,7 @@ function PT.BattleFrame_UpdateBattleButtons(self)
 	end -- end for pet
 end
 
-function PT.BattleFrame_UpdateHealthState(self)
+function module.BattleFrame_UpdateHealthState(self)
 	local enemy = get_enemy(self);
 	
 	local frame_name = self:GetName();
@@ -520,7 +520,7 @@ end
 -- Highlighting, Reorganizing, Animation Functions
 ---------------------------------------------------------
 
-function PT.BattleFrame_UpdateActivePetHighlight(self)
+function module.BattleFrame_UpdateActivePetHighlight(self)
 	local r, g, b;
 	
 	local frame_name = self:GetName();
@@ -575,7 +575,7 @@ function BattleFrame_Pets_Reorganize_Exec(self, animate) -- self is PT master fr
 			--f["animShow"..(f:GetID() == self.player.activePet and "" or "_h")]:Play();
 			f.animShow:Play();
 		else
-			PT.BattleFrame_Pet_ShowFinished(f.animShow); -- dummy
+			module.BattleFrame_Pet_ShowFinished(f.animShow); -- dummy
 		end
 	end
 end
@@ -631,7 +631,7 @@ function BattleFrame_Pets_Reorganize_Init(self, animate) -- self is PT master fr
 end
 
 -- called by xml
-function PT.BattleFrame_Pet_HideFinished(self) -- self is animation frame
+function module.BattleFrame_Pet_HideFinished(self) -- self is animation frame
 	local parent = self:GetParent(); -- pet frame
 	local master = parent:GetParent(); -- master frame
 	
@@ -646,14 +646,14 @@ function PT.BattleFrame_Pet_HideFinished(self) -- self is animation frame
 end
 
 -- called by xml
-function PT.BattleFrame_Pet_ShowFinished(self) -- self is animation frame
+function module.BattleFrame_Pet_ShowFinished(self) -- self is animation frame
 	local parent = self:GetParent(); -- pet frame
 	local alpha = module.db.profile.nactivealpha_use and module.db.profile.nactivealpha or 1;
 	parent:SetAlpha( parent:GetID() == parent:GetParent().player.activePet and 1 or alpha );
 end
 
 -- called by xml
-function PT.BattleFrame_Pet_WhilePlaying(self) -- self is animation frame
+function module.BattleFrame_Pet_WhilePlaying(self) -- self is animation frame
 	local parent = self:GetParent();
 	if( module.db.profile.nactivealpha_use and parent:GetID() ~= parent:GetParent().player.activePet ) then
 		if( module.db.profile.nactivealpha <= parent:GetAlpha() ) then
@@ -680,7 +680,7 @@ local mirrors = {
 };
 
 -- called by xml and configuration window
-function PT.BattleFrame_Options_Apply(self)
+function module.BattleFrame_Options_Apply(self)
 	local frame_name = self:GetName();
 	
 	local icon;
@@ -739,7 +739,7 @@ local function do_mirror(self, elapsed)
 end
 
 -- called by xml
-function PT.BattleFrame_StartDrag(self) -- self is master frame
+function module.BattleFrame_StartDrag(self) -- self is master frame
 	self:StartMoving();
 	
 	if( mirror ) then
@@ -748,7 +748,7 @@ function PT.BattleFrame_StartDrag(self) -- self is master frame
 end
 
 -- called by xml
-function PT.BattleFrame_StopDrag(self) -- self is master frame
+function module.BattleFrame_StopDrag(self) -- self is master frame
 	self:StopMovingOrSizing();
 	
 	if( mirror ) then
@@ -808,7 +808,7 @@ function module:GetPositionOptions()
 	
 	local function set_pet_icon(info, value)
 		module.db.profile["peticon_"..info.arg] = value;
-		PT.BattleFrame_Options_Apply(_G[info.arg]);
+		module.BattleFrame_Options_Apply(_G[info.arg]);
 	end
 	
 	local options = {
@@ -845,8 +845,8 @@ function module:GetPositionOptions()
 				end,
 				set = function(_, value)
 					module.db.profile.scale = value;
-					PT.BattleFrame_Options_Apply(_G.PTPlayer);
-					PT.BattleFrame_Options_Apply(_G.PTEnemy);
+					module.BattleFrame_Options_Apply(_G.PTPlayer);
+					module.BattleFrame_Options_Apply(_G.PTEnemy);
 					do_mirror(_G.PTEnemy, 1); -- for styling purposes, scaling smells
 				end,
 			},
@@ -861,8 +861,8 @@ function module:GetPositionOptions()
 				end,
 				set = function(_, value)
 					module.db.profile.bg = value;
-					PT.BattleFrame_Options_Apply(_G.PTPlayer);
-					PT.BattleFrame_Options_Apply(_G.PTEnemy);
+					module.BattleFrame_Options_Apply(_G.PTPlayer);
+					module.BattleFrame_Options_Apply(_G.PTEnemy);
 				end,
 			},
 			bg_color = {
@@ -878,8 +878,8 @@ function module:GetPositionOptions()
 					module.db.profile.bg_g = g;
 					module.db.profile.bg_b = b;
 					module.db.profile.bg_a = a;
-					PT.BattleFrame_Options_Apply(_G.PTPlayer);
-					PT.BattleFrame_Options_Apply(_G.PTEnemy);
+					module.BattleFrame_Options_Apply(_G.PTPlayer);
+					module.BattleFrame_Options_Apply(_G.PTEnemy);
 				end,
 			},
 			spacer3 = { type = "description", name = "", order = 4.1 },
@@ -1001,8 +1001,8 @@ function module:GetOptions()
 						self.db.profile.animate_active = value;
 						-- update if currently in battle
 						if( _G.C_PetBattles.IsInBattle() ) then
-							PT.BattleFrame_UpdateActivePetHighlight(_G.PTPlayer);
-							PT.BattleFrame_UpdateActivePetHighlight(_G.PTEnemy);
+							module.BattleFrame_UpdateActivePetHighlight(_G.PTPlayer);
+							module.BattleFrame_UpdateActivePetHighlight(_G.PTEnemy);
 						end
 					end,
 				},
@@ -1017,8 +1017,8 @@ function module:GetOptions()
 						self.db.profile.animate_active_r = r;
 						self.db.profile.animate_active_g = g;
 						self.db.profile.animate_active_b = b;
-						PT.BattleFrame_Options_Apply(_G.PTPlayer);
-						PT.BattleFrame_Options_Apply(_G.PTEnemy);
+						module.BattleFrame_Options_Apply(_G.PTPlayer);
+						module.BattleFrame_Options_Apply(_G.PTEnemy);
 					end,
 				},
 				nactivealpha_use = {
@@ -1033,8 +1033,8 @@ function module:GetOptions()
 						self.db.profile.nactivealpha_use = value;
 						-- update if currently in battle
 						if( _G.C_PetBattles.IsInBattle() ) then
-							PT.BattleFrame_UpdateActivePetHighlight(_G.PTPlayer);
-							PT.BattleFrame_UpdateActivePetHighlight(_G.PTEnemy);
+							module.BattleFrame_UpdateActivePetHighlight(_G.PTPlayer);
+							module.BattleFrame_UpdateActivePetHighlight(_G.PTEnemy);
 						end
 					end,
 				},
@@ -1052,8 +1052,8 @@ function module:GetOptions()
 						self.db.profile.nactivealpha = value;
 						-- update if currently in battle
 						if( _G.C_PetBattles.IsInBattle() ) then
-							PT.BattleFrame_UpdateActivePetHighlight(_G.PTPlayer);
-							PT.BattleFrame_UpdateActivePetHighlight(_G.PTEnemy);
+							module.BattleFrame_UpdateActivePetHighlight(_G.PTPlayer);
+							module.BattleFrame_UpdateActivePetHighlight(_G.PTEnemy);
 						end
 					end,
 					disabled = is_disabled,

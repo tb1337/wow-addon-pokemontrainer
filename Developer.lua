@@ -1,10 +1,10 @@
 --[[
 
-This file contains developer stuff, so it is commented out by the Curse Packager.
+This file contains developer stuff. The contents are cut off by the Curse Packaging System.
 
 --]]
 
---@alpha@
+--@do-not-package@
 local AddonName, PT = ...;
 
 PT.dev = true;
@@ -125,4 +125,4 @@ setmetatable(PT.PlayerInfo[3], mt);
 setmetatable(PT.EnemyInfo[1], mt);
 setmetatable(PT.EnemyInfo[2], mt);
 setmetatable(PT.EnemyInfo[3], mt);
---@end-alpha@
+--@end-do-not-package@
