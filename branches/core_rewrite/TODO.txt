@@ -1,5 +1,9 @@
 grdn:
 - Permanently set an eye on the Core/pets_scanned var which has currently no need
+- TooltipCombatDisplay.lua, 249
+    ...	tip:SetLineScript(line, "OnEnter", ... {side, pet, ab} ...
+	Need to think about another solution because this sucks. 9 new tables on each display update, per side. Urgh.
+	We need something more static here.
 
 Possible:
 - 
