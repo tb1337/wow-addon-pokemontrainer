@@ -81,8 +81,6 @@ function module:OnInitialize()
 end
 
 function module:OnEnable()
-	local frame;
-	
 	-- register events
 	for _,frame in ipairs(BattleFrames) do
 		frame:RegisterEvent("PET_BATTLE_OPENING_START");
@@ -106,12 +104,11 @@ function module:OnEnable()
 	for pet = 1, PT.MAX_COMBAT_PETS do
 		self:SecureHookScript(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnEnter", "Hook_PetSelection_Pet_Enter");
 		self:SecureHookScript(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnLeave", "Hook_PetSelection_Pet_Leave");
+		self:SecureHookScript(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnClick", "Hook_PetSelection_Hide");
 	end
 end
 
 function module:OnDisable()
-	local frame;
-	
 	-- unregister events
 	for _,frame in ipairs(BattleFrames) do
 		frame:UnregisterEvent("PET_BATTLE_OPENING_START");
@@ -135,6 +132,7 @@ function module:OnDisable()
 	for pet = 1, PT.MAX_COMBAT_PETS do
 		self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnEnter");
 		self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnLeave");
+		self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnClick");
 	end
 end
 
@@ -144,8 +142,12 @@ end
 
 -- This chunk of hooks makes PT interacting with the default PetBattle UI Pet Selection Frame
 do
+	local pet_selected = false; -- when clicked a pet, this becomes true to prevent re-loading the default selecting highlights
+	
 	-- Sets all player levels to default size excepting the current pet
 	local function adjust_player_fonts(current_pet)
+		current_pet = pet_selected and -1 or current_pet;
+		
 		local font, size, outline;
 		local fs;
 		
@@ -180,12 +182,18 @@ do
 	
 	-- called when PetSelection is shown
 	function module:Hook_PetSelection_Show(frame)
+		pet_selected = false;
 		adjust_enemy_fonts(true);
 		adjust_player_fonts(PT.PlayerInfo.activePet);
 	end
 	
 	-- called when PetSelection is hidden
-	function module:Hook_PetSelection_Hide(frame)
+	function module:Hook_PetSelection_Hide(frame, button)
+		-- we set pet_selected to true because we clicked it (which results in frame closing)
+		if( button and button == "LeftButton" ) then
+			pet_selected = true;
+		end
+		
 		adjust_enemy_fonts(false);
 		adjust_player_fonts(-1); -- fake pet index to get all fonts smaller :D
 	end
@@ -193,7 +201,7 @@ do
 	local timer;
 	
 	-- called when a pet is hovered on the PetSelection frame
-	function module:Hook_PetSelection_Pet_Enter(frame)
+	function module:Hook_PetSelection_Pet_Enter(frame)		
 		local pet = frame.petIndex;
 		adjust_color(PT.PlayerInfo[pet].level);
 		adjust_player_fonts(frame.petIndex);
@@ -214,7 +222,9 @@ do
 	-- called when a pet is not hovered anymore on the PetSelection frame
 	-- the reason for the timer is a delayed reset to defaults
 	function module:Hook_PetSelection_Pet_Leave(frame)
-		timer = AceTimer.ScheduleTimer(module, real_leave, 0.2);
+		if( not pet_selected ) then -- if pet_selected, we do not need the timer which sets everything to default
+			timer = AceTimer.ScheduleTimer(module, real_leave, 0.2);
+		end
 	end
 end
 
