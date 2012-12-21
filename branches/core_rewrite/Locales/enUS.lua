@@ -63,5 +63,10 @@ L["If this is not set, battle infos are also displayed on NPC and player pets."]
 
 -- module Auction Search
 L["Auction Search"] = true
+L["When searching for pets in the auction house, this module sets red and green background colors which indicate whether you own this pet or not."] = true
+L["Known pet color"] = true
+L["Unknown pet color"] = true
+L["Please note that the Auction Search module isn't supporting third party auction addons. If such addons are actually changing the default auction UI and these changes break this module, simply disable it. Please do not open tickets if other addons break this module. Thanks."] = true
+L["If you are author/maintainer of a common auction UI addon and want this module supporting your addon, feel free to open a ticket on Curseforge or simply send me an email at"] = true
 
 --@end-do-not-package@
