@@ -25,6 +25,7 @@ function module:OnInitialize()
 		profile = {
 			enabled = true,
 			battlelevel = true,
+			battlelevelonlydiff = true,
 			consolidated = false,
 			onlywildpets = false,
 		},
@@ -83,7 +84,7 @@ function module:ProcessTooltip()
 	local modifier, abName, abIcon;
 	local strong, weak;
 	
-	if( self.db.profile.battlelevel ) then
+	if( self.db.profile.battlelevel and not(self.db.profile.battlelevelonlydiff and enemyLevel == _G.UnitLevel(unit)) ) then
 		_G.GameTooltip:AddDoubleLine("|cffffffff"..L["Battle Level"].."|r  "..enemyLevel);
 	end
 	
@@ -162,6 +163,10 @@ end
 ----------------------
 
 function module:GetOptions()
+	local function is_disabled()
+		return not(module:IsEnabled() and module.db.profile.battlelevel);
+	end
+	
 	return {
 		battlelevel = {
 			type = "toggle",
@@ -176,6 +181,20 @@ function module:GetOptions()
 			order = 1,
 			width = "full",
 		},
+		battlelevelonlydiff = {
+			type = "toggle",
+			name = L["...only on different levels"],
+			get = function()
+				return self.db.profile.battlelevelonlydiff;
+			end,
+			set = function(_, value)
+				self.db.profile.battlelevelonlydiff = value;
+			end,
+			order = 2,
+			width = "full",
+			disabled = is_disabled,
+		},
+		spacer = { type = "description", name = " ", order = 3 },
 		consolidated = {
 			type = "toggle",
 			name = L["Consolidated battle infos"],
@@ -186,7 +205,7 @@ function module:GetOptions()
 			set = function(_, value)
 				self.db.profile.consolidated = value;
 			end,
-			order = 2,
+			order = 4,
 			width = "full",
 		},
 		onlywildpets = {
@@ -199,7 +218,7 @@ function module:GetOptions()
 			set = function(_, value)
 				self.db.profile.onlywildpets = value;
 			end,
-			order = 3,
+			order = 5,
 			width = "full",
 		},
 	};

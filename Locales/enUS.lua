@@ -55,6 +55,7 @@ L["Battle Pet Tooltip"] = true
 L["Add battle-specific informations to battle pet tooltips."] = true
 L["Battle Level"] = true
 L["Display battle pet level"] = true
+L["...only on different levels"] = true
 L["Sometimes the actual battle pet level differs from the NPC pet level."] = true
 L["Consolidated battle infos"] = true
 L["Display your battle pet team without their abilities and if they have at least one bonus or weakness."] = true
