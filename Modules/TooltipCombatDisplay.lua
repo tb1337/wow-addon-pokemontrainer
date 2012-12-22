@@ -47,6 +47,7 @@ end
 function module:OnEnable()
 	self:RegisterEvent("PET_BATTLE_OPENING_START", "PetBattleStart");
 	self:RegisterEvent("PET_BATTLE_OVER", "PetBattleStop");
+	self:RegisterEvent("PET_BATTLE_CLOSE", "PetBattleStop");
 	self:RegisterEvent("PET_BATTLE_PET_CHANGED", "PetBattleChanged");
 	self:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE", "PetBattleChanged");
 	--self:RegisterEvent("PET_BATTLE_HEALTH_CHANGED", "PetBattleChanged");
@@ -56,6 +57,7 @@ end
 function module:OnDisable()
 	self:UnregisterEvent("PET_BATTLE_OPENING_START");
 	self:UnregisterEvent("PET_BATTLE_OVER");
+	self:UnregisterEvent("PET_BATTLE_CLOSE");
 	self:UnregisterEvent("PET_BATTLE_PET_CHANGED");
 	self:UnregisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
 	--self:UnregisterEvent("PET_BATTLE_HEALTH_CHANGED");
@@ -92,8 +94,12 @@ do
 end
 
 function module:PetBattleStop()
-	self:GetTooltip("Player"):Release();
-	self:GetTooltip("Enemy"):Release();
+	if( self:IsTooltip("Player") ) then
+		self:GetTooltip("Player"):Release();
+	end
+	if( self:IsTooltip("Enemy") ) then
+		self:GetTooltip("Enemy"):Release();
+	end
 end
 
 function module:PetBattleChanged()
