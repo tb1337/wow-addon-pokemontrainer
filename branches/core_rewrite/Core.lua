@@ -6,6 +6,7 @@ local AddonName = ...;
 local PT = LibStub("AceAddon-3.0"):NewAddon(select(2, ...), AddonName, "AceEvent-3.0");
 
 local L = LibStub("AceLocale-3.0"):GetLocale(AddonName);
+local AceTimer = LibStub("AceTimer-3.0"); -- no need for embedding it
 
 local _G = _G;
 
@@ -41,7 +42,7 @@ local pets_scanned = false; -- Currently not sure if we ever need this. true whe
 ------------------
 
 function PT:OnInitialize()
-	self.db = LibStub("AceDB-3.0"):New("PokemonTrainerDB", { profile = { activeBattleDisplay = 1 } }, "Default");
+	self.db = LibStub("AceDB-3.0"):New("PokemonTrainerDB", { profile = { activeBattleDisplay = 1, version = "" } }, "Default");
 	
 	-- We require the PetJournal for many API functions
 	if( not _G.IsAddOnLoaded("Blizzard_PetJournal") ) then
@@ -57,6 +58,21 @@ function PT:OnEnable()
 	_G["SLASH_PT1"] = "/pt";
 	
 	--self:RegisterEvent("PET_BATTLE_CLOSE", "PetBattleStop");
+	
+	-- version check and reminder that the user may want to check the options
+	local version = tostring(_G.GetAddOnMetadata(AddonName, "Version"));
+	if( self.db.profile.version ~= version ) then
+		local msg;
+		if( self.db.profile.version == "" ) then
+			msg = "|cff00aaff"..AddonName.."|r: First run, you may wanna check /pt for options.";
+		else
+			msg = "|cff00aaff"..AddonName.."|r: Recently updated to version "..version;
+		end
+		if( msg ) then
+			self.db.profile.version = version;
+			AceTimer.ScheduleTimer(self, function() print(msg) end, 20);
+		end
+	end
 end
 
 -------------------------
@@ -349,8 +365,8 @@ function PT:OpenOptions()
 		},
 	};
 	
-	-- This code snippet is written by ckknight and the Chinchilla team
-	-- It is great and fits our needs, so we do not re-invent the wheel
+	-- Parts of this code snippet have been written by ckknight and the Chinchilla team
+	-- They are great and fit our needs, so we do not re-invent the wheel over and over again.
 	local t;
 	for key, module in PT:IterateModules() do
 		t = module.GetOptions and module:GetOptions() or {};
