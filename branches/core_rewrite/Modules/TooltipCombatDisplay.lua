@@ -269,7 +269,8 @@ local function dummy_tooltip_hide()
 	timer = nil;
 end
 
-local function dummy_tooltip_show()	
+local function dummy_tooltip_show()
+	PT:ScanDummyPets();
 	module:PetBattleStart("NOSCAN");
 	
 	if( _G.C_PetBattles.IsInBattle() ) then

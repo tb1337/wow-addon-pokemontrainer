@@ -86,7 +86,7 @@ function module:OnEnable()
 		frame:RegisterEvent("PET_BATTLE_OPENING_START");
 		frame:RegisterEvent("PET_BATTLE_OVER");
 		frame:RegisterEvent("PET_BATTLE_CLOSE");
-		frame:RegisterEvent("PET_BATTLE_TURN_STARTED");
+		--frame:RegisterEvent("PET_BATTLE_TURN_STARTED");
 		frame:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
 		frame:RegisterEvent("PET_BATTLE_PET_CHANGED");
 		frame:RegisterEvent("PET_BATTLE_HEALTH_CHANGED");
@@ -116,7 +116,7 @@ function module:OnDisable()
 		frame:UnregisterEvent("PET_BATTLE_OPENING_START");
 		frame:UnregisterEvent("PET_BATTLE_OVER");
 		frame:UnregisterEvent("PET_BATTLE_CLOSE");
-		frame:UnregisterEvent("PET_BATTLE_TURN_STARTED");
+		--frame:UnregisterEvent("PET_BATTLE_TURN_STARTED");
 		frame:UnregisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
 		frame:UnregisterEvent("PET_BATTLE_PET_CHANGED");
 		frame:UnregisterEvent("PET_BATTLE_HEALTH_CHANGED");
@@ -238,7 +238,7 @@ local function get_frame(side)
 	return side == PT.PLAYER and _G[FRAME_PLAYER] or _G[FRAME_ENEMY];
 end
 
-local function BattleFrame_Resize(self)
+function module.BattleFrame_Resize(self)
 	-- resizing may be disabled
 	if( not module.db.profile.resize ) then
 		return;
@@ -327,11 +327,6 @@ function module.BattleFrame_OnEvent(self, event, ...)
 	-- a pet battle recently started - completely set up the frames
 	if( event == "PET_BATTLE_OPENING_START" ) then
 		PT:ScanPets();
-		BattleFrame_Resize(self);
-		module.BattleFrame_Initialize(self);
-		module.BattleFrame_UpdateBattleButtons(self);
-		module.BattleFrame_UpdateActivePetHighlight(self);
-		module.BattleFrame_Pets_Reorganize_Init(self, false);
 		self:FadeIn();
 	-- battle is over (beginning camera zoom)
 	elseif( event == "PET_BATTLE_OVER" ) then
@@ -367,10 +362,9 @@ function module.BattleFrame_OnEvent(self, event, ...)
 		end
 	-- should never happen but may actually do
 	else
-		--@do-not-package@
-		-- this should never happen. god, please.
+		--@alpha@
 		print("Uncatched event on frame: "..self:GetName(), event, ...);
-		--@end-do-not-package@
+		--@end-alpha@
 	end
 end
 
@@ -811,7 +805,11 @@ local function OpenPositioning()
 	LibStub("AceConfigDialog-3.0"):Open("PokemonTrainer_FrameCombatDisplay", container); -- container == our custom AceGUI container
 	_G.InterfaceOptionsFrame:Hide();
 	
-	for _,frame in ipairs(BattleFrames) do
+	if( not _G.C_PetBattles.IsInBattle() ) then
+		PT:ScanDummyPets();
+	end
+	
+	for _,frame in ipairs(BattleFrames) do		
 		frame:Show();
 		frame:RegisterForDrag("LeftButton");
 	end
