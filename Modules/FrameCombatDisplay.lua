@@ -595,16 +595,27 @@ end
 
 -- little sort function which sorts the pet frames, dead pets are displayed last
 local function pets_sort_dead_last(pet1, pet2)
-	local dead1 = pet1:GetParent().player[pet1:GetID()].dead;
-	local dead2 = pet2:GetParent().player[pet2:GetID()].dead;
+	local master = pet1:GetParent();
 	
+	-- first, if pet frame > numPets, put it last
+	local numPets = master.player.numPets;
+	if( pet1:GetID() > numPets ) then
+		return false;
+	elseif( pet2:GetID() > numPets ) then
+		return true;
+	end
+	
+	-- then, check for a dead pet
+	local dead1 = master.player[pet1:GetID()].dead;
+	local dead2 = master.player[pet2:GetID()].dead;
 	if( dead1 and not dead2 ) then
 		return false;
 	elseif( dead2 and not dead1 ) then
 		return true;
-	else
-		return pet1:GetID() > pet2:GetID(); -- fall back to pet ID (1, 2, 3)
 	end
+	
+	-- fall back to pet ID (1, 2, 3) (no pets dead, numPets == MAX_PETS)
+	return pet1:GetID() > pet2:GetID();
 end
 
 function module.BattleFrame_Pets_Reorganize_Init(self, animate) -- self is PT master frame

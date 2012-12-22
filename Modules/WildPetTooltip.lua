@@ -52,7 +52,6 @@ local function get_ability_infos(petLevel, slot, ab, enemyType)
 	if( slot > (petLevel >= 4 and 3 or petLevel >= 2 and 2 or 1) ) then
 		return;
 	end
-	
 	local _, abName, abIcon, _, _, _, abType, noStrongWeak = _G.C_PetBattles.GetAbilityInfoByID(ab);
 	
 	return PT:GetTypeBonus(abType, enemyType, noStrongWeak), abName, abIcon;
@@ -104,15 +103,21 @@ function module:ProcessTooltip()
 				
 				-- Ability 1
 				modifier = get_ability_infos(petLevel, 1, ab1, enemyType);
-				strong, weak = isStrongWeak(strong, weak, modifier);
+				if( modifier ) then
+					strong, weak = isStrongWeak(strong, weak, modifier);
+				end
 				
 				-- Ability 2
 				modifier = get_ability_infos(petLevel, 2, ab2, enemyType);
-				strong, weak = isStrongWeak(strong, weak, modifier);
+				if( modifier ) then
+					strong, weak = isStrongWeak(strong, weak, modifier);
+				end
 				
 				-- Ability 3
 				modifier = get_ability_infos(petLevel, 3, ab3, enemyType);
-				strong, weak = isStrongWeak(strong, weak, modifier);
+				if( modifier ) then
+					strong, weak = isStrongWeak(strong, weak, modifier);
+				end
 				
 				_G.GameTooltip:AddDoubleLine(
 					petName.."  "..("|cff%02x%02x%02x%s|r"):format(r *255, g *255, b *255, petLevel),
@@ -133,24 +138,30 @@ function module:ProcessTooltip()
 			
 				-- Ability 1
 				modifier, abName, abIcon = get_ability_infos(petLevel, 1, ab1, enemyType);
-				_G.GameTooltip:AddDoubleLine(
-					" |T"..abIcon..":14:14|t |cffffffff"..abName.."|r",
-					"|T"..PT:GetTypeBonusIcon(modifier)..":14:14|t"
-				);
+				if( modifier ) then
+					_G.GameTooltip:AddDoubleLine(
+						" |T"..abIcon..":14:14|t |cffffffff"..abName.."|r",
+						"|T"..PT:GetTypeBonusIcon(modifier)..":14:14|t"
+					);
+				end
 				
 				-- Ability 2
 				modifier, abName, abIcon = get_ability_infos(petLevel, 2, ab2, enemyType);
-				_G.GameTooltip:AddDoubleLine(
-					" |T"..abIcon..":14:14|t |cffffffff"..abName.."|r",
-					"|T"..PT:GetTypeBonusIcon(modifier)..":14:14|t"
-				);
+				if( modifier ) then
+					_G.GameTooltip:AddDoubleLine(
+						" |T"..abIcon..":14:14|t |cffffffff"..abName.."|r",
+						"|T"..PT:GetTypeBonusIcon(modifier)..":14:14|t"
+					);
+				end
 				
 				-- Ability 3
 				modifier, abName, abIcon = get_ability_infos(petLevel, 3, ab3, enemyType);
-				_G.GameTooltip:AddDoubleLine(
-					" |T"..abIcon..":14:14|t |cffffffff"..abName.."|r",
-					"|T"..PT:GetTypeBonusIcon(modifier)..":14:14|t"
-				);
+				if( modifier ) then
+					_G.GameTooltip:AddDoubleLine(
+						" |T"..abIcon..":14:14|t |cffffffff"..abName.."|r",
+						"|T"..PT:GetTypeBonusIcon(modifier)..":14:14|t"
+					);
+				end
 			end
 		end
 	end
