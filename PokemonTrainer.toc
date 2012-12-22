@@ -29,7 +29,6 @@ Locales\Locales.xml
 
 # Main
 Core.lua
-Developer.lua
 
 # Combat Displays
 Modules\FrameCombatDisplay.xml

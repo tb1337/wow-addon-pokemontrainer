@@ -372,7 +372,14 @@
 				self.firstRound = 1;
 				self.animDone = 0;
 				
-				PT:GetModule("FrameCombatDisplay").BattleFrame_Options_Apply(self);
+				local module = PT:GetModule("FrameCombatDisplay");
+				
+				module.BattleFrame_Resize(self);
+				module.BattleFrame_Initialize(self);
+				module.BattleFrame_UpdateBattleButtons(self);
+				module.BattleFrame_UpdateActivePetHighlight(self);
+				module.BattleFrame_Pets_Reorganize_Init(self, false);
+				module.BattleFrame_Options_Apply(self);
 			</OnShow>
 			<OnEvent>
 				PT:GetModule("FrameCombatDisplay").BattleFrame_OnEvent(self, event, ...)

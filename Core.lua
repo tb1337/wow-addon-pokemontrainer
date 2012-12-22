@@ -35,14 +35,21 @@ PT.BONUS_SPEED_FASTER = 2;
 PT.BONUS_SPEED_EQUAL  = 1;
 PT.BONUS_SPEED_SLOWER = 0;
 
-local pets_scanned = false; -- Currently not sure if we ever need this. true when initially scanned the pets, false if not. resetted in PT:PetBattleStop
+PT.alpha = false; -- is this an alpha package?
+--@alpha@
+PT.alpha = true;
+--@end-alpha@
+
+--@do-not-package@
+PT.developer = true;
+--@end-do-not-package@
 
 ------------------
 -- Boot
 ------------------
 
 function PT:OnInitialize()
-	self.db = LibStub("AceDB-3.0"):New("PokemonTrainerDB", { profile = { activeBattleDisplay = 1, version = "" } }, "Default");
+	self.db = LibStub("AceDB-3.0"):New("PokemonTrainerDB", { profile = { activeBattleDisplay = 1, version = "", alpha = false } }, "Default");
 	
 	-- We require the PetJournal for many API functions
 	if( not _G.IsAddOnLoaded("Blizzard_PetJournal") ) then
@@ -60,18 +67,23 @@ function PT:OnEnable()
 	--self:RegisterEvent("PET_BATTLE_CLOSE", "PetBattleStop");
 	
 	-- version check and reminder that the user may want to check the options
+	local msg;
 	local version = tostring(_G.GetAddOnMetadata(AddonName, "Version"));
 	if( self.db.profile.version ~= version ) then
-		local msg;
 		if( self.db.profile.version == "" ) then
 			msg = "|cff00aaff"..AddonName.."|r: "..L["First run, you may wanna check /pt for options."];
 		else
 			msg = "|cff00aaff"..AddonName.."|r: "..L["Recently updated to version"].." "..version;
 		end
-		if( msg ) then
-			self.db.profile.version = version;
-			AceTimer.ScheduleTimer(self, function() print(msg) end, 15);
-		end
+		self.db.profile.alpha = true;
+	end
+	if( self.db.profile.alpha and PT.alpha and not PT.developer ) then
+		self.db.profile.alpha = false;
+		msg = "|cff00aaff"..AddonName.."|r: Running Alpha Package without being a developer. You may encounter errors and weird messages. Please install at least a Beta Package if you do not want that.";
+	end
+	if( msg ) then
+		self.db.profile.version = version;
+		AceTimer.ScheduleTimer(self, function() print(msg) end, 15);
 	end
 end
 
@@ -79,9 +91,7 @@ end
 -- Event Callbacks
 -------------------------
 
-function PT:PetBattleStop()
-	pets_scanned = false;
-end
+
 
 ---------------------------
 -- Compare Functions
@@ -214,7 +224,7 @@ end
 -- Scanning Pets for Combat
 ----------------------------------
 
-local scan_pets, roundup_pets;
+local scan_pets, scan_dummys, roundup_pets;
 do
 	-- wipes all keys/values and subtable keys/values, but not the subtables themselves
 	local function wipe_pets(t)
@@ -256,6 +266,7 @@ do
 		
 		t.numPets = numPets;
 		t.activePet = activePet;
+		t.scanned = true;
 		
 		for pet = 1, numPets do
 			species = _G.C_PetBattles.GetPetSpeciesID(side, pet);
@@ -296,6 +307,48 @@ do
 		end
 	end
 	
+	local random = math.random;
+	scan_dummys = function(side, t)
+		-- if there is scanned data, we can return :)
+		if( t.scanned ) then return; end
+		
+		local numPets = 3;
+		local activePet = random(1, numPets);
+		
+		t.numPets = numPets;
+		t.activePet = activePet;
+		t.scanned = true;
+		
+		local abID; -- for random ability creation
+		
+		for pet = 1, numPets do
+			-- the t[pet] tables will be reused even after wipe_pets() got executed, the garbagecollector doesn't get something to eat *sob*
+			if( not t[pet] or not(type(t[pet]) == "table") ) then
+				t[pet] = {};
+				setmetatable(t[pet], mt);
+			end
+			
+			t[pet].name = "Dummy "..pet;
+			t[pet].level = random(1, 25);
+			t[pet].species = species;
+			t[pet].type = random(1, 10);
+			t[pet].speed = t[pet].level * random(7, 15);
+			t[pet].icon = "INTERFACE\\ICONS\\INV_CRATE_02";
+			t[pet].quality = pet + ((side - 1) * 3) - 1;
+			t[pet].hp = random(0, 10);
+			t[pet].hpM = 10;
+			t[pet].numAbilities = random(1, 3);
+			
+			for ab = 1, t[pet].numAbilities do
+				while( not abID ) do
+					abID = _G.C_PetBattles.GetAbilityInfoByID(random(200, 800));
+				end
+				t[pet]["ab"..ab] = abID;
+				abID = nil;
+			end
+		end
+	end
+	
 	-- I decided to create a roundup function to get rid off too many scan_pets() calls
 	-- For each battle round there is little updated data: speed and current hp (excepting buffs/debuffs)
 	roundup_pets = function(side, t)
@@ -319,13 +372,17 @@ end
 
 function PT:ScanPets()
 	scan_pets(PT.PLAYER, self.PlayerInfo);
-	scan_pets(PT.ENEMY , self.EnemyInfo);
-	pets_scanned = true;
+	scan_pets(PT.ENEMY , self.EnemyInfo );
+end
+
+function PT:ScanDummyPets()
+	scan_dummys(PT.PLAYER, self.PlayerInfo);
+	scan_dummys(PT.ENEMY , self.EnemyInfo );
 end
 
 function PT:RoundUpPets()
 	roundup_pets(PT.PLAYER, self.PlayerInfo);
-	roundup_pets(PT.ENEMY , self.EnemyInfo);
+	roundup_pets(PT.ENEMY , self.EnemyInfo );
 end
 
 -----------------------------
@@ -335,7 +392,7 @@ end
 local options;
 function PT:OpenOptions()
 	options = {
-		name = L["Pokemon Trainer Options"].."    "..(PT.dev and "|cffff0000Developer Version|r" or "|cffffffffv".._G.GetAddOnMetadata(AddonName, "Version").."|r"),
+		name = L["Pokemon Trainer Options"]..(PT.alpha and " |cffff0000Alpha Package|r" or ""),
 		type = "group",
 		args = {
 			display = {
