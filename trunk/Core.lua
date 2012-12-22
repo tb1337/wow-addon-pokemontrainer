@@ -328,6 +328,8 @@ do
 				setmetatable(t[pet], mt);
 			end
 			
+			--t[pet].side = side;
+			--t[pet].index = pet;
 			t[pet].name = "Dummy "..pet;
 			t[pet].level = random(1, 25);
 			t[pet].species = species;
