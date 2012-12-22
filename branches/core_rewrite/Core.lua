@@ -56,12 +56,7 @@ function PT:OnEnable()
 	_G.SlashCmdList["PT"] = function() _G.InterfaceOptionsFrame_OpenToCategory(AddonName); end
 	_G["SLASH_PT1"] = "/pt";
 	
-	-- for the skill frames
-	--self:RegisterEvent("PET_BATTLE_OPENING_START", "ScanPets");
 	--self:RegisterEvent("PET_BATTLE_CLOSE", "PetBattleStop");
-	--self:RegisterEvent("PET_BATTLE_PET_CHANGED", "PetBattleChanged");
-	--self:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE", "PetBattleRoundUp");
-	self:RegisterEvent("PET_BATTLE_OVER", "PetBattleStop");
 end
 
 -------------------------

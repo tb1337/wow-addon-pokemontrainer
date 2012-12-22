@@ -45,7 +45,7 @@ function module:OnInitialize()
 			peticon_PTEnemy = "TOPRIGHT",
 			scale = 1,
 			resize = true,
-			animate_active = false,
+			animate_active = true,
 			animate_active_r = 0.99,
 			animate_active_g = 0.82,
 			animate_active_b = 0,
@@ -85,6 +85,8 @@ function module:OnEnable()
 	for _,frame in ipairs(BattleFrames) do
 		frame:RegisterEvent("PET_BATTLE_OPENING_START");
 		frame:RegisterEvent("PET_BATTLE_OVER");
+		frame:RegisterEvent("PET_BATTLE_CLOSE");
+		frame:RegisterEvent("PET_BATTLE_TURN_STARTED");
 		frame:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
 		frame:RegisterEvent("PET_BATTLE_PET_CHANGED");
 		frame:RegisterEvent("PET_BATTLE_HEALTH_CHANGED");
@@ -113,6 +115,8 @@ function module:OnDisable()
 	for _,frame in ipairs(BattleFrames) do
 		frame:UnregisterEvent("PET_BATTLE_OPENING_START");
 		frame:UnregisterEvent("PET_BATTLE_OVER");
+		frame:UnregisterEvent("PET_BATTLE_CLOSE");
+		frame:UnregisterEvent("PET_BATTLE_TURN_STARTED");
 		frame:UnregisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
 		frame:UnregisterEvent("PET_BATTLE_PET_CHANGED");
 		frame:UnregisterEvent("PET_BATTLE_HEALTH_CHANGED");
@@ -128,13 +132,6 @@ function module:OnDisable()
 	
 	-- unhook hooks
 	self:UnhookAll();
-	--self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame, "OnShow");
-	--self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame, "OnHide");
-	--for pet = 1, PT.MAX_COMBAT_PETS do
-	--	self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnEnter");
-	--	self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnLeave");
-	--	self:Unhook(_G.PetBattleFrame.BottomFrame.PetSelectionFrame["Pet"..pet], "OnClick");
-	--end
 end
 
 ---------------
@@ -327,6 +324,7 @@ end
 
 -- called by xml
 function module.BattleFrame_OnEvent(self, event, ...)
+	-- a pet battle recently started - completely set up the frames
 	if( event == "PET_BATTLE_OPENING_START" ) then
 		PT:ScanPets();
 		BattleFrame_Resize(self);
@@ -335,12 +333,20 @@ function module.BattleFrame_OnEvent(self, event, ...)
 		module.BattleFrame_UpdateActivePetHighlight(self);
 		module.BattleFrame_Pets_Reorganize_Init(self, false);
 		self:FadeIn();
+	-- battle is over (beginning camera zoom)
 	elseif( event == "PET_BATTLE_OVER" ) then
 		self:FadeOut();
+	-- battle is over or got interrupted (by lfg warp etc.), we must hide the frames if no _OVER event was fired
+	elseif( event == "PET_BATTLE_CLOSE" ) then
+		if( self:IsVisible() and not self.animHide:IsPlaying() ) then
+			self:Hide();
+		end
+	-- fires before a new round begins
 	elseif( event == "PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE" ) then
 		PT:RoundUpPets();
 		module.BattleFrame_UpdateBattleButtons(self);
 		--PT.BattleFrame_UpdateActivePetHighlight(self);
+	-- fires when either player or enemy changed their active pet
 	elseif( event == "PET_BATTLE_PET_CHANGED" ) then
 		PT:RoundUpPets();
 		module.BattleFrame_UpdateActivePetHighlight(self);
@@ -352,12 +358,14 @@ function module.BattleFrame_OnEvent(self, event, ...)
 				module.BattleFrame_Pets_Reorganize_Init(self);
 			end
 		end
+	-- fired whenever a pet got damaged, healed or buffed itself more HP
 	elseif( event == "PET_BATTLE_HEALTH_CHANGED" or event == "PET_BATTLE_MAX_HEALTH_CHANGED" ) then
 		local side, pet = ...;
 		if( side == self:GetID() and pet == self.player.activePet ) then
 			PT:RoundUpPets();
 			module.BattleFrame_UpdateHealthState(self);
 		end
+	-- should never happen but may actually do
 	else
 		--@do-not-package@
 		-- this should never happen. god, please.
@@ -803,12 +811,10 @@ local function OpenPositioning()
 	LibStub("AceConfigDialog-3.0"):Open("PokemonTrainer_FrameCombatDisplay", container); -- container == our custom AceGUI container
 	_G.InterfaceOptionsFrame:Hide();
 	
-	_G.PTPlayer:Show();
-	_G.PTEnemy:Show();
-	
-	-- left button for dragging should be enough, I think
-	_G.PTPlayer:RegisterForDrag("LeftButton");
-	_G.PTEnemy:RegisterForDrag("LeftButton");
+	for _,frame in ipairs(BattleFrames) do
+		frame:Show();
+		frame:RegisterForDrag("LeftButton");
+	end
 end
 
 -- called by :OnInitialize
