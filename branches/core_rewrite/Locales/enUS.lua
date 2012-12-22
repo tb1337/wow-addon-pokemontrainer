@@ -7,6 +7,8 @@ local L = LibStub("AceLocale-3.0"):NewLocale(AddonName, "enUS", true)
 
 -- Core
 L["Pokemon Trainer Options"] = true
+L["First run, you may wanna check /pt for options."] = true
+L["Recently updated to version"] = true
 L["Enable"] = true
 L["Enable this module."] = true
 L["Preferred combat display"] = true
