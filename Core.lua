@@ -64,13 +64,13 @@ function PT:OnEnable()
 	if( self.db.profile.version ~= version ) then
 		local msg;
 		if( self.db.profile.version == "" ) then
-			msg = "|cff00aaff"..AddonName.."|r: First run, you may wanna check /pt for options.";
+			msg = "|cff00aaff"..AddonName.."|r: "..L["First run, you may wanna check /pt for options."];
 		else
-			msg = "|cff00aaff"..AddonName.."|r: Recently updated to version "..version;
+			msg = "|cff00aaff"..AddonName.."|r: "..L["Recently updated to version"].." "..version;
 		end
 		if( msg ) then
 			self.db.profile.version = version;
-			AceTimer.ScheduleTimer(self, function() print(msg) end, 20);
+			AceTimer.ScheduleTimer(self, function() print(msg) end, 15);
 		end
 	end
 end
