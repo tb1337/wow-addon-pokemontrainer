@@ -79,7 +79,7 @@ function PT:OnEnable()
 	end
 	if( self.db.profile.alpha and PT.alpha and not PT.developer ) then
 		self.db.profile.alpha = false;
-		msg = "|cff00aaff"..AddonName.."|r: Running Alpha Package without being a developer. You may encounter errors and weird messages. Please install at least a Beta Package if you do not want that.";
+		msg = "|cff00aaff"..AddonName.."|r: Running Alpha Package without being a developer, it could be unstable or erroneous. Feedback is appreciated. Please install at least a Beta Package if you do not want that at all.";
 	end
 	if( msg ) then
 		self.db.profile.version = version;

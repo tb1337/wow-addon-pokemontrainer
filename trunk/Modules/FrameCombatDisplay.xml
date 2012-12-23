@@ -329,7 +329,7 @@
 		</Frames>
 	</Frame>
 	
-	<Frame name="PTFrameTemplate" frameStrata="LOW" enablemouse="true" movable="true" clampedtoscreen="true" virtual="true">
+	<Frame name="PTFrameTemplate" frameStrata="LOW" enablemouse="true" movable="true" clampedtoscreen="true" hidden="true" virtual="true">
 		<Size>
 			<AbsDimension x="98" y="319" />
 		</Size>
@@ -440,27 +440,9 @@
 	</Frame>
 	
 	<!-- Player Frame -->
-	<Frame name="PTPlayer" hidden="true" inherits="PTFrameTemplate">
-		<Anchors>
-			<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="UIParent">
-				<Offset>
-					<AbsDimension x="200" y="-150" />
-				</Offset>
-			</Anchor>
-		</Anchors>
-	</Frame>
+	<Frame name="PTPlayer" inherits="PTFrameTemplate" />
 	
 	<!-- Enemy Frame -->
-	<Frame name="PTEnemy"  hidden="true" inherits="PTFrameTemplate">
-		<Anchors>
-			<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" relativeTo="UIParent">
-				<Offset>
-					<AbsDimension x="-200" y="-150" />
-				</Offset>
-			</Anchor>
-		</Anchors>
-	</Frame>
-	
-	
+	<Frame name="PTEnemy"  inherits="PTFrameTemplate" />
 	
 </Ui>
