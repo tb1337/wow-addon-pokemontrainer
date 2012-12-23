@@ -41,8 +41,12 @@ local FONT_LEVEL_ADJUST = 8;
 function module:OnInitialize()
 	self.db = PT.db:RegisterNamespace("FrameCombatDisplay", {
 		profile = {
-			peticon_PTPlayer = "TOPLEFT",
-			peticon_PTEnemy = "TOPRIGHT",
+			PTPlayer_icon = "TOPLEFT",
+			PTPlayer_x = 200,
+			PTPlayer_y = 200,
+			PTEnemy_icon = "TOPRIGHT",
+			PTEnemy_x = ((_G.GetScreenWidth() * _G.UIParent:GetScale()) - 298),
+			PTEnemy_y = 200,
 			scale = 1,
 			resize = true,
 			animate_active = true,
@@ -98,6 +102,9 @@ function module:OnEnable()
 				_G[frame.petFrames[pet]:GetName()]["Ability"..ab]:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
 			end
 		end
+		
+		-- reanchor when module loads
+		self.BattleFrame_Reanchor(frame, true);
 	end
 	
 	-- setup hooks
@@ -708,7 +715,7 @@ function module.BattleFrame_Options_Apply(self)
 	local frame_name = self:GetName();
 	
 	local icon;
-	local value = module.db.profile["peticon_"..frame_name];
+	local value = module.db.profile[frame_name.."_icon"];
 	
 	for pet = 1, PT.MAX_COMBAT_PETS do
 		-- adjust pet icon anchors
@@ -758,6 +765,10 @@ local function do_mirror(self, elapsed)
 	
 	-- re-position the enemy frame
 	local enemy = get_enemy(self);
+	
+	-- we need to correct x since there is always an inaccuracy of appros 2 pixels
+	x = x - 2;
+	
 	enemy:ClearAllPoints();
 	enemy:SetPoint(mirrors[point], relativeTo, mirrors[point], -x, y);
 end
@@ -771,6 +782,28 @@ function module.BattleFrame_StartDrag(self) -- self is master frame
 	end
 end
 
+-- after dragging stopped, we reanchor both frames to TOPLEFT points instead of LEFT, CENTER, etc.
+-- also called from :OnEnable()
+function module.BattleFrame_Reanchor(self, from_config)
+	local left, top;
+	local frame_name = self:GetName();
+	
+	if( from_config ) then
+		left, top = module.db.profile[frame_name.."_x"], module.db.profile[frame_name.."_y"];
+	else
+		left, top = self:GetLeft(), self:GetTop();
+		
+		-- we must adjust top by both UI and frame scale
+		top = ((_G.GetScreenHeight() * _G.UIParent:GetScale() / module.db.profile.scale) - top);
+		
+		module.db.profile[frame_name.."_x"] = left;
+		module.db.profile[frame_name.."_y"] = top;
+	end
+	
+	self:ClearAllPoints();
+	self:SetPoint("TOPLEFT", _G.UIParent, "TOPLEFT", left, -top);
+end
+
 -- called by xml
 function module.BattleFrame_StopDrag(self) -- self is master frame
 	self:StopMovingOrSizing();
@@ -780,9 +813,13 @@ function module.BattleFrame_StopDrag(self) -- self is master frame
 		do_mirror(self, 0);
 	end
 	
+	local enemy = get_enemy(self);
+	module.BattleFrame_Reanchor(self);
+	module.BattleFrame_Reanchor(enemy);
+	
 	-- set to true so the UI saves and restores their positions automatically
-	self:SetUserPlaced(true);
-	get_enemy(self):SetUserPlaced(true);
+	self:SetUserPlaced(false);
+	enemy:SetUserPlaced(false);
 end
 
 -- fake AceGUI widget with custom close callback, which acts as our container
@@ -829,11 +866,11 @@ end
 -- called by :OnInitialize
 function module:GetPositionOptions()
 	local function get_pet_icon(info)
-		return module.db.profile["peticon_"..info.arg];
+		return module.db.profile[info.arg.."_icon"];
 	end
 	
 	local function set_pet_icon(info, value)
-		module.db.profile["peticon_"..info.arg] = value;
+		module.db.profile[info.arg.."_icon"] = value;
 		module.BattleFrame_Options_Apply(_G[info.arg]);
 	end
 	
