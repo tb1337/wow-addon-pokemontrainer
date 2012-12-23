@@ -34,7 +34,7 @@ function module:OnInitialize()
 	self.db = PT.db:RegisterNamespace("TooltipCombatDisplay", {
 		profile = {
 			pos_x = 0,
-			pos_y = -300,
+			pos_y = 300,
 			scale = 1,
 		},
 	});
