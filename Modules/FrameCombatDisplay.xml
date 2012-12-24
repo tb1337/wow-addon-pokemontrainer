@@ -122,6 +122,9 @@
 				</FontString>
 			</Layer>
 			<Layer level="ARTWORK">
+				<Texture parentKey="bg" setallpoints="true">
+					
+				</Texture>
 				<Texture parentKey="Bonus1" inherits="PTTextureBonusTemplate">
 					<Anchors>
 						<Anchor point="LEFT" relativePoint="RIGHT" x="3" y="0" />
