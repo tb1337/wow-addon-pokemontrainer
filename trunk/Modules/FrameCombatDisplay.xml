@@ -55,10 +55,16 @@
 				end
 				
 				-- love the frame widget id system :D
-				local side = self:GetParent():GetParent():GetID();
+				local master = self:GetParent():GetParent();
 				local pet  = self:GetParent():GetID();
+				local ab = self:GetID();
 				
-				local available, cdleft = PT:GetAbilityCooldown(side, pet, self:GetID());
+				-- if pet index is higher than max pets OR ability index higher than max abilities
+				if( pet > master.player.numPets or ab > master.player[pet].numAbilities ) then
+					return;
+				end
+				
+				local available, cdleft = PT:GetAbilityCooldown(master:GetID(), pet, ab);
 				
 				if( available ) then
 					self.Cooldown:SetText("");
@@ -66,7 +72,7 @@
 				else
 					if( db.cd_text ) then
 						self.Cooldown:SetTextColor(db.cd_text_r, db.cd_text_g, db.cd_text_b, db.cd_text_a);
-						self.Cooldown:SetText(cdleft > 0 and cdleft or "");
+						self.Cooldown:SetText(cdleft &gt; <!-- yes &gt, actually &gt; xD --> 0 and cdleft or "");
 					end
 					if( db.cd_highlight ) then
 						self.CooldownBG:SetTexture(db.cd_highlight_r, db.cd_highlight_g, db.cd_highlight_b, db.cd_highlight_a);
@@ -79,7 +85,7 @@
 			<OnShow>
 				local db = PT:GetModule("FrameCombatDisplay").db.profile;
 				
-				-- during the battle opening scene, buttons shall glow red until the player can actually use them - if highlights are enabled
+				-- during the battle opening scene, buttons glow red until the player can actually use them - if highlights are enabled
 				self.Cooldown:SetText("");
 				
 				if( db.cd_highlight ) then
