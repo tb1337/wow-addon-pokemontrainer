@@ -72,6 +72,7 @@ function module:OnInitialize()
 			cd_highlight_g = 0,
 			cd_highlight_b = 0,
 			cd_highlight_a = 0.3,
+			ability_zoom = false,
 		},
 	});
 
@@ -466,7 +467,7 @@ function module.BattleFrame_SetupAbilityButtons(self, pet)
 			abID, abName, abIcon = _G.C_PetBattles.GetAbilityInfoByID( self.player[pet]["ab"..ab] );
 			
 			-- set ability icon
-			_G[self:GetName().."Pet"..pet]["Ability"..ab]:SetNormalTexture(abIcon);
+			_G[self:GetName().."Pet"..pet]["Ability"..ab].bg:SetTexture(abIcon);
 			
 			-- show ability row on self
 			BattleFrame_SetRowVisibility(self, pet, ab, "Show");
@@ -728,6 +729,17 @@ function module.BattleFrame_Options_Apply(self)
 			module.db.profile.animate_active_b,
 			0.2 -- the alpha is not adjustable
 		);
+		
+		-- cut off ability icon borders, or not
+		if( module.db.profile.ability_zoom ) then
+			for ab = 1, PT.MAX_PET_ABILITY do
+				_G[frame_name.."Pet"..pet]["Ability"..ab].bg:SetTexCoord(0.078125, 0.921875, 0.078125, 0.921875);
+			end
+		else
+			for ab = 1, PT.MAX_PET_ABILITY do
+				_G[frame_name.."Pet"..pet]["Ability"..ab].bg:SetTexCoord(0, 1, 0, 1);
+			end
+		end
 	end
 	
 	-- adjust frame background colors
@@ -1179,6 +1191,21 @@ function module:GetOptions()
 						self.db.profile.cd_highlight_g = g;
 						self.db.profile.cd_highlight_b = b;
 						self.db.profile.cd_highlight_a = a;
+					end,
+				},
+				ability_zoom = {
+					type = "toggle",
+					name = L["Cut off ability icon borders by zooming in"],
+					desc = L["Removes the borders from any ability icon displayed by PT. Only for styling purposes."],
+					order = 5,
+					width = "full",
+					get = function()
+						return self.db.profile.ability_zoom;
+					end,
+					set = function(_, value)
+						self.db.profile.ability_zoom = value;
+						module.BattleFrame_Options_Apply(_G.PTPlayer);
+						module.BattleFrame_Options_Apply(_G.PTEnemy);
 					end,
 				},
 			},

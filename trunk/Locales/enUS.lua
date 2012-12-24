@@ -45,6 +45,8 @@ L["Display rounds"] = true
 L["Whether to show the cooldown of abilities on the buttons or not."] = true
 L["Highlight"] = true
 L["Highlights ability buttons with a color when they are on cooldown."] = true
+L["Cut off ability icon borders by zooming in"] = true
+L["Removes the borders from any ability icon displayed by PT. Only for styling purposes."] = true
 
 -- module TooltipCombatDisplay
 L["Display: Tooltip"] = true
