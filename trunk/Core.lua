@@ -433,7 +433,7 @@ function PT:OpenOptions()
 					[1] = L["Display: Frames"],
 					[2] = L["Display: Tooltip"],
 				},
-				disabled = _G.C_PetBattles.IsInBattle,
+				hidden = _G.C_PetBattles.IsInBattle,
 			},
 			combatnotice = {
 				type = "description",
