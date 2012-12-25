@@ -435,6 +435,12 @@ function PT:OpenOptions()
 				},
 				disabled = _G.C_PetBattles.IsInBattle,
 			},
+			combatnotice = {
+				type = "description",
+				name = "|cffff0000"..L["Switching the combat display doesn't work during pet battles."].."|r",
+				order = 1.1,
+				hidden = function() return not _G.C_PetBattles.IsInBattle() end,
+			},
 			spacer = { type = "description", name = " ", order = 50 },
 		},
 	};

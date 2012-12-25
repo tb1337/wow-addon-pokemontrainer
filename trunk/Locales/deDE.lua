@@ -6,6 +6,7 @@ if not L then return end
 --@localization(locale="deDE", format="lua_additive_table", handle-unlocalized="english", escape-non-ascii=true, same-key-is-true=true)@
 
 --@do-not-package@
+L["Switching the combat display doesn't work during pet battles."] = "Die Kampfanzeige kann w\195\164hrend Haustierk\195\164mpfen nicht ver\195\164ndert werden."
 L["Active and inactive pet highlightning"] = "Hervorhebung f\195\188r aktive und inaktive Kampfhaustiere"
 L["Add battle-specific informations to battle pet tooltips."] = "Kampfbezogene Informationen im Tooltip von Kampfhaustieren anzeigen."
 L["Animate reorganizing"] = "Vorgang animieren"
