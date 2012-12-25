@@ -413,7 +413,9 @@ function PT:OpenOptions()
 			display = {
 				type = "select",
 				name = L["Preferred combat display"],
+				desc = L["Choose between the new (Frames) or the old (Tooltip) way of displaying combat data during pet battles."],
 				order = 1,
+				style = "radio",
 				get = function()
 					return PT.db.profile.activeBattleDisplay;
 				end,

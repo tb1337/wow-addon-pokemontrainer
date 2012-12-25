@@ -12,6 +12,7 @@ L["Recently updated to version"] = true
 L["Enable"] = true
 L["Enable this module."] = true
 L["Preferred combat display"] = true
+L["Choose between the new (Frames) or the old (Tooltip) way of displaying combat data during pet battles."] = true
 
 -- module FrameCombatDisplay
 L["Display: Frames"] = true

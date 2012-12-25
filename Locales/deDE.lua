@@ -15,6 +15,7 @@ L["Battle frames are getting resized when players have less than three pets."] =
 L["Battle frames are usually colored black. Enable to set your own color."] = "Die Fenster sind normalerweise schwarz. Diese Option aktivieren, um eine eigene Farbe einzustellen."
 L["Battle Level"] = "Kampflevel"
 L["Battle Pet Tooltip"] = "Kampfhaustier-Tooltip"
+L["Choose between the new (Frames) or the old (Tooltip) way of displaying combat data during pet battles."] = "W\195\164hle zwischen der neuen (Frames) oder der alten (Tooltip) Art und Weise, um kampfbezogene Daten w\195\164hrend Haustierk\195\164mpfen anzuzeigen."
 L["Consolidated battle infos"] = "Kompakte Kampfinformationen"
 L["Cut off ability icon borders by zooming in"] = "R\195\164nder der F\195\164higkeiten-Symbole durch Hineinzoomen abschneiden"
 L["Display battle infos only on wild pets"] = "Kampfinformationen nur bei wilden Kampfhaustieren anzeigen"
