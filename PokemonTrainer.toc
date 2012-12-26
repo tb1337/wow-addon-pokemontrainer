@@ -38,3 +38,7 @@ Modules\TooltipCombatDisplay.lua
 # Misc modules
 Modules\AuctionSearch.lua
 Modules\WildPetTooltip.lua
+
+#@alpha@
+Modules\HealBandageButtons.xml
+#@end-alpha@
