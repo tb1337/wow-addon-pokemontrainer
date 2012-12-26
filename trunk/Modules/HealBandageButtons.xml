@@ -10,16 +10,15 @@
 		<Scripts>
 			<OnLoad>
 				local _, name, icon, count;
+				local module = PT:GetModule("HealBandageButtons");
 				
 				if( self:GetID() == 1 ) then
-					local id = PT:GetModule("HealBandageButtons").petHealSpell;
+					local id = module.petHealSpell;
 					name, _, icon = _G.GetSpellInfo(id);
-					self:SetAttribute("type", "spell");
 					self:SetAttribute("spell", name);
 				else
-					local id = PT:GetModule("HealBandageButtons").petBandage;
+					local id = module.petBandage;
 					name, _, _, _, _, _, _, count, _, icon = _G.GetItemInfo(id);
-					self:SetAttribute("type", "item");
 					self:SetAttribute("item", name);
 				end
 				
@@ -88,7 +87,7 @@
 	
 	<Frame name="PTHealBandageFrame" parent="UIParent" frameStrata="MEDIUM" enablemouse="true" movable="true" clampedtoscreen="true" hidden="true">
 		<Size>
-			<AbsDimension x="98" y="50" />
+			<AbsDimension x="99" y="50" />
 		</Size>
 		<Layers>
 			<Layer level="ARTWORK">
@@ -112,15 +111,15 @@
 			</OnDragStop>
 		</Scripts>
 		<Frames>
-			<Button name="$parentHealButton" parentKey="HealButton" id="1" inherits="PTHBButton">
+			<Button name="$parentHealButton" id="1" inherits="PTHBButton">
 				<Anchors>
 					<Anchor point="LEFT" x="2" y="0" />
 				</Anchors>
 			</Button>
 			
-			<Button name="$parentBandageButton" parentKey="BandageButton" id="2" inherits="PTHBButton">
+			<Button name="$parentBandageButton" id="2" inherits="PTHBButton">
 				<Anchors>
-					<Anchor point="RIGHT" x="-2" y="0" />
+					<Anchor point="RIGHT" x="-3" y="0" />
 				</Anchors>
 			</Button>
 		</Frames>
