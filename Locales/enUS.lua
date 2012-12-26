@@ -76,4 +76,15 @@ L["Unknown pet color"] = true
 L["Please note that the Auction Search module isn't supporting third party auction addons. If such addons are actually changing the default auction UI and these changes break this module, simply disable it. Please do not open tickets if other addons break this module. Thanks."] = true
 L["If you are author/maintainer of a common auction UI addon and want this module supporting your addon, feel free to open a ticket on Curseforge or simply send me an email at"] = true
 
+-- module HealBandageButtons
+L["Heal Pet Buttons"] = true
+L["When pet tracking is enabled, this module displays two buttons on a separate and draggable frame. One for healing your battle pets with the spellcast, another for healing with pet bandages. Clicking these buttons is allowed when not in combat."] = true
+L["Shift"] = true
+L["Alt"] = true
+L["Ctrl"] = true
+L["Modifier"] = true
+L["Choose whether you need to push a modifier key or not, when clicking an action button. UI reload required."] = true
+L["Mouse button"] = true
+L["Select the mouse button on which clicks will execute actions. UI reload required."] = true
+
 --@end-do-not-package@
