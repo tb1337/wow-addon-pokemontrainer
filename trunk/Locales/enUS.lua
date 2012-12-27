@@ -79,12 +79,14 @@ L["If you are author/maintainer of a common auction UI addon and want this modul
 -- module HealBandageButtons
 L["Heal Pet Buttons"] = true
 L["When pet tracking is enabled, this module displays two buttons on a separate and draggable frame. One for healing your battle pets with the spellcast, another for healing with pet bandages. Clicking these buttons is allowed when not in combat."] = true
+L["Draggable"] = true
+L["You may drag the frame around when this option is set."] = true
 L["Shift"] = true
 L["Alt"] = true
 L["Ctrl"] = true
 L["Modifier"] = true
-L["Choose whether you need to push a modifier key or not, when clicking an action button. UI reload required."] = true
+L["Choose whether you need to push a modifier key or not, when clicking an action button."] = true
 L["Mouse button"] = true
-L["Select the mouse button on which clicks will execute actions. UI reload required."] = true
+L["Select the mouse button on which clicks will execute actions."] = true
 
 --@end-do-not-package@

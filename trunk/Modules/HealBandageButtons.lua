@@ -17,7 +17,7 @@ module.displayName = L["Heal Pet Buttons"];
 module.desc = L["When pet tracking is enabled, this module displays two buttons on a separate and draggable frame. One for healing your battle pets with the spellcast, another for healing with pet bandages. Clicking these buttons is allowed when not in combat."];
 
 module.petHealSpell = 125439; -- Blizzard_PetJournal.lua
-module.petBandage = 86143; -- item id
+module.petBandage = 117;--86143; -- item id
 
 -------------------------
 -- Module Handling
@@ -27,6 +27,8 @@ function module:OnInitialize()
 	self.db = PT.db:RegisterNamespace("HealBandageButtons", {
 		profile = {
 			enabled = false,
+			scale = 1,
+			draggable = true,
 			mousebutton = "type1",
 			modifier = "alt-",
 		},
@@ -36,8 +38,10 @@ function module:OnInitialize()
 		self:SetEnabledState(false);
 	end
 	
-	_G.PTHealBandageFrameHealButton:SetAttribute(self.db.profile.modifier..self.db.profile.mousebutton, "spell");
-	_G.PTHealBandageFrameBandageButton:SetAttribute(self.db.profile.modifier..self.db.profile.mousebutton, "item");
+	-- set options
+	_G.PTHealBandageFrame:SetScale(module.db.profile.scale);
+	self:SetDraggable();
+	self:SetBindings(false, false);
 end
 
 function module:OnEnable()	
@@ -89,6 +93,33 @@ function module:CheckMinimapTracking()
 	end
 end
 
+-----------------------
+-- Frame related
+-----------------------
+
+function module:SetDraggable(draggable)
+	if( type(draggable) == "nil" ) then
+		draggable = module.db.profile.draggable;
+	end
+	draggable = draggable and "LeftButton" or nil;
+	
+	_G.PTHealBandageFrame:RegisterForDrag(draggable);
+	_G.PTHealBandageFrameHealButton:RegisterForDrag(draggable);
+	_G.PTHealBandageFrameBandageButton:RegisterForDrag(draggable);
+end
+
+function module:SetBindings(button, modifier, value)
+	local old_button, old_modifier = self.db.profile.mousebutton, self.db.profile.modifier;
+	button = button and value or old_button;
+	modifier = modifier and value or old_modifier;
+	
+	_G.PTHealBandageFrameHealButton:SetAttribute(old_modifier..old_button, nil);
+	_G.PTHealBandageFrameHealButton:SetAttribute(modifier..button, "spell");
+	
+	_G.PTHealBandageFrameBandageButton:SetAttribute(old_modifier..old_button, nil);
+	_G.PTHealBandageFrameBandageButton:SetAttribute(modifier..button, "item");
+end
+
 -----------------------------
 -- Both Button related
 -----------------------------
@@ -119,7 +150,15 @@ function module.Button_UpdateUsability(self)
 			self:UnregisterEvent("SPELLS_CHANGED");
 		end
 	else
-		local count = _G.GetItemCount(module.petBandage);
+		if( self:IsEventRegistered("BAG_UPDATE_DELAYED") ) then
+			self:UnregisterEvent("BAG_UPDATE_DELAYED");
+		end
+		
+		local id = module.petBandage;
+		local name, _, _, _, _, _, _, _, _, icon = _G.GetItemInfo(id);				
+		local count = _G.GetItemCount(id);
+		
+		self.icon:SetTexture(icon);
 		_G[self:GetName().."Count"]:SetText(count);
 		
 		if( count > 0 ) then
@@ -135,16 +174,49 @@ end
 ----------------------
 
 function module:GetOptions()
+	local function is_disabled(info)
+		return not module:IsEnabled() and true or not not _G.InCombatLockdown(); -- this API returns either 1 or nil, so we ensure a bool
+	end
+	
 	return {
+		draggable = {
+			type = "toggle",
+			name = L["Draggable"],
+			desc = L["You may drag the frame around when this option is set."],
+			order = 1,
+			get = function()
+				return module.db.profile.draggable;
+			end,
+			set = function(_, value)
+				module.db.profile.draggable = value;
+				self:SetDraggable(value);
+			end,
+		},
+		scale = {
+			type = "range",
+			name = L["Frame scale"],
+			min = 0.5,
+			max = 2.0,
+			step = 0.05,
+			order = 2,
+			get = function()
+				return self.db.profile.scale;
+			end,
+			set = function(_, value)
+				self.db.profile.scale = value;
+				_G.PTHealBandageFrame:SetScale(value);
+			end,
+		},
 		mousebutton = {
 			type = "select",
 			name = L["Mouse button"],
-			desc = L["Select the mouse button on which clicks will execute actions. UI reload required."],
-			order = 1,
+			desc = L["Select the mouse button on which clicks will execute actions."],
+			order = 3,
 			get = function()
 				return self.db.profile.mousebutton;
 			end,
 			set = function(_, value)
+				self:SetBindings(true, false, value);
 				self.db.profile.mousebutton = value;
 			end,
 			values = {
@@ -152,16 +224,18 @@ function module:GetOptions()
 				["type2"] = L["Right"],
 				["type*"] = _G.ALL,
 			},
+			disabled = is_disabled,
 		},
 		modifier = {
 			type = "select",
 			name = L["Modifier"],
-			desc = L["Choose whether you need to push a modifier key or not, when clicking an action button. UI reload required."],
-			order = 2,
+			desc = L["Choose whether you need to push a modifier key or not, when clicking an action button."],
+			order = 4,
 			get = function()
 				return self.db.profile.modifier;
 			end,
 			set = function(_, value)
+				self:SetBindings(false, true, value);
 				self.db.profile.modifier = value;
 			end,
 			values = {
@@ -170,6 +244,7 @@ function module:GetOptions()
 				["alt-"]   = L["Alt"],
 				["ctrl-"]  = L["Ctrl"],
 			},
+			disabled = is_disabled,
 		},
 	};
 end
