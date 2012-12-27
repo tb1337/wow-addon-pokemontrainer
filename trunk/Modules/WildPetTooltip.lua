@@ -173,64 +173,66 @@ end
 -- Option Table
 ----------------------
 
-function module:GetOptions()
+do
 	local function is_disabled()
 		return not(module:IsEnabled() and module.db.profile.battlelevel);
 	end
 	
-	return {
-		battlelevel = {
-			type = "toggle",
-			name = L["Display battle pet level"],
-			desc = L["Sometimes the actual battle pet level differs from the NPC pet level."],
-			get = function()
-				return self.db.profile.battlelevel;
-			end,
-			set = function(_, value)
-				self.db.profile.battlelevel = value;
-			end,
-			order = 1,
-			width = "full",
-		},
-		battlelevelonlydiff = {
-			type = "toggle",
-			name = L["...only on different levels"],
-			get = function()
-				return self.db.profile.battlelevelonlydiff;
-			end,
-			set = function(_, value)
-				self.db.profile.battlelevelonlydiff = value;
-			end,
-			order = 2,
-			width = "full",
-			disabled = is_disabled,
-		},
-		spacer = { type = "description", name = " ", order = 3 },
-		consolidated = {
-			type = "toggle",
-			name = L["Consolidated battle infos"],
-			desc = L["Display your battle pet team without their abilities and if they have at least one bonus or weakness."],
-			get = function()
-				return self.db.profile.consolidated;
-			end,
-			set = function(_, value)
-				self.db.profile.consolidated = value;
-			end,
-			order = 4,
-			width = "full",
-		},
-		onlywildpets = {
-			type = "toggle",
-			name = L["Display battle infos only on wild pets"],
-			desc = L["If this is not set, battle infos are also displayed on NPC and player pets."],
-			get = function()
-				return self.db.profile.onlywildpets;
-			end,
-			set = function(_, value)
-				self.db.profile.onlywildpets = value;
-			end,
-			order = 5,
-			width = "full",
-		},
-	};
+	function module:GetOptions()
+		return {
+			battlelevel = {
+				type = "toggle",
+				name = L["Display battle pet level"],
+				desc = L["Sometimes the actual battle pet level differs from the NPC pet level."],
+				get = function()
+					return self.db.profile.battlelevel;
+				end,
+				set = function(_, value)
+					self.db.profile.battlelevel = value;
+				end,
+				order = 1,
+				width = "full",
+			},
+			battlelevelonlydiff = {
+				type = "toggle",
+				name = L["...only on different levels"],
+				get = function()
+					return self.db.profile.battlelevelonlydiff;
+				end,
+				set = function(_, value)
+					self.db.profile.battlelevelonlydiff = value;
+				end,
+				order = 2,
+				width = "full",
+				disabled = is_disabled,
+			},
+			spacer = { type = "description", name = " ", order = 3 },
+			consolidated = {
+				type = "toggle",
+				name = L["Consolidated battle infos"],
+				desc = L["Display your battle pet team without their abilities and if they have at least one bonus or weakness."],
+				get = function()
+					return self.db.profile.consolidated;
+				end,
+				set = function(_, value)
+					self.db.profile.consolidated = value;
+				end,
+				order = 4,
+				width = "full",
+			},
+			onlywildpets = {
+				type = "toggle",
+				name = L["Display battle infos only on wild pets"],
+				desc = L["If this is not set, battle infos are also displayed on NPC and player pets."],
+				get = function()
+					return self.db.profile.onlywildpets;
+				end,
+				set = function(_, value)
+					self.db.profile.onlywildpets = value;
+				end,
+				order = 5,
+				width = "full",
+			},
+		};
+	end
 end
