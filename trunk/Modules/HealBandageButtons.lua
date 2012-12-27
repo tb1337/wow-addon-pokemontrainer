@@ -17,7 +17,7 @@ module.displayName = L["Heal Pet Buttons"];
 module.desc = L["When pet tracking is enabled, this module displays two buttons on a separate and draggable frame. One for healing your battle pets with the spellcast, another for healing with pet bandages. Clicking these buttons is allowed when not in combat."];
 
 module.petHealSpell = 125439; -- Blizzard_PetJournal.lua
-module.petBandage = 117;--86143; -- item id
+module.petBandage = 86143; -- item id
 
 -------------------------
 -- Module Handling
