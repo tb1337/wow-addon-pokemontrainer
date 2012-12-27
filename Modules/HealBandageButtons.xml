@@ -22,8 +22,7 @@
 					self:SetAttribute("item", name);
 				end
 				
-				self.icon:SetTexture(icon);				
-				self:RegisterForDrag("LeftButton");
+				self.icon:SetTexture(icon);
 			</OnLoad>
 			<OnShow>
 				local module = PT:GetModule("HealBandageButtons");
@@ -40,6 +39,7 @@
 				else
 					self:RegisterEvent("BAG_UPDATE_COOLDOWN");
 					self:RegisterEvent("BAG_UPDATE");
+					self:RegisterEvent("BAG_UPDATE_DELAYED");
 				end
 			</OnShow>
 			<OnHide>
@@ -54,6 +54,9 @@
 				else
 					self:UnregisterEvent("BAG_UPDATE_COOLDOWN");
 					self:UnregisterEvent("BAG_UPDATE");
+					if( self:IsEventRegistered("BAG_UPDATE_DELAYED") ) then
+						self:UnregisterEvent("BAG_UPDATE_DELAYED");
+					end
 				end
 			</OnHide>
 			<OnEvent>
@@ -100,9 +103,6 @@
 			<Anchor point="CENTER" />
 		</Anchors>
 		<Scripts>
-			<OnLoad>
-				self:RegisterForDrag("LeftButton");
-			</OnLoad>
 			<OnDragStart>
 				self:StartMoving();
 			</OnDragStart>
