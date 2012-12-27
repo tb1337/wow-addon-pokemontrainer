@@ -89,4 +89,20 @@ L["Choose whether you need to push a modifier key or not, when clicking an actio
 L["Mouse button"] = true
 L["Select the mouse button on which clicks will execute actions."] = true
 
+-- module AutoSafariHat
+L["Auto Safari Hat"] = true
+L["Small module which will always equip your Safari Hat when engaging a battle pet. After the battle is over and the XP is gained, it will switch back to your previous weared head gear."] = true
+L["Hat already put on!"] = true
+L["Hat put on successfully."] = true
+L["Something went totally wrong. This error should never appear."] = true
+L["Safari Hat"] = true
+L["Original hat put on succesfully."] = true
+L["Cannot put original hat on, it is unknown."] = true
+L["Safari Hat found in your bags!"] = true
+L["Safari Hat not found in your bags!"] = true
+L["Display messages"] = true
+L["Prints messages into the chat window when equip is successfully switched or errors occured."] = true
+L["Only errors"] = true
+L["Prints only error messages."] = true
+
 --@end-do-not-package@

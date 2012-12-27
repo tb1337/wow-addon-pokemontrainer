@@ -173,78 +173,80 @@ end
 -- Option Table
 ----------------------
 
-function module:GetOptions()
+do
 	local function is_disabled(info)
 		return not module:IsEnabled() and true or not not _G.InCombatLockdown(); -- this API returns either 1 or nil, so we ensure a bool
 	end
 	
-	return {
-		draggable = {
-			type = "toggle",
-			name = L["Draggable"],
-			desc = L["You may drag the frame around when this option is set."],
-			order = 1,
-			get = function()
-				return module.db.profile.draggable;
-			end,
-			set = function(_, value)
-				module.db.profile.draggable = value;
-				self:SetDraggable(value);
-			end,
-		},
-		scale = {
-			type = "range",
-			name = L["Frame scale"],
-			min = 0.5,
-			max = 2.0,
-			step = 0.05,
-			order = 2,
-			get = function()
-				return self.db.profile.scale;
-			end,
-			set = function(_, value)
-				self.db.profile.scale = value;
-				_G.PTHealBandageFrame:SetScale(value);
-			end,
-		},
-		mousebutton = {
-			type = "select",
-			name = L["Mouse button"],
-			desc = L["Select the mouse button on which clicks will execute actions."],
-			order = 3,
-			get = function()
-				return self.db.profile.mousebutton;
-			end,
-			set = function(_, value)
-				self:SetBindings(true, false, value);
-				self.db.profile.mousebutton = value;
-			end,
-			values = {
-				["type1"] = L["Left"],
-				["type2"] = L["Right"],
-				["type*"] = _G.ALL,
+	function module:GetOptions()
+		return {
+			draggable = {
+				type = "toggle",
+				name = L["Draggable"],
+				desc = L["You may drag the frame around when this option is set."],
+				order = 1,
+				get = function()
+					return module.db.profile.draggable;
+				end,
+				set = function(_, value)
+					module.db.profile.draggable = value;
+					self:SetDraggable(value);
+				end,
 			},
-			disabled = is_disabled,
-		},
-		modifier = {
-			type = "select",
-			name = L["Modifier"],
-			desc = L["Choose whether you need to push a modifier key or not, when clicking an action button."],
-			order = 4,
-			get = function()
-				return self.db.profile.modifier;
-			end,
-			set = function(_, value)
-				self:SetBindings(false, true, value);
-				self.db.profile.modifier = value;
-			end,
-			values = {
-				[""] = _G.NONE,
-				["shift-"] = L["Shift"],
-				["alt-"]   = L["Alt"],
-				["ctrl-"]  = L["Ctrl"],
+			scale = {
+				type = "range",
+				name = L["Frame scale"],
+				min = 0.5,
+				max = 2.0,
+				step = 0.05,
+				order = 2,
+				get = function()
+					return self.db.profile.scale;
+				end,
+				set = function(_, value)
+					self.db.profile.scale = value;
+					_G.PTHealBandageFrame:SetScale(value);
+				end,
 			},
-			disabled = is_disabled,
-		},
-	};
+			mousebutton = {
+				type = "select",
+				name = L["Mouse button"],
+				desc = L["Select the mouse button on which clicks will execute actions."],
+				order = 3,
+				get = function()
+					return self.db.profile.mousebutton;
+				end,
+				set = function(_, value)
+					self:SetBindings(true, false, value);
+					self.db.profile.mousebutton = value;
+				end,
+				values = {
+					["type1"] = L["Left"],
+					["type2"] = L["Right"],
+					["type*"] = _G.ALL,
+				},
+				disabled = is_disabled,
+			},
+			modifier = {
+				type = "select",
+				name = L["Modifier"],
+				desc = L["Choose whether you need to push a modifier key or not, when clicking an action button."],
+				order = 4,
+				get = function()
+					return self.db.profile.modifier;
+				end,
+				set = function(_, value)
+					self:SetBindings(false, true, value);
+					self.db.profile.modifier = value;
+				end,
+				values = {
+					[""] = _G.NONE,
+					["shift-"] = L["Shift"],
+					["alt-"]   = L["Alt"],
+					["ctrl-"]  = L["Ctrl"],
+				},
+				disabled = is_disabled,
+			},
+		};
+	end
 end

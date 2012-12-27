@@ -874,16 +874,16 @@ local function OpenPositioning()
 end
 
 -- called by :OnInitialize
-function module:GetPositionOptions()
-	local function get_pet_icon(info)
-		return module.db.profile[info.arg.."_icon"];
-	end
+local function get_pet_icon(info)
+	return module.db.profile[info.arg.."_icon"];
+end
+
+local function set_pet_icon(info, value)
+	module.db.profile[info.arg.."_icon"] = value;
+	module.BattleFrame_Options_Apply(_G[info.arg]);
+end
 	
-	local function set_pet_icon(info, value)
-		module.db.profile[info.arg.."_icon"] = value;
-		module.BattleFrame_Options_Apply(_G[info.arg]);
-	end
-	
+function module:GetPositionOptions()	
 	local options = {
 		name = L["More settings"],
 		type = "group",
@@ -991,11 +991,11 @@ end
 -- Option Table
 ----------------------
 
-function module:GetOptions()
-	local function is_disabled(info)
-		return not module:IsEnabled() and true or not module.db.profile[info[#info].."_use"];
-	end
-	
+local function is_disabled(info)
+	return not module:IsEnabled() and true or not module.db.profile[info[#info].."_use"];
+end
+
+function module:GetOptions()	
 	return {
 		frame = {
 			name = L["Frame-related options"],
