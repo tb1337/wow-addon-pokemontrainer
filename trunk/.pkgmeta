@@ -31,3 +31,4 @@ optional-dependencies:
   - ace3
   - ilib
   - libpetjournal-2-0
+  - libpetbreedinfo

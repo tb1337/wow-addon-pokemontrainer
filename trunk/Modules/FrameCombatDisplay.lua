@@ -58,6 +58,7 @@ function module:OnInitialize()
 			bg_g = 0.30,
 			bg_b = 0.30,
 			bg_a = 0.48,
+			breeds = 3,
 			reorganize_use = true,
 			reorganize_ani = true,
 			nactivealpha_use = false,
@@ -418,6 +419,7 @@ function module.BattleFrame_Initialize(self)
 	local color;
 	
 	local frame_name = self:GetName();
+	local breed, show1, show2;
 	
 	for pet = 1, PT.MAX_COMBAT_PETS do
 		if( pet <= self.player.numPets ) then
@@ -439,6 +441,37 @@ function module.BattleFrame_Initialize(self)
 			
 			-- setup ability buttons
 			module.BattleFrame_SetupAbilityButtons(self, pet);
+			
+			-- prepare breed info
+			breed = self.player[pet].breed;
+			show1, show2 = false, false;
+			
+			if( breed and module.db.profile.breeds > 0 ) then
+				-- the breeds option has to be treated as an ORed value
+				if( bit.band(module.db.profile.breeds, 1) > 0 ) then
+					_G[frame_name.."Pet"..pet].Button.BreedText:SetText(breed);
+					show1 = true;
+				end
+				
+				-- the breeds option has to be treated as an ORed value
+				if( bit.band(module.db.profile.breeds, 2) > 0 ) then
+					breed = breed:sub(1, 1); -- we don't need breed anymore, so we get the first letter for displaying icons
+					show2 = true;
+					
+					if( breed == "P" ) then
+						_G[frame_name.."Pet"..pet].Button.BreedTexture:SetTexCoord(0, 0.5, 0, 0.5);
+					elseif( breed == "S" ) then
+						_G[frame_name.."Pet"..pet].Button.BreedTexture:SetTexCoord(0, 0.5, 0.5, 1);
+					elseif( breed == "H" ) then
+						_G[frame_name.."Pet"..pet].Button.BreedTexture:SetTexCoord(0.5, 1, 0.5, 1);
+					else
+						-- balanced means no special stuff, so no icon
+						show2 = false;
+					end
+				end
+			end
+			if( show1 ) then _G[frame_name.."Pet"..pet].Button.BreedText:Show() else _G[frame_name.."Pet"..pet].Button.BreedText:Hide() end
+			if( show2 ) then _G[frame_name.."Pet"..pet].Button.BreedTexture:Show() else _G[frame_name.."Pet"..pet].Button.BreedTexture:Hide() end
 			
 			-- display pet frame
 			_G[frame_name.."Pet"..pet]:Show();
@@ -722,6 +755,18 @@ function module.BattleFrame_Options_Apply(self)
 		icon:ClearAllPoints();
 		icon:SetPoint(mirrors[value], icon:GetParent(), value, (value == "TOPLEFT" and -6 or 4), 0);
 		
+		-- reanchor the breed textures and breed strings
+		icon.BreedText:ClearAllPoints();
+		icon.BreedTexture:ClearAllPoints();
+		
+		if( value == "TOPLEFT" ) then
+			icon.BreedText:SetPoint("BOTTOMRIGHT", 1, 2);
+			icon.BreedTexture:SetPoint("BOTTOMLEFT", -4, -2);
+		else
+			icon.BreedText:SetPoint("BOTTOMLEFT", 0, 2);
+			icon.BreedTexture:SetPoint("BOTTOMRIGHT", 4, -2);
+		end
+				
 		-- adjust active highlight colors
 		_G[frame_name.."Pet"..pet].activeBG:SetTexture(
 			module.db.profile.animate_active_r,
@@ -1020,6 +1065,24 @@ function module:GetOptions()
 					name = L["More settings"],
 					order = 2,
 					func = OpenPositioning,
+				},
+				breeds = {
+					type = "select",
+					name = L["Display breeds"],
+					desc = L["Perhaps, you heard of battle pet breeds before. Any pet has an assigned breed ID which defines which stats will grow larger than others while leveling up. Stats are health, power and speed. When this option is enabled, you can actually see pet breeds in during battles."],
+					order = 3,
+					get = function()
+						return self.db.profile.breeds;
+					end,
+					set = function(_, value)
+						self.db.profile.breeds = value;
+					end,
+					values = {
+						[0] = _G.NONE,
+						[1] = L["As text"],
+						[2] = L["As image"],
+						[3] = L["Both"],
+					},
 				},
 			},
 		},
