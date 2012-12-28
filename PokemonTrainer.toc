@@ -1,12 +1,12 @@
 ## Interface: 50100
 ## Title: Pokemon Trainer
-## Version: 1.0.1
+## Version: 1.0.3
 ## Notes: The pet battle addon with many helpers!
 ## Author: grdn
 ## X-Maintainer: Possible
 ## X-Tester: Detritis
 ## SavedVariables: PokemonTrainerDB
-## OptionalDeps: Ace3, iLib, LibPetJournal-2.0
+## OptionalDeps: Ace3, iLib, LibPetBreedInfo-1.0, LibPetJournal-2.0
 
 
 # Libraries
@@ -14,6 +14,7 @@ Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
 Libs\LibStub\Libstub.lua
 
 Libs\iLib\lib.xml
+LibPetBreedInfo-1.0\LibPetBreedInfo-1.0.lua
 Libs\LibPetJournal-2.0\LibPetJournal-2.0.lua
 
 Libs\AceAddon-3.0\AceAddon-3.0.xml
@@ -39,7 +40,4 @@ Modules\TooltipCombatDisplay.lua
 Modules\AuctionSearch.lua
 Modules\WildPetTooltip.lua
 Modules\HealBandageButtons.xml
-
-#@alpha@
 Modules\AutoSafariHat.lua
-#@end-alpha@

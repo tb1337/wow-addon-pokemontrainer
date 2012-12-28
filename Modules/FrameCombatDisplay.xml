@@ -302,9 +302,19 @@
 					<Layer level="OVERLAY">
 						<FontString parentKey="Level" inherits="SystemFont_Outline" justifyH="LEFT" justifyV="TOP">
 							<Anchors>
-								<Anchor point="TOP" relativePoint="BOTTOM" y="-2" />
+								<Anchor point="TOP" relativePoint="BOTTOM" x="0" y="-2" />
 							</Anchors>
 						</FontString>
+						<FontString parentKey="BreedText" font="Fonts\FRIZQT__.TTF" outline="NORMAL" justifyH="LEFT" justifyV="TOP" hidden="true">
+							<FontHeight>
+								<AbsValue val="8"/>
+							</FontHeight>
+						</FontString>
+						<Texture parentKey="BreedTexture" file="Interface\PetBattles\PetBattle-StatIcons" hidden="true">
+							<Size>
+								<AbsDimension x="12" y="12" />
+							</Size>
+						</Texture>
 					</Layer>
 				</Layers>
 			</Button>

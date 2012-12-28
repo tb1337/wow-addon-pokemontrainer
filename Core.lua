@@ -7,6 +7,7 @@ local PT = LibStub("AceAddon-3.0"):NewAddon(select(2, ...), AddonName, "AceEvent
 
 local L = LibStub("AceLocale-3.0"):GetLocale(AddonName);
 local AceTimer = LibStub("AceTimer-3.0"); -- no need for embedding it
+local LibBreed = LibStub("LibPetBreedInfo-1.0");
 
 local _G = _G;
 
@@ -313,6 +314,7 @@ do
 			t[pet].hp = petHP;
 			t[pet].hpM = petMaxHP;
 			t[pet].numAbilities = numAbilities;
+			t[pet].breed = LibBreed:GetBreedName( LibBreed:GetBreedByPetBattleSlot(side, pet) or 0 );
 			
 			for ab = 1, numAbilities do
 				t[pet]["ab"..ab] = _G.C_PetBattles.GetAbilityInfo(side, pet, ab); -- ability id
@@ -353,6 +355,7 @@ do
 			t[pet].hp = random(0, 10);
 			t[pet].hpM = 10;
 			t[pet].numAbilities = random(1, 3);
+			t[pet].breed = LibBreed:GetBreedName( random(1, 10) );
 			
 			for ab = 1, t[pet].numAbilities do
 				while( not abID ) do
