@@ -3,6 +3,3 @@ grdn:
     ...	tip:SetLineScript(line, "OnEnter", ... {side, pet, ab} ...
 	Need to think about another solution because this sucks. 9 new tables on each display update, per side. Urgh.
 	We need something more static here.
-
-Possible:
-- 

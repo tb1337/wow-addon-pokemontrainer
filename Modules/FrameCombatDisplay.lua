@@ -92,7 +92,7 @@ function module:OnEnable()
 		frame:RegisterEvent("PET_BATTLE_OPENING_START");
 		frame:RegisterEvent("PET_BATTLE_OVER");
 		frame:RegisterEvent("PET_BATTLE_CLOSE");
-		--frame:RegisterEvent("PET_BATTLE_TURN_STARTED");
+		frame:RegisterEvent("PET_BATTLE_TURN_STARTED");
 		frame:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
 		frame:RegisterEvent("PET_BATTLE_PET_CHANGED");
 		frame:RegisterEvent("PET_BATTLE_HEALTH_CHANGED");
@@ -125,7 +125,7 @@ function module:OnDisable()
 		frame:UnregisterEvent("PET_BATTLE_OPENING_START");
 		frame:UnregisterEvent("PET_BATTLE_OVER");
 		frame:UnregisterEvent("PET_BATTLE_CLOSE");
-		--frame:UnregisterEvent("PET_BATTLE_TURN_STARTED");
+		frame:UnregisterEvent("PET_BATTLE_TURN_STARTED");
 		frame:UnregisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
 		frame:UnregisterEvent("PET_BATTLE_PET_CHANGED");
 		frame:UnregisterEvent("PET_BATTLE_HEALTH_CHANGED");
@@ -524,8 +524,6 @@ end
 
 function module.BattleFrame_UpdateBattleButtons(self)
 	local speed, flying;
-	local available, cdleft;
-	
 	local frame_name = self:GetName();
 	
 	for pet = 1, self.player.numPets do
@@ -547,6 +545,30 @@ function module.BattleFrame_UpdateBattleButtons(self)
 			end
 		end -- end for enemPet
 	end -- end for pet
+	
+	--@do-not-package@
+	
+	local glow1, glow2, glow3 = PT:GetStateBonuses(self.player, self.enemy);
+	
+	print(self:GetName(), glow1, glow2, glow3)
+	
+	if( glow1 ) then
+		ActionButton_ShowOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability1);
+	else
+		ActionButton_HideOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability1);
+	end
+	if( glow2 ) then
+		ActionButton_ShowOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability2);
+	else
+		ActionButton_HideOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability2);
+	end
+	if( glow3 ) then
+		ActionButton_ShowOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability3);
+	else
+		ActionButton_HideOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability3);
+	end
+	
+	--@end-do-not-package@
 end
 
 function module.BattleFrame_UpdateHealthState(self)

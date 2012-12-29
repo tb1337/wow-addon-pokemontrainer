@@ -5,7 +5,8 @@
 ## Author: grdn
 ## X-Maintainer: Possible
 ## X-Tester: Detritis
-## SavedVariables: PokemonTrainerDB
+## SavedVariables: PokemonTrainerDB, PTDevDB
+## Dependencies: Blizzard_PetJournal, Blizzard_PetBattleUI
 ## OptionalDeps: Ace3, iLib, LibPetBreedInfo-1.0, LibPetJournal-2.0
 
 
@@ -31,6 +32,10 @@ Locales\Locales.xml
 
 # Main
 Core.lua
+Data.lua
+#@do-not-package@
+Developer.lua
+#@end-do-not-package@
 
 # Combat Displays
 Modules\FrameCombatDisplay.xml
