@@ -26,8 +26,12 @@ LibStub("iLib"):Register(AddonName);
 PT.PlayerInfo = {};
 PT.EnemyInfo  = {};
 
-PT.PLAYER = _G.LE_BATTLE_PET_ALLY;
-PT.ENEMY  = _G.LE_BATTLE_PET_ENEMY;
+PT.PAD_INDEX = _G.PET_BATTLE_PAD_INDEX;
+PT.PET_INDEX = 1;
+
+PT.WEATHER= _G.LE_BATTLE_PET_WEATHER;	-- 0
+PT.PLAYER = _G.LE_BATTLE_PET_ALLY;		-- 1
+PT.ENEMY  = _G.LE_BATTLE_PET_ENEMY;		-- 2
 
 PT.MAX_COMBAT_PETS = 3;
 PT.MAX_PET_ABILITY = 3;
@@ -53,9 +57,9 @@ function PT:OnInitialize()
 	self.db = LibStub("AceDB-3.0"):New("PokemonTrainerDB", { profile = { activeBattleDisplay = 1, version = "", alpha = false } }, "Default");
 	
 	-- We require the PetJournal for many API functions
-	if( not _G.IsAddOnLoaded("Blizzard_PetJournal") ) then
-		_G.LoadAddOn("Blizzard_PetJournal");
-	end
+	--if( not _G.IsAddOnLoaded("Blizzard_PetJournal") ) then
+	--	_G.LoadAddOn("Blizzard_PetJournal");
+	--end
 end
 
 function PT:OnEnable()
@@ -234,6 +238,75 @@ function PT:GetAbilityCooldown(side, pet, ab)
 	return available, cdleft;
 end
 
+--@do-not-package@
+do	
+	local effects = {_G.C_PetBattles.GetAllEffectNames()};
+	
+	local env = {};
+	for i, effect in ipairs(effects) do
+		env[effect] = function(abilityID, turnIndex, event)
+			return _G.C_PetBattles.GetAbilityEffectInfo(abilityID, turnIndex, event, effects[i]) or 0;
+		end;
+	end
+	
+	local states = {};
+	for stateName, stateID in pairs(_G.C_PetBattles.GetAllStates()) do
+		stateName = stateName:sub(6, 0);
+		states[stateName] = stateID;
+		states[stateID] = stateName;
+	end
+	
+	local EVENT_On_Apply, EVENT_On_Damage_Taken, EVENT_On_Damage_Dealt, EVENT_On_Heal_Taken, EVENT_On_Heal_Dealt, EVENT_On_Aura_Removed,
+		EVENT_On_Round_Start, EVENT_On_Round_End, EVENT_On_Turn, EVENT_On_Ability, EVENT_On_Swap_In, EVENT_On_Swap_Out =
+		_G.PET_BATTLE_EVENT_ON_APPLY, _G.PET_BATTLE_EVENT_ON_DAMAGE_TAKEN, _G.PET_BATTLE_EVENT_ON_DAMAGE_DEALT, _G.PET_BATTLE_EVENT_ON_HEAL_TALEN,
+		_G.PET_BATTLE_EVENT_ON_HEAL_DEALT, _G.PET_BATTLE_EVENT_ON_AURA_REMOVED, _G.PET_BATTLE_EVENT_ON_ROUND_START, _G.PET_BATTLE_EVENT_ON_ROUND_END,
+		_G.PET_BATTLE_EVENT_ON_TURN, _G.PET_BATTLE_EVENT_ON_ABILITY, _G.PET_BATTLE_EVENT_ON_SWAP_IN, _G.PET_BATTLE_EVENT_ON_SWAP_OUT;
+	
+	PT.effects, PT.events, PT.states, PT.env = effects, events, states, env;
+	
+	local glow = {};
+	local function g(i,v) if not glow[i] then glow[i]=v elseif glow[i] and not v then else glow[i]=v end end
+	
+	function PT:GetStateBonuses(player, enemy)		
+		local Data = PT:GetModule("_Data");
+		local playerPet, enemyPet = player[player.activePet], enemy[enemy.activePet];
+		
+		glow[1], glow[2], glow[3] = false, false, false;
+		
+		-- We have a buff which leads us in dealing more damage
+		-- So we check if an ability does damage and if yes, let it glow
+		if( _G.C_PetBattles.GetStateValue(player.side, player.activePet, states.Mod_DamageDealtPercent) > 0 ) then
+			for ab = 1, playerPet.numAbilities do
+				g(ab, env.points(playerPet["ab"..ab], 1, EVENT_On_Damage_Taken) > 0);
+			end
+			return unpack(glow); -- we do not need the other checks anymore
+		end
+		
+		-- Our enemy has a debuff which leads us in dealing more damage
+		-- SO we check if an ability does damage and if yes, let it glow
+		if( _G.C_PetBattles.GetStateValue(enemy.side, enemy.activePet, states.Mod_DamageTakenPercent) > 0 ) then
+			for ab = 1, player.numAbilities do
+				g(ab, env.points(playerPet["ab"..ab], 1, EVENT_On_Damage_Taken) > 0);
+			end
+			return unpack(glow); -- we do not need the other checks anymore
+		end
+		
+		-- Looping through all current aura states and check if there are abilities that need one of that states
+		local state;
+		for _,aurastate in ipairs(Data:GetAuraStates(player)) do
+			for ab = 1, playerPet.numAbilities do				
+				-- check if ability needs a specific aura state to get more damage
+				state = env.requiredtargetstate(playerPet["ab"..ab], 1, EVENT_On_Damage_Dealt);
+				g(ab, state > 0 and aurastate == state);
+			end
+		end
+		
+		return unpack(glow);
+	end
+end
+--@end-do-not-package@
+
+
 ----------------------------------
 -- Scanning Pets for Combat
 ----------------------------------
@@ -278,6 +351,7 @@ do
 		local petLevel, petName, petSpeed, petQuality, petHP, petMaxHP;
 		local numAbilities;
 		
+		t.side = side;
 		t.numPets = numPets;
 		t.activePet = activePet;
 		t.scanned = true;
@@ -303,7 +377,7 @@ do
 			end
 			
 			--t[pet].side = side;
-			--t[pet].index = pet;
+			--t[pet].pet = pet;
 			t[pet].name = petName;
 			t[pet].level = petLevel;
 			t[pet].species = species;
@@ -330,6 +404,7 @@ do
 		local numPets = 3;
 		local activePet = random(1, numPets);
 		
+		t.side = side;
 		t.numPets = numPets;
 		t.activePet = activePet;
 		t.scanned = true;
@@ -344,7 +419,7 @@ do
 			end
 			
 			--t[pet].side = side;
-			--t[pet].index = pet;
+			--t[pet].pet = pet;
 			t[pet].name = "Dummy "..pet;
 			t[pet].level = random(1, 25);
 			t[pet].species = species;
@@ -452,41 +527,43 @@ function PT:OpenOptions()
 	-- They are great and fit our needs, so we do not re-invent the wheel over and over again.
 	local t;
 	for key, module in PT:IterateModules() do
-		t = module.GetOptions and module:GetOptions() or {};
-		
-		for option, args in pairs(t) do
-			if( type(args.disabled) == "nil" ) then
-				args.disabled = function() return not module:IsEnabled(); end
+		if( key:sub(1, 1) ~= "_" ) then -- no data modules
+			t = module.GetOptions and module:GetOptions() or {};
+			
+			for option, args in pairs(t) do
+				if( type(args.disabled) == "nil" ) then
+					args.disabled = function() return not module:IsEnabled(); end
+				end
 			end
+			
+			t.descr = { type = "description", name = module.desc, order = 0.1 };
+			t._spacer1 = { type = "description", name = " ", order = 0.2 };
+			
+			if( not module.noEnableButton ) then
+				t.enabled = {
+					type = "toggle",
+					name = L["Enable"],
+					desc = L["Enable this module."],
+					get = function()
+						return module:IsEnabled();
+					end,
+					set = function(_, value)
+						module.db.profile.enabled = not not value; -- to ensure a boolean
+						
+						if value then
+							return module:Enable();
+						else
+							return module:Disable();
+						end
+					end,
+					order = 0.3,
+					width = "full",
+				};
+				t._spacer2 = { type = "description", name = " ", order = 0.4 }; -- spacer between the Enable toggle button and the acual options
+			end
+			
+			options.args[key] = { type = "group", name = module.displayName, desc = module.desc, handler = module, order = module.order or -1, args = t }
 		end
-		
-		t.descr = { type = "description", name = module.desc, order = 0.1 };
-		t._spacer1 = { type = "description", name = " ", order = 0.2 };
-		
-		if( not module.noEnableButton ) then
-			t.enabled = {
-				type = "toggle",
-				name = L["Enable"],
-				desc = L["Enable this module."],
-				get = function()
-					return module:IsEnabled();
-				end,
-				set = function(_, value)
-					module.db.profile.enabled = not not value; -- to ensure a boolean
-					
-					if value then
-						return module:Enable();
-					else
-						return module:Disable();
-					end
-				end,
-				order = 0.3,
-				width = "full",
-			};
-			t._spacer2 = { type = "description", name = " ", order = 0.4 }; -- spacer between the Enable toggle button and the acual options
-		end
-		
-		options.args[key] = { type = "group", name = module.displayName, desc = module.desc, handler = module, order = module.order or -1, args = t }
 	end
 	
 	PT.OpenOptions = nil; -- this function is needed once and gets deleted
