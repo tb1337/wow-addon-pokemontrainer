@@ -21,6 +21,8 @@ module.noEnableButton = true;
 
 local BattleFrames = {}; -- if a battle frame is loaded, it adds itself into this table (simply for iterating over battle frames)
 
+local Proxy;
+
 -- xml values
 local FRAME_PLAYER = "PTPlayer";
 local FRAME_ENEMY  = "PTEnemy";
@@ -87,17 +89,26 @@ function module:OnInitialize()
 end
 
 function module:OnEnable()
+	-- load data module
+	-- TODO put this into an option
+	PT:GetModule("_Data"):Enable();
+	
+	-- For now, our proxy frames collects events and handles them
+	-- Read more at the Proxy declaration
+	Proxy:RegisterEvent("PET_BATTLE_OPENING_START");
+	Proxy:RegisterEvent("PET_BATTLE_OVER");
+	Proxy:RegisterEvent("PET_BATTLE_CLOSE");
+	Proxy:RegisterEvent("PET_BATTLE_TURN_STARTED");
+	Proxy:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
+	Proxy:RegisterEvent("PET_BATTLE_PET_CHANGED");
+	Proxy:RegisterEvent("PET_BATTLE_HEALTH_CHANGED");
+	Proxy:RegisterEvent("PET_BATTLE_MAX_HEALTH_CHANGED");
+	Proxy:RegisterEvent("PET_BATTLE_AURA_APPLIED");
+	Proxy:RegisterEvent("PET_BATTLE_AURA_CHANGED");
+	Proxy:RegisterEvent("PET_BATTLE_AURA_CANCELED");
+	
 	-- register events
 	for _,frame in ipairs(BattleFrames) do
-		frame:RegisterEvent("PET_BATTLE_OPENING_START");
-		frame:RegisterEvent("PET_BATTLE_OVER");
-		frame:RegisterEvent("PET_BATTLE_CLOSE");
-		frame:RegisterEvent("PET_BATTLE_TURN_STARTED");
-		frame:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
-		frame:RegisterEvent("PET_BATTLE_PET_CHANGED");
-		frame:RegisterEvent("PET_BATTLE_HEALTH_CHANGED");
-		frame:RegisterEvent("PET_BATTLE_MAX_HEALTH_CHANGED");
-		
 		for pet = 1, #frame.petFrames do
 			for ab = 1, PT.MAX_PET_ABILITY do
 				-- for every ability button
@@ -121,17 +132,10 @@ end
 
 function module:OnDisable()
 	-- unregister events
-	for _,frame in ipairs(BattleFrames) do
-		frame:UnregisterEvent("PET_BATTLE_OPENING_START");
-		frame:UnregisterEvent("PET_BATTLE_OVER");
-		frame:UnregisterEvent("PET_BATTLE_CLOSE");
-		frame:UnregisterEvent("PET_BATTLE_TURN_STARTED");
-		frame:UnregisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
-		frame:UnregisterEvent("PET_BATTLE_PET_CHANGED");
-		frame:UnregisterEvent("PET_BATTLE_HEALTH_CHANGED");
-		frame:UnregisterEvent("PET_BATTLE_MAX_HEALTH_CHANGED");
-		
-		for pet = 1, #frame.petFrames do
+	Proxy:UnregisterAllEvents();
+	
+	for _,frame in ipairs(BattleFrames) do		
+		for pet = PT.PET_INDEX, #frame.petFrames do
 			for ab = 1, PT.MAX_PET_ABILITY do
 				-- for every ability button
 				_G[frame.petFrames[pet]:GetName()]["Ability"..ab]:UnregisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
@@ -159,7 +163,7 @@ do
 		local fs;
 		
 		for pet = 1, PT.PlayerInfo.numPets do
-			fs = _G["PTPlayerPet"..pet].Button.Level;
+			fs = _G[FRAME_PLAYER.."Pet"..pet].Button.Level;
 			font, size, outline = fs:GetFont();
 			fs:SetFont(font, FONT_LEVEL_DEFAULT + (pet == current_pet and FONT_LEVEL_ADJUST or 0), outline);
 		end
@@ -171,7 +175,7 @@ do
 		local fs;
 		
 		for pet = 1, PT.EnemyInfo.numPets do
-			fs = _G["PTEnemyPet"..pet].Button.Level;
+			fs = _G[FRAME_ENEMY.."Pet"..pet].Button.Level;
 			font, size, outline = fs:GetFont();
 			fs:SetFont(font, FONT_LEVEL_DEFAULT + (bigger and FONT_LEVEL_ADJUST or 0), outline);
 		end
@@ -183,7 +187,7 @@ do
 		
 		for pet = 1, PT.EnemyInfo.numPets do
 			r, g, b = PT:GetDifficultyColor(level, PT.EnemyInfo[pet].level);
-			_G["PTEnemyPet"..pet].Button.Level:SetTextColor(r, g, b, 1);
+			_G[FRAME_ENEMY.."Pet"..pet].Button.Level:SetTextColor(r, g, b, 1);
 		end
 	end
 	
@@ -285,6 +289,80 @@ function module.GetTooltipPosition()
 	return _G.GetCursorPosition() < (_G.GetScreenWidth() * _G.UIParent:GetEffectiveScale() / 2);
 end
 
+----------------------------------------
+-- Frame for scanning events once
+----------------------------------------
+
+-- Previously, both Player and Enemy frames were listening for events. That resulted in scanning pets twice, rounding up twice,
+-- annoying checks which frame is currently handling an events, etc.pp.
+-- That's why I choosed to create a Proxy frame which listens to all necessary events and makes the battle frames doing something.
+
+Proxy = _G.CreateFrame("Frame");
+
+function Proxy.OnEvent(self, event, ...)
+	-- a pet battle recently started - completely set up the frames
+	if( event == "PET_BATTLE_OPENING_START" ) then
+		PT:ScanPets();
+		_G[FRAME_PLAYER]:FadeIn();
+		_G[FRAME_ENEMY]:FadeIn();
+	-- battle is over (beginning camera zoom)
+	elseif( event == "PET_BATTLE_OVER" ) then
+		_G[FRAME_PLAYER]:FadeOut();
+		_G[FRAME_ENEMY]:FadeOut();
+	-- battle is over or got interrupted (by lfg warp etc.), we must hide the frames if no _OVER event was fired
+	elseif( event == "PET_BATTLE_CLOSE" ) then
+		for _,frame in ipairs(BattleFrames) do
+			if( frame:IsVisible() and not frame.animHide:IsPlaying() ) then
+				frame:Hide();
+			end
+		end
+	-- fires before a new round begins
+	elseif( event == "PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE" ) then
+		PT:RoundUpPets();
+		module.BattleFrame_UpdateBattleButtons(_G[FRAME_PLAYER]);
+		module.BattleFrame_UpdateBattleButtons(_G[FRAME_ENEMY]);
+		--PT.BattleFrame_UpdateActivePetHighlight(self);
+	-- fires when either player or enemy changed their active pet
+	elseif( event == "PET_BATTLE_PET_CHANGED" ) then
+		local side = ...;
+		local frame = get_frame(side);
+		
+		module.BattleFrame_UpdateActivePetHighlight(frame);
+		
+		PT:RoundUpPets(side);
+		PT:ScanPetAuras(side, frame.player.activePet);
+		
+		if( frame.firstRound ) then
+			frame.firstRound = nil;
+		else
+			module.BattleFrame_Pets_Reorganize_Init(frame);
+		end
+	-- fired whenever a pet got damaged, healed or buffed itself more HP
+	elseif( event == "PET_BATTLE_HEALTH_CHANGED" or event == "PET_BATTLE_MAX_HEALTH_CHANGED" ) then
+		local side, pet = ...;
+		local frame = get_frame(side);
+		
+		if( pet == frame.player.activePet ) then
+			PT:RoundUpPets(side);
+			module.BattleFrame_UpdateHealthState(frame);
+		end
+	-- check aura events ONLY if the data module is loaded
+	elseif( PT.DATALOADED and event == "PET_BATTLE_AURA_APPLIED" or event == "PET_BATTLE_AURA_CHANGED" or event == "PET_BATTLE_AURA_CANCELED" ) then
+		local side, pet = ...;
+		local frame = get_frame(side);
+		
+		PT:ScanWeather();
+		if( pet == frame.player.activePet ) then
+			PT:ScanPetAuras(side, pet);
+		end
+	--@do-not-package@
+	else
+		print("Uncatched event:", event, ...);
+		--@end-do-not-package@
+	end
+end
+Proxy:SetScript("OnEvent", Proxy.OnEvent);
+
 -------------------------------
 -- On Loading and Events
 -------------------------------
@@ -332,6 +410,7 @@ do
 end
 
 -- called by xml
+--[[
 function module.BattleFrame_OnEvent(self, event, ...)
 	-- a pet battle recently started - completely set up the frames
 	if( event == "PET_BATTLE_OPENING_START" ) then
@@ -347,15 +426,18 @@ function module.BattleFrame_OnEvent(self, event, ...)
 		end
 	-- fires before a new round begins
 	elseif( event == "PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE" ) then
-		PT:RoundUpPets();
+		PT:RoundUpPets(); -- we must ensure actual data before updating the frames
 		module.BattleFrame_UpdateBattleButtons(self);
 		--PT.BattleFrame_UpdateActivePetHighlight(self);
 	-- fires when either player or enemy changed their active pet
 	elseif( event == "PET_BATTLE_PET_CHANGED" ) then
-		PT:RoundUpPets();
+		local side = ...;
 		module.BattleFrame_UpdateActivePetHighlight(self);
 		
-		if( select(1, ...) == self:GetID() ) then
+		if( side == self:GetID() ) then
+			PT:RoundUpPets(side, event);
+			PT:ScanPetAuras(side, self.player.activePet);
+			
 			if( self.firstRound ) then
 				self.firstRound = nil;
 			else
@@ -365,47 +447,66 @@ function module.BattleFrame_OnEvent(self, event, ...)
 	-- fired whenever a pet got damaged, healed or buffed itself more HP
 	elseif( event == "PET_BATTLE_HEALTH_CHANGED" or event == "PET_BATTLE_MAX_HEALTH_CHANGED" ) then
 		local side, pet = ...;
+		
 		if( side == self:GetID() and pet == self.player.activePet ) then
-			PT:RoundUpPets();
+			PT:RoundUpPets(side, event);
 			module.BattleFrame_UpdateHealthState(self);
 		end
-	-- should never happen but may actually do
+	-- check aura events ONLY if the data module is loaded
+	elseif( PT.DATALOADED and event == "PET_BATTLE_AURA_APPLIED" or event == "PET_BATTLE_AURA_CHANGED" or event == "PET_BATTLE_AURA_CANCELED" ) then
+		local side, pet = ...;
+		
+		if( side == self:GetID() ) then
+			PT:ScanWeather(); -- the side who got aura updates also scans for current weather
+			
+			if( pet == self.player.activePet ) then
+				PT:ScanPetAuras(side, pet);
+			end
+		end
+	--@do-not-package@
 	else
-		--@alpha@
-		print("Uncatched event on frame: "..self:GetName(), event, ...);
-		--@end-alpha@
+		print("Uncatched event: "..self:GetName(), event, ...);
+		--@end-do-not-package@
 	end
 end
+--]]
 
 --------------------------
 -- Frame Visibility
 --------------------------
 
-local function call_tfunc(key, func)
-	local result, err = loadstring("_G."..key..":"..func.."()");
-	return type(result) == "function" and pcall(result) or nil;
-end
-
-local function BattleFrame_SetColumnVisibility(f, column, func)
+local function BattleFrame_SetColumnVisibility(f, column, visible)
 	-- we just need the frame name here
 	f = f:GetName();
 	
-	call_tfunc(f.."Header.Enemy"..column, func);
-	
-	for pet = 1, 3 do
-		call_tfunc(f.."Pet"..pet..".Speed"..column, func);
-		call_tfunc(f.."Pet"..pet..".SpeedBG"..column, func);
-		call_tfunc(f.."Pet"..pet..".Ability1.Bonus"..column, func);
-		call_tfunc(f.."Pet"..pet..".Ability2.Bonus"..column, func);
-		call_tfunc(f.."Pet"..pet..".Ability3.Bonus"..column, func);
+	if( visible ) then
+		_G[f.."Header"]["Enemy"..column]:Show();
+		for pet = PT.PET_INDEX, PT.MAX_COMBAT_PETS do
+			_G[f.."Pet"..pet]["Speed"..column]:Show();
+			_G[f.."Pet"..pet]["SpeedBG"..column]:Show();
+			_G[f.."Pet"..pet]["Ability1"]["Bonus"..column]:Show();
+			_G[f.."Pet"..pet]["Ability2"]["Bonus"..column]:Show();
+			_G[f.."Pet"..pet]["Ability3"]["Bonus"..column]:Show();
+		end
+	else
+		_G[f.."Header"]["Enemy"..column]:Hide();
+		for pet = PT.PET_INDEX, PT.MAX_COMBAT_PETS do
+			_G[f.."Pet"..pet]["Speed"..column]:Hide();
+			_G[f.."Pet"..pet]["SpeedBG"..column]:Hide();
+			_G[f.."Pet"..pet]["Ability1"]["Bonus"..column]:Hide();
+			_G[f.."Pet"..pet]["Ability2"]["Bonus"..column]:Hide();
+			_G[f.."Pet"..pet]["Ability3"]["Bonus"..column]:Hide();
+		end
 	end
 end
 
-local function BattleFrame_SetRowVisibility(self, pet, ab, func)
+local function BattleFrame_SetRowVisibility(self, pet, ab, visible)
 	local f = self:GetName();
 	
-	for i = 1, self.enemy.numPets do
-		call_tfunc(f.."Pet"..pet..".Ability"..ab, func);
+	if( visible ) then
+		_G[f.."Pet"..pet]["Ability"..ab]:Show();
+	else
+		_G[f.."Pet"..pet]["Ability"..ab]:Hide();
 	end
 end
 
@@ -437,7 +538,7 @@ function module.BattleFrame_Initialize(self)
 			_G[frame_name.."Pet"..pet].Button.Level:SetText( self.player[pet].level );
 			
 			-- display pet column on enemy frame
-			BattleFrame_SetColumnVisibility(enemy, pet, "Show");
+			BattleFrame_SetColumnVisibility(enemy, pet, true);
 			
 			-- setup ability buttons
 			module.BattleFrame_SetupAbilityButtons(self, pet);
@@ -480,7 +581,7 @@ function module.BattleFrame_Initialize(self)
 			_G[frame_name.."Pet"..pet]:Hide();
 			
 			-- hide pet column on enemy frame
-			BattleFrame_SetColumnVisibility(enemy, pet, "Hide");
+			BattleFrame_SetColumnVisibility(enemy, pet, false);
 		end
 	end
 	
@@ -503,13 +604,13 @@ function module.BattleFrame_SetupAbilityButtons(self, pet)
 			_G[self:GetName().."Pet"..pet]["Ability"..ab].bg:SetTexture(abIcon);
 			
 			-- show ability row on self
-			BattleFrame_SetRowVisibility(self, pet, ab, "Show");
+			BattleFrame_SetRowVisibility(self, pet, ab, true);
 			
 			-- setup vulnerability bonus buttons
 			module.BattleFrame_SetupVulnerabilityButtons(self, pet, ab);
 		else
 			-- hide ability row on self
-			BattleFrame_SetRowVisibility(self, pet, ab, "Hide");
+			BattleFrame_SetRowVisibility(self, pet, ab, false);
 		end
 	end
 end
@@ -548,24 +649,24 @@ function module.BattleFrame_UpdateBattleButtons(self)
 	
 	--@do-not-package@
 	
-	local glow1, glow2, glow3 = PT:GetStateBonuses(self.player, self.enemy);
-	
-	print(self:GetName(), glow1, glow2, glow3)
-	
-	if( glow1 ) then
-		ActionButton_ShowOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability1);
-	else
-		ActionButton_HideOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability1);
-	end
-	if( glow2 ) then
-		ActionButton_ShowOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability2);
-	else
-		ActionButton_HideOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability2);
-	end
-	if( glow3 ) then
-		ActionButton_ShowOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability3);
-	else
-		ActionButton_HideOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability3);
+	if( PT.DATALOADED and _G.C_PetBattles.IsInBattle() ) then
+		local glow1, glow2, glow3 = PT:GetStateBonuses(self.player, self.enemy);
+		
+		if( glow1 ) then
+			ActionButton_ShowOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability1);
+		else
+			ActionButton_HideOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability1);
+		end
+		if( glow2 ) then
+			ActionButton_ShowOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability2);
+		else
+			ActionButton_HideOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability2);
+		end
+		if( glow3 ) then
+			ActionButton_ShowOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability3);
+		else
+			ActionButton_HideOverlayGlow(_G[frame_name.."Pet"..self.player.activePet].Ability3);
+		end
 	end
 	
 	--@end-do-not-package@
@@ -912,13 +1013,13 @@ container:SetCallback("OnClose", function(widget, event)
 	widget:Hide();
 	
 	-- unregister dragging mouse buttons
-	_G.PTPlayer:RegisterForDrag();
-	_G.PTEnemy:RegisterForDrag();
+	_G[FRAME_PLAYER]:RegisterForDrag();
+	_G[FRAME_ENEMY]:RegisterForDrag();
 	
 	-- hiding the frames during a battle is sort of annoying
 	if( not _G.C_PetBattles.IsInBattle() ) then
-		_G.PTPlayer:Hide();
-		_G.PTEnemy:Hide();
+		_G[FRAME_PLAYER]:Hide();
+		_G[FRAME_ENEMY]:Hide();
 		
 		-- when not in a battle, call /pt to re-open the options frame
 		pcall(_G.SlashCmdList["PT"]);
@@ -985,9 +1086,9 @@ function module:GetPositionOptions()
 				end,
 				set = function(_, value)
 					module.db.profile.scale = value;
-					module.BattleFrame_Options_Apply(_G.PTPlayer);
-					module.BattleFrame_Options_Apply(_G.PTEnemy);
-					do_mirror(_G.PTEnemy, 1); -- for styling purposes, scaling smells
+					module.BattleFrame_Options_Apply(_G[FRAME_PLAYER]);
+					module.BattleFrame_Options_Apply(_G[FRAME_ENEMY]);
+					do_mirror(_G[FRAME_ENEMY], 1); -- for styling purposes, scaling smells
 				end,
 			},
 			spacer2 = { type = "description", name = "", order = 2.2 },
@@ -1001,8 +1102,8 @@ function module:GetPositionOptions()
 				end,
 				set = function(_, value)
 					module.db.profile.bg = value;
-					module.BattleFrame_Options_Apply(_G.PTPlayer);
-					module.BattleFrame_Options_Apply(_G.PTEnemy);
+					module.BattleFrame_Options_Apply(_G[FRAME_PLAYER]);
+					module.BattleFrame_Options_Apply(_G[FRAME_ENEMY]);
 				end,
 			},
 			bg_color = {
@@ -1018,8 +1119,8 @@ function module:GetPositionOptions()
 					module.db.profile.bg_g = g;
 					module.db.profile.bg_b = b;
 					module.db.profile.bg_a = a;
-					module.BattleFrame_Options_Apply(_G.PTPlayer);
-					module.BattleFrame_Options_Apply(_G.PTEnemy);
+					module.BattleFrame_Options_Apply(_G[FRAME_PLAYER]);
+					module.BattleFrame_Options_Apply(_G[FRAME_ENEMY]);
 				end,
 			},
 			spacer3 = { type = "description", name = "", order = 4.1 },
@@ -1033,7 +1134,7 @@ function module:GetPositionOptions()
 					["TOPLEFT"] = L["Left"],
 					["TOPRIGHT"] = L["Right"],
 				},
-				arg = "PTPlayer",
+				arg = FRAME_PLAYER,
 			},
 			peticon2 = {
 				type = "select",
@@ -1045,7 +1146,7 @@ function module:GetPositionOptions()
 					["TOPLEFT"] = L["Left"],
 					["TOPRIGHT"] = L["Right"],
 				},
-				arg = "PTEnemy",
+				arg = FRAME_ENEMY,
 			},
 		},
 	};
@@ -1159,8 +1260,8 @@ function module:GetOptions()
 						self.db.profile.animate_active = value;
 						-- update if currently in battle
 						if( _G.C_PetBattles.IsInBattle() ) then
-							module.BattleFrame_UpdateActivePetHighlight(_G.PTPlayer);
-							module.BattleFrame_UpdateActivePetHighlight(_G.PTEnemy);
+							module.BattleFrame_UpdateActivePetHighlight(_G[FRAME_PLAYER]);
+							module.BattleFrame_UpdateActivePetHighlight(_G[FRAME_ENEMY]);
 						end
 					end,
 				},
@@ -1175,8 +1276,8 @@ function module:GetOptions()
 						self.db.profile.animate_active_r = r;
 						self.db.profile.animate_active_g = g;
 						self.db.profile.animate_active_b = b;
-						module.BattleFrame_Options_Apply(_G.PTPlayer);
-						module.BattleFrame_Options_Apply(_G.PTEnemy);
+						module.BattleFrame_Options_Apply(_G[FRAME_PLAYER]);
+						module.BattleFrame_Options_Apply(_G[FRAME_ENEMY]);
 					end,
 				},
 				nactivealpha_use = {
@@ -1191,8 +1292,8 @@ function module:GetOptions()
 						self.db.profile.nactivealpha_use = value;
 						-- update if currently in battle
 						if( _G.C_PetBattles.IsInBattle() ) then
-							module.BattleFrame_UpdateActivePetHighlight(_G.PTPlayer);
-							module.BattleFrame_UpdateActivePetHighlight(_G.PTEnemy);
+							module.BattleFrame_UpdateActivePetHighlight(_G[FRAME_PLAYER]);
+							module.BattleFrame_UpdateActivePetHighlight(_G[FRAME_ENEMY]);
 						end
 					end,
 				},
@@ -1210,8 +1311,8 @@ function module:GetOptions()
 						self.db.profile.nactivealpha = value;
 						-- update if currently in battle
 						if( _G.C_PetBattles.IsInBattle() ) then
-							module.BattleFrame_UpdateActivePetHighlight(_G.PTPlayer);
-							module.BattleFrame_UpdateActivePetHighlight(_G.PTEnemy);
+							module.BattleFrame_UpdateActivePetHighlight(_G[FRAME_PLAYER]);
+							module.BattleFrame_UpdateActivePetHighlight(_G[FRAME_ENEMY]);
 						end
 					end,
 					disabled = is_disabled,
@@ -1289,8 +1390,8 @@ function module:GetOptions()
 					end,
 					set = function(_, value)
 						self.db.profile.ability_zoom = value;
-						module.BattleFrame_Options_Apply(_G.PTPlayer);
-						module.BattleFrame_Options_Apply(_G.PTEnemy);
+						module.BattleFrame_Options_Apply(_G[FRAME_PLAYER]);
+						module.BattleFrame_Options_Apply(_G[FRAME_ENEMY]);
 					end,
 				},
 			},
