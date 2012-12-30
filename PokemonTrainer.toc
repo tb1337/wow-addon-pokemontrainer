@@ -32,8 +32,8 @@ Locales\Locales.xml
 
 # Main
 Core.lua
-Data.lua
 #@do-not-package@
+Data.lua
 Developer.lua
 #@end-do-not-package@
 

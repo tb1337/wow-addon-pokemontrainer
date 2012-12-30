@@ -1,4 +1,4 @@
-local MAJOR, MINOR = "LibPetBreedInfo-1.0", 7
+local MAJOR, MINOR = "LibPetBreedInfo-1.0", 9
 local lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR)
 
 if not lib then return end
@@ -13,11 +13,16 @@ local ipairs = _G.ipairs
 local C_PetJournal,C_PetBattles = _G.C_PetJournal, _G.C_PetBattles
 local _
 local EMPTY_PET = "0x0000000000000000"
-
+local epsilion = .005
 local STATE_Mod_SpeedPrecent = 25
 local STATE_MaxHealthBonus = 2
 local STATE_Mod_MaxHealthPrercent = 99
-
+local HEALTH,POWER,SPEED = 1,2,3
+local BASE_HEALTH = 100
+local HEALTH_PER_STAMINA = 5
+local FALLBACK_BREEDS = {1,2,3,4,5,6,7,8,9,10}
+local WILD_PET_HEALTH_MULTIPLIER = 1.2
+local MAX_PETS_PER_TEAM = 3
 --
 -- Non Lib helper functions
 --
@@ -51,59 +56,76 @@ end
 --Returns arg1: petIndex that can be used by GetBreedName to return the breeds name. arg2: a confidence indicator, lower numbers are better. A good cutoff for high confidence is .15
 --Returns nil if the species cannot battle or does not have a base stats profile or if level, health power and speed are not numbers and rarity is not between 1 and 4
 function lib:GetBreedByStats(speciesID,level,rarity,health,power,speed)
-	if not self.breedData.speciesToBaseStatProfile[speciesID] or type(level) ~= "number" or not self.breedData.qualityMultiplier[rarity] or type(health) ~= "number" or type(power) ~= "number" or type(speed) ~= "number" then 
+	
+	if not self.breedData.speciesToBaseStatProfile[speciesID] or not self.breedData.qualityMultiplier[rarity] or  
+		type(level) ~= "number" or type(health) ~= "number" or type(power) ~= "number" or type(speed) ~= "number" then 
+		
 		return 
 	end
 	
-	local canBattle = select(8,C_PetJournal.GetPetInfoBySpeciesID(speciesID))
-	local baseStatsIndex =self.breedData.speciesToBaseStatProfile[speciesID]
+	local canBattle      = select(8,C_PetJournal.GetPetInfoBySpeciesID(speciesID))
+	local baseStatsIndex = self.breedData.speciesToBaseStatProfile[speciesID]
+	
 	if not baseStatsIndex and not canBattle then return end
 	
-	local baseStats =self.breedData.baseStatsProfiles[baseStatsIndex]
+	local baseStats         = self.breedData.baseStatsProfiles[baseStatsIndex]
+	local qualityMultiplier = self.breedData.qualityMultiplier[rarity]
 
-	local breedBonusPerLevel = {
-		clamp(round((((health-100)/5) /self.breedData.qualityMultiplier[rarity]) - level*baseStats[1],1)/level,0,2),
-		clamp(round(  (power          /self.breedData.qualityMultiplier[rarity]) - level*baseStats[2],1)/level,0,2),
-		clamp(round(  (speed          /self.breedData.qualityMultiplier[rarity]) - level*baseStats[3],1)/level,0,2),
-	}
-
-	local minDiff = {100000,100000,100000}
-	local index = 0
-	for i=1, #self.breedData.breeds do
-		local diff = {math.abs(breedBonusPerLevel[1] -self.breedData.breeds[i][1]),math.abs(breedBonusPerLevel[2] -self.breedData.breeds[i][2]),math.abs(breedBonusPerLevel[3] -self.breedData.breeds[i][3])}
-		if minDiff[1] >= diff[1] and minDiff[2] >= diff[2] and minDiff[3]>= diff[3] then
-			minDiff = diff
-			index = i
+	health = clamp(round(( ((health-BASE_HEALTH)/HEALTH_PER_STAMINA) / qualityMultiplier) - level * baseStats[HEALTH],1) / level,0,2)
+	power  = clamp(round((									  power  / qualityMultiplier) - level * baseStats[POWER] ,1) / level,0,2)
+	speed  = clamp(round((                                    speed  / qualityMultiplier) - level * baseStats[SPEED] ,1) / level,0,2)
+	
+	local breeds = self:GetAvailableBreeds(speciesID)
+	breeds = breeds and breeds or FALLBACK_BREEDS
+	
+	local leastDiff = 100
+	local leastDiff2 = 100
+	local breedID = 0
+	
+	for i=1,#breeds do
+		local breedIndex = breeds[i]
+		local breedData = self.breedData.breeds[breedIndex]
+		local diff = round(math.abs(health - breedData[HEALTH]) + math.abs(power - breedData[POWER]) + math.abs(speed - breedData[SPEED]),2) + epsilion
+		
+		if diff < leastDiff then
+			leastDiff2 = leastDiff
+			leastDiff  = diff
+			breedID    = breedIndex
+		elseif diff < leastDiff2 then
+			leastDiff2 = diff
 		end
+		
 	end
-
-	local confidence = round(minDiff[1] + minDiff[2]+ minDiff[3],2)
-	return index,confidence
+	return breedID, round(leastDiff2 / leastDiff ,2)
 end
+
+
 
 --Gets the breed index for the given pet
 --!!!Results are not valid if computed while a round play back is happening!!!
 --Returns arg1: petIndex that can be used by GetBreedName to return the breeds name. arg2: a confidence indicator, lower numbers are better. A good cutoff for high confidence is .15
 --Returns nil if the species cannot battle or does not have a base stats profile, or an invalid petOwner/petID is used, or if the player is not in a pet battle
+
+--/run print(C_PetBattles.GetName(1,1),LibStub("LibPetBreedInfo-1.0"):GetBreedByPetBattleSlot(1,1))
 function lib:GetBreedByPetBattleSlot(petOwner,id)
 	if not C_PetBattles.IsInBattle() then return end
 	if petOwner ~= LE_BATTLE_PET_ALLY and petOwner ~= LE_BATTLE_PET_ENEMY then return end
-	if id < 1 or id > 3 then return end
+	if id <= 0 or id > MAX_PETS_PER_TEAM then return end
 	
-	local speedMultiplier = inverseStats(C_PetBattles.GetStateValue(petOwner,id,STATE_Mod_SpeedPrecent))
-	local healthModifier = C_PetBattles.GetStateValue(petOwner,id,STATE_MaxHealthBonus)
+	local speedMultiplier  = inverseStats(C_PetBattles.GetStateValue(petOwner,id,STATE_Mod_SpeedPrecent))
 	local healthMultiplier = inverseStats(C_PetBattles.GetStateValue(petOwner,id,STATE_Mod_MaxHealthPrercent))
+	local healthModifier   = C_PetBattles.GetStateValue(petOwner,id,STATE_MaxHealthBonus)
 	
 	if C_PetBattles.IsWildBattle() and petOwner == LE_BATTLE_PET_ENEMY then
-		healthMultiplier = healthMultiplier * 1.2
+		healthMultiplier = healthMultiplier * WILD_PET_HEALTH_MULTIPLIER
 	end
 	
 	local speciesID = C_PetBattles.GetPetSpeciesID(petOwner,id)
-	local speed = round(C_PetBattles.GetSpeed(petOwner,id) * speedMultiplier)
-	local power = C_PetBattles.GetPower(petOwner,id)
-	local health =  (C_PetBattles.GetMaxHealth(petOwner,id) * healthMultiplier) - healthModifier
-	local rarity = C_PetBattles.GetBreedQuality(petOwner,id)
-	local level = C_PetBattles.GetLevel(petOwner,id)
+	local speed     = round(C_PetBattles.GetSpeed(petOwner,id) * speedMultiplier)
+	local power     = C_PetBattles.GetPower(petOwner,id)
+	local health    = (C_PetBattles.GetMaxHealth(petOwner,id) * healthMultiplier) - healthModifier
+	local rarity    = C_PetBattles.GetBreedQuality(petOwner,id)
+	local level     = C_PetBattles.GetLevel(petOwner,id)
 	
 	return self:GetBreedByStats(speciesID,level,rarity,health,power,speed)
 end
@@ -115,14 +137,14 @@ end
 function lib:GetPetPredictedStats(speciesID, breedID, rarity, level)
 	if not self.breedData.breeds[breedID] or not self.breedData.speciesToBaseStatProfile[speciesID] or type(level) ~= "number" or not self.breedData.qualityMultiplier[rarity] then return end
 	
-	local baseStatsIndex =self.breedData.speciesToBaseStatProfile[speciesID]
-	local baseStats =self.breedData.baseStatsProfiles[baseStatsIndex]
-	local multiplier =self.breedData.qualityMultiplier[rarity]
-	local breedStats =self.breedData.breeds[breedID]
+	local baseStatsIndex = self.breedData.speciesToBaseStatProfile[speciesID]
+	local baseStats      = self.breedData.baseStatsProfiles[baseStatsIndex]
+	local multiplier     = self.breedData.qualityMultiplier[rarity]
+	local breedStats     = self.breedData.breeds[breedID]
 	
-	local health = round(100 + ((baseStats[1] + breedStats[1]) * 5 * multiplier) * level)
-	local power = round( (baseStats[2] + breedStats[2])  * multiplier * level) 
-	local speed = round( (baseStats[3] + breedStats[3])  * multiplier * level)
+	local health = round((baseStats[HEALTH] + breedStats[HEALTH]) * multiplier * level * HEALTH_PER_STAMINA + BASE_HEALTH)
+	local power  = round((baseStats[POWER]  + breedStats[POWER])  * multiplier * level) 
+	local speed  = round((baseStats[SPEED]  + breedStats[SPEED])  * multiplier * level)
 	
 	return health, power , speed
 end
@@ -143,6 +165,14 @@ end
 --Returns nil for invalid breedID's
 function lib:GetBreedName(breedID)
 	return self.breedData.breedNames[breedID]
+end
+
+
+--Gets a table of possible breedId's for a given species
+--BreedIDs are from 1-10
+--Returns nil for invalid speciesID's
+function lib:GetAvailableBreeds(speciesID)
+	return self.breedData.speciesToAvailableBreeds[speciesID]
 end
 
 --/lb code LibStub("LibPetBreedInfo-1.0"):GetSpeciesWithoutProfiles()
@@ -960,5 +990,555 @@ lib.breedData.speciesToBaseStatProfile = {
 	[1168] = 10
 }
 
+lib.breedData.speciesToAvailableBreeds = {
+	[39] = {9},
+    [40] = {6},
+    [41] = {2},
+    [42] = {5},
+    [43] = {1},
+    [44] = {3},
+    [45] = {1},
+    [46] = {10},
+    [47] = {1, 3},
+    [49] = {1},
+    [50] = {9},
+    [51] = {1, 3},
+    [52] = {1, 8, 9, 10},
+    [55] = {1, 3, 4, 7},
+    [56] = {6},
+    [57] = {2},
+    [58] = {6},
+    [59] = {7},
+    [64] = {7},
+    [65] = {10},
+    [67] = {1, 6, 8},
+    [68] = {1, 4, 5},
+    [69] = {1, 8, 9},
+    [70] = {1, 3, 10},
+    [72] = {1, 3, 9},
+    [74] = {9},
+    [75] = {3},
+    [77] = {1},
+    [78] = {10},
+    [83] = {6},
+    [84] = {1, 8, 9, 10},
+    [85] = {7},
+    [86] = {5},
+    [87] = {3},
+    [89] = {4},
+    [90] = {5},
+    [92] = {1},
+    [93] = {2},
+    [94] = {3},
+    [95] = {1},
+    [106] = {8},
+    [107] = {1},
+    [111] = {10},
+    [114] = {10},
+    [116] = {10},
+    [117] = {1},
+    [118] = {1},
+    [119] = {1},
+    [120] = {1},
+    [121] = {1},
+    [122] = {3},
+    [124] = {1},
+    [125] = {3},
+    [126] = {8},
+    [127] = {5},
+    [128] = {1},
+    [130] = {1},
+    [131] = {6},
+    [132] = {4},
+    [136] = {1, 5, 8, 10},
+    [137] = {1, 3, 9},
+    [138] = {1, 10},
+    [139] = {1, 6, 10},
+    [140] = {1, 2, 10},
+    [141] = {1, 4, 10},
+    [142] = {1, 3},
+    [143] = {1, 3, 6},
+    [144] = {1, 3, 9},
+    [145] = {1, 3, 4, 6},
+    [146] = {1, 3, 7, 10},
+    [149] = {7},
+    [153] = {5},
+    [156] = {1},
+    [157] = {1},
+    [158] = {1},
+    [159] = {4},
+    [160] = {2},
+    [162] = {8},
+    [163] = {6},
+    [164] = {1},
+    [165] = {7},
+    [166] = {5},
+    [167] = {1, 4, 7},
+    [168] = {3},
+    [169] = {1},
+    [170] = {5},
+    [171] = {5},
+    [172] = {8},
+    [173] = {5},
+    [174] = {1},
+    [175] = {3},
+    [179] = {5},
+    [180] = {5},
+    [183] = {1},
+    [186] = {1, 2, 3, 6},
+    [187] = {6},
+    [188] = {4},
+    [189] = {1},
+    [190] = {4, 5, 10},
+    [191] = {1},
+    [192] = {7},
+    [193] = {2},
+    [194] = {1, 3, 6, 7, 9},
+    [195] = {3, 6, 7, 9},
+    [196] = {5},
+    [197] = {6},
+    [198] = {9},
+    [199] = {8},
+    [200] = {3},
+    [201] = {5},
+    [202] = {5},
+    [203] = {10},
+    [204] = {1},
+    [205] = {5},
+    [206] = {1, 7, 9},
+    [207] = {6},
+    [209] = {1},
+    [210] = {3},
+    [211] = {4},
+    [212] = {1},
+    [213] = {3},
+    [214] = {1},
+    [215] = {8},
+    [216] = {1},
+    [217] = {5},
+    [218] = {2},
+    [220] = {7},
+    [224] = {8},
+    [225] = {1},
+    [226] = {2},
+    [227] = {2},
+    [228] = {5},
+    [229] = {1},
+    [231] = {1},
+    [232] = {6},
+    [233] = {6},
+    [234] = {8},
+    [235] = {8},
+    [236] = {4},
+    [237] = {1},
+    [238] = {9},
+    [239] = {2},
+    [240] = {1},
+    [241] = {1},
+    [242] = {6},
+    [243] = {8},
+    [244] = {5},
+    [245] = {6},
+    [246] = {1},
+    [247] = {4},
+    [248] = {6},
+    [249] = {5},
+    [250] = {6},
+    [251] = {1},
+    [253] = {1},
+    [254] = {1, 3, 6},
+    [255] = {4},
+    [256] = {5},
+    [258] = {4},
+    [259] = {10},
+    [260] = {6},
+    [261] = {2},
+    [262] = {3},
+    [264] = {6},
+    [265] = {4},
+    [266] = {6},
+    [267] = {1},
+    [268] = {2},
+    [270] = {7},
+    [271] = {1, 7, 8},
+    [272] = {4, 7},
+    [277] = {9},
+    [278] = {7},
+    [279] = {6},
+    [280] = {1},
+    [281] = {1},
+    [282] = {1},
+    [283] = {1},
+    [285] = {8},
+    [286] = {5},
+    [287] = {1},
+    [289] = {4},
+    [291] = {10},
+    [292] = {1},
+    [293] = {7},
+    [294] = {6},
+    [296] = {1},
+    [297] = {2},
+    [298] = {1},
+    [301] = {9},
+    [302] = {5},
+    [303] = {3},
+    [306] = {9},
+    [307] = {1},
+    [308] = {1},
+    [309] = {6},
+    [310] = {6},
+    [311] = {1},
+    [316] = {1},
+    [317] = {1},
+    [318] = {1},
+    [319] = {8},
+    [320] = {5},
+    [321] = {4},
+    [323] = {6},
+    [325] = {3, 6, 8},
+    [328] = {2},
+    [329] = {6},
+    [330] = {8},
+    [331] = {1},
+    [332] = {1},
+    [333] = {9},
+    [335] = {10},
+    [336] = {1},
+    [337] = {10},
+    [338] = {5},
+    [339] = {10},
+    [340] = {1},
+    [341] = {1},
+    [342] = {1},
+    [343] = {1, 6},
+    [346] = {1},
+    [347] = {1},
+    [348] = {6},
+    [374] = {5, 6, 7, 8, 9, 10},
+    [378] = {1, 3, 5, 7, 9, 10},
+    [379] = {1, 3, 8, 9, 10},
+    [380] = {1, 10},
+    [381] = {7},
+    [383] = {6, 9},
+    [385] = {1, 3, 6, 9, 10},
+    [386] = {1, 3, 9},
+    [387] = {1, 3},
+    [388] = {1, 4, 5},
+    [389] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+    [391] = {1, 3, 7},
+    [392] = {1, 3, 7, 9},
+    [393] = {3, 4, 5, 7, 9, 10},
+    [395] = {1, 4, 5},
+    [396] = {6, 9},
+    [397] = {1, 7, 9, 10},
+    [398] = {1, 3, 7, 9},
+    [399] = {1, 3, 6},
+    [400] = {1, 2, 7, 9},
+    [401] = {1, 4, 5},
+    [402] = {1, 7, 10},
+    [403] = {1, 3, 6, 8},
+    [404] = {1, 10},
+    [405] = {1, 2, 5},
+    [406] = {1, 4, 5, 7},
+    [407] = {1, 3, 6, 9},
+    [408] = {1, 3, 9},
+    [409] = {3, 6, 8},
+    [410] = {1, 3, 7, 9},
+    [411] = {1, 2},
+    [412] = {1, 3, 9},
+    [414] = {1, 6},
+    [415] = {4, 5, 7},
+    [416] = {1, 3, 6},
+    [417] = {1, 3, 7, 9},
+    [418] = {1, 9},
+    [419] = {1, 9},
+    [420] = {1, 5, 10},
+    [421] = {1, 7, 10},
+    [422] = {1, 3, 6},
+    [423] = {1, 4, 7},
+    [424] = {3, 4, 5, 7, 9, 10},
+    [425] = {1, 6, 8},
+    [427] = {1, 7},
+    [428] = {1, 3, 6, 9},
+    [429] = {2, 4, 5, 7},
+    [430] = {3},
+    [431] = {6, 7},
+    [432] = {1, 6},
+    [433] = {1, 3, 5},
+    [437] = {1, 8},
+    [438] = {4, 7},
+    [439] = {4, 7},
+    [440] = {1, 2, 6},
+    [441] = {3, 5, 7},
+    [442] = {4, 5, 7, 10},
+    [443] = {1, 3, 5, 7, 9, 10},
+    [445] = {4, 5, 7, 8},
+    [446] = {1, 2, 4, 7},
+    [447] = {1, 3, 7, 9, 10},
+    [448] = {1, 3, 5, 7, 9, 10},
+    [449] = {1, 3, 9},
+    [450] = {1, 4},
+    [452] = {1, 3, 8, 9, 10},
+    [453] = {4, 5},
+    [454] = {1, 3, 7, 9},
+    [455] = {5, 6, 8},
+    [456] = {1, 4, 5, 6},
+    [457] = {4, 7},
+    [458] = {1, 4},
+    [459] = {1, 3, 6, 9},
+    [460] = {1, 4, 7},
+    [461] = {1},
+    [463] = {4, 7},
+    [464] = {1, 3, 7},
+    [465] = {1, 2, 6},
+    [466] = {1, 3, 5},
+    [467] = {1, 4, 5, 7},
+    [468] = {1, 4, 5, 7},
+    [469] = {1, 2, 4, 5, 7},
+    [470] = {1, 2, 5, 9},
+    [471] = {1, 3, 4, 6, 7, 8},
+    [472] = {1, 2, 3, 4, 5, 6, 8, 9},
+    [473] = {1, 7},
+    [474] = {3},
+    [475] = {1, 10},
+    [477] = {1, 9},
+    [478] = {1, 7, 9, 10},
+    [479] = {1, 9},
+    [480] = {1, 4, 7},
+    [482] = {1, 3},
+    [483] = {1, 10},
+    [484] = {1, 3, 6, 9},
+    [485] = {4, 5, 7},
+    [487] = {1, 3, 5, 8, 9, 10},
+    [488] = {10},
+    [489] = {2, 6, 8},
+    [491] = {3, 6},
+    [492] = {1, 4, 7},
+    [493] = {1, 4, 5},
+    [494] = {1, 4, 5},
+    [495] = {1, 10},
+    [496] = {1, 7, 10},
+    [497] = {4, 5, 7, 10},
+    [498] = {1, 6, 7},
+    [499] = {5},
+    [500] = {1, 2, 4, 5, 6, 8},
+    [502] = {1, 10},
+    [503] = {1, 3, 9},
+    [504] = {1, 2, 8},
+    [505] = {1, 3, 5, 9},
+    [506] = {1, 4, 7, 9},
+    [507] = {1, 7, 10},
+    [508] = {1, 2, 5},
+    [509] = {4, 5, 7},
+    [511] = {1, 3, 9},
+    [512] = {2, 4, 7, 10},
+    [514] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+    [515] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+    [517] = {1, 6},
+    [518] = {1, 4},
+    [519] = {4, 5, 7},
+    [521] = {8},
+    [523] = {4, 7},
+    [525] = {1, 3, 10},
+    [528] = {7, 10},
+    [529] = {2, 5},
+    [530] = {1, 4, 5, 7},
+    [532] = {2, 4},
+    [534] = {1, 2, 3, 6, 8},
+    [535] = {1, 7},
+    [536] = {5, 7},
+    [537] = {1, 2, 4, 5},
+    [538] = {4, 6},
+    [539] = {1, 3, 8, 9, 10},
+    [540] = {1, 3, 8, 9, 10},
+    [541] = {3, 4, 5, 7},
+    [542] = {1, 10},
+    [543] = {1, 3, 7},
+    [544] = {3, 9, 10},
+    [545] = {1, 3, 6},
+    [546] = {4, 7, 10},
+    [547] = {1, 3, 5, 7, 8, 9},
+    [548] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+    [549] = {1, 3, 8, 9, 10},
+    [550] = {1, 3, 8, 9, 10},
+    [552] = {1, 2, 4, 5, 9},
+    [553] = {1, 3, 8, 9, 10},
+    [554] = {1, 5, 7},
+    [555] = {3, 4, 5, 7},
+    [556] = {4, 7, 10},
+    [557] = {2, 3, 5, 8, 9},
+    [558] = {6},
+    [559] = {2, 4, 5, 7},
+    [560] = {1, 3, 8},
+    [562] = {1, 3, 6},
+    [564] = {1, 4, 10},
+    [565] = {1, 10},
+    [566] = {1, 7, 10},
+    [567] = {3, 8},
+    [568] = {1, 7},
+    [569] = {1, 10},
+    [570] = {1, 8},
+    [571] = {1, 3},
+    [572] = {2, 4},
+    [573] = {1, 3, 8, 9},
+    [626] = {2, 3, 5, 6, 8, 9},
+    [627] = {5, 8},
+    [628] = {1, 8},
+    [629] = {1, 2, 5},
+    [630] = {1, 3, 6, 8},
+    [631] = {5, 7},
+    [632] = {1, 8},
+    [633] = {1, 5, 7, 10},
+    [634] = {1, 7},
+    [635] = {1, 6, 8},
+    [637] = {1, 3, 9},
+    [638] = {3, 4, 5, 7},
+    [639] = {1, 3, 8, 9, 10},
+    [640] = {1, 3, 5, 7, 9, 10},
+    [641] = {1, 3, 5, 7, 9, 10},
+    [644] = {1, 3, 8, 9, 10},
+    [645] = {1, 6, 7},
+    [646] = {1, 3, 9, 10},
+    [647] = {1, 3, 6, 8, 9},
+    [648] = {1, 4, 5, 10},
+    [649] = {1, 5, 6},
+    [650] = {6},
+    [652] = {9},
+    [665] = {9},
+    [671] = {6},
+    [675] = {1, 3, 8, 9, 10},
+    [677] = {1, 3, 6},
+    [678] = {4, 7},
+    [679] = {3, 9},
+    [680] = {3, 9},
+    [699] = {1, 7, 9, 10},
+    [702] = {1, 3, 10},
+    [703] = {1, 9},
+    [706] = {1, 3, 6},
+    [707] = {1, 3},
+    [708] = {1, 3, 8, 9, 10},
+    [709] = {1, 3, 9, 10},
+    [710] = {1, 7, 9},
+    [711] = {1, 3, 9},
+    [712] = {1, 3, 9},
+    [713] = {1, 7},
+    [714] = {1, 2, 8, 9},
+    [716] = {5, 7},
+    [717] = {3, 4, 7, 10},
+    [718] = {1, 6, 7},
+    [722] = {1, 7, 8, 10},
+    [723] = {1, 4, 7},
+    [724] = {3, 8},
+    [725] = {1, 9},
+    [726] = {1, 3, 5},
+    [727] = {1, 3, 6, 9, 10},
+    [728] = {1, 3, 9, 10},
+    [729] = {1, 3, 5, 7, 9, 10},
+    [730] = {1, 3, 7, 9, 10},
+    [731] = {5, 7},
+    [732] = {6, 7},
+    [733] = {1, 3, 9},
+    [737] = {3, 6},
+    [739] = {3, 6},
+    [740] = {1, 7, 8, 9, 10},
+    [741] = {1, 10},
+    [742] = {1, 3},
+    [743] = {1, 3, 10},
+    [744] = {3, 4, 5, 7, 9, 10},
+    [745] = {1, 7},
+    [746] = {2, 4},
+    [747] = {1, 7, 8, 10},
+    [748] = {1, 3, 5, 6, 7, 8, 9, 10},
+    [749] = {3, 9},
+    [750] = {1, 3, 9},
+    [751] = {1, 7, 9, 10},
+    [752] = {1, 2, 10},
+    [753] = {1, 7},
+    [754] = {1, 3, 5, 6, 7, 9, 10},
+    [755] = {6, 8},
+    [756] = {1, 3, 7},
+    [757] = {3},
+    [758] = {6},
+    [792] = {1, 10},
+    [802] = {2},
+    [817] = {5},
+    [818] = {6},
+    [819] = {3},
+    [820] = {10},
+    [821] = {9},
+    [823] = {1, 3, 7, 10},
+    [834] = {5},
+    [835] = {3},
+    [836] = {3},
+    [837] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+    [838] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+    [844] = {3},
+    [845] = {1, 6, 8},
+    [846] = {3},
+    [847] = {10},
+    [848] = {1, 3, 7},
+    [849] = {1},
+    [850] = {1},
+    [851] = {1, 3, 5},
+    [855] = {1},
+    [856] = {7, 10},
+    [868] = {7},
+    [903] = {8},
+    [1013] = {1, 4, 7},
+    [1039] = {4},
+    [1040] = {4},
+    [1042] = {6},
+    [1061] = {3},
+    [1062] = {1, 7, 8, 10},
+    [1063] = {6},
+    [1068] = {1, 3, 6, 8},
+    [1073] = {10},
+    [1117] = {1},
+    [1124] = {6},
+    [1125] = {1},
+    [1126] = {5},
+    [1127] = {6},
+    [1128] = {1, 10},
+    [1142] = {9},
+    [1143] = {6},
+    [1144] = {7},
+    [1145] = {3},
+    [1146] = {5},
+    [1147] = {2},
+    [1149] = {6},
+    [1150] = {7},
+    [1151] = {5},
+    [1152] = {4},
+    [1153] = {2},
+    [1154] = {7},
+    [1155] = {4},
+    [1156] = {6},
+    [1157] = {1, 10},
+    [1158] = {10},
+    [1159] = {10},
+    [1160] = {6},
+    [1161] = {2, 6, 8},
+    [1162] = {3, 6},
+    [1163] = {4, 5},
+    [1164] = {1, 3, 9},
+    [1165] = {2, 6, 8},
+    [1166] = {2, 6, 8},
+    [1167] = {2, 6, 8},
+}
+
+--[[
+local a,b = 0,0
+for k,v in pairs(lib.breedData.speciesToAvailableBreeds) do a = a+1 end
+for k,v in pairs(lib.breedData.speciesToBaseStatProfile) do b = b+1 end
+
+missingPets = ""
+for k,v in pairs(lib.breedData.speciesToBaseStatProfile) do 
+	if not lib.breedData.speciesToAvailableBreeds[k] then
+		missingPets = missingPets..k..", "
+		print(k)
+	end
+end
 
 
+print(a,b)]]

@@ -400,9 +400,6 @@
 				module.BattleFrame_Pets_Reorganize_Init(self, false);
 				module.BattleFrame_Options_Apply(self);
 			</OnShow>
-			<OnEvent>
-				PT:GetModule("FrameCombatDisplay").BattleFrame_OnEvent(self, event, ...)
-			</OnEvent>
 			<OnDragStart>
 				PT:GetModule("FrameCombatDisplay").BattleFrame_StartDrag(self);
 			</OnDragStart>	
