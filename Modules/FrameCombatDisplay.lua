@@ -405,7 +405,7 @@ function Proxy.OnEvent(self, event, ...)
 			PT:ScanPetAuras(get_enemy(frame).player);
 			module.BattleFrame_UpdateAbilityHighlights(frame);
 			module.BattleFrame_UpdateAbilityHighlights(get_enemy(frame));
-		elseif( pet == frame.player.activePet ) then
+		elseif( pet == frame.player.activePet or pet == PT.PAD_INDEX ) then
 			PT:ScanPetAuras(frame.player);
 			module.BattleFrame_UpdateAbilityHighlights(frame);
 			module.BattleFrame_UpdateAbilityHighlights(get_enemy(frame)); -- enemy needs update, too!
