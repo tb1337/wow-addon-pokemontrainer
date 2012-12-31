@@ -33,7 +33,7 @@ Locales\Locales.xml
 Core.lua
 Data.lua
 #@do-not-package@
-Developer.lua
+_scripts\Developer.lua
 #@end-do-not-package@
 
 # Combat Displays
