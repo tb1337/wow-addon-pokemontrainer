@@ -2,8 +2,8 @@ package-as: PokemonTrainer
 enable-nolib-creation: no
 
 ignore:
+  - _scripts
   - Developer.lua
-  - pack_data.pl
 
 externals:
   Libs/CallbackHandler-1.0:
