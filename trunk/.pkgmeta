@@ -3,7 +3,6 @@ enable-nolib-creation: no
 
 ignore:
   - _scripts
-  - Developer.lua
 
 externals:
   Libs/CallbackHandler-1.0:
