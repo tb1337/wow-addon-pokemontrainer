@@ -9,8 +9,7 @@ chomp@sr;my@re;my$db;for(@sr){if(m|^PTDevDB.=.{$|){$db=1;next}next if!$db;last i
 s|\s+(.+)$|$1|gi;s|(.+).--.*$|$1|gi;s|\[(\d+)\].=.(\d+)(,?)$|\[$1\]=$2$3|gi;
 s|\[("?)(\w+)("?)\].=.{$|[$1$2$3]={|gi;push@re,$_;}do{my@ro;my$re=qññ;for(@re){
 if(length($re)>80&&length($_)>4){push@ro,$re;$re=q**;}$re.=$_;}$re=join(qq÷\n÷,@ro);
-open(D,qqµ>µ.$d)or die qq¦Dest not found!¦;print D q¬local AddonName, PT = ...;
-local data = {
-¬;print D qq¹$re¹;print D q³}};
-PT.Data={};
-setmetatable(PT.Data,{__index=data,__newindex=function()end});³;close(D);}
+open(D,qqµ>µ.$d)or die qq¦Dest not found!¦;print D qq¬local AddonName, PT = ...;\nlocal data = {\n¬;
+my$br=[];for(split//,$re){$$br[0]++if$_ eq qq!{!;$$br[1]++if$_ eq qq?}?;}print D qq¹$re¹;
+print D q´}´x($$br[0]-$$br[1]);print D qq³\n};³;
+print D qq`\nPT.Data={};\nsetmetatable(PT.Data,{__index=data,__newindex=function()end});`;close(D);}
