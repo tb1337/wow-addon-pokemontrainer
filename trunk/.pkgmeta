@@ -3,6 +3,7 @@ enable-nolib-creation: no
 
 ignore:
   - Developer.lua
+  - pack_data.pl
 
 externals:
   Libs/CallbackHandler-1.0:
