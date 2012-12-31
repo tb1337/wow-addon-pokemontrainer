@@ -1,10 +1,9 @@
 ## Interface: 50100
 ## Title: Pokemon Trainer
-## Version: 1.0.3
+## Version: 1.1.0
 ## Notes: The pet battle addon with many helpers!
 ## Author: grdn
-## X-Maintainer: Possible
-## X-Tester: Detritis
+## X-Crew: grdn, Possible, Detritis
 ## SavedVariables: PokemonTrainerDB, PTDevDB
 ## Dependencies: Blizzard_PetJournal, Blizzard_PetBattleUI
 ## OptionalDeps: Ace3, iLib, LibPetBreedInfo-1.0, LibPetJournal-2.0
@@ -32,8 +31,8 @@ Locales\Locales.xml
 
 # Main
 Core.lua
-#@do-not-package@
 Data.lua
+#@do-not-package@
 Developer.lua
 #@end-do-not-package@
 
