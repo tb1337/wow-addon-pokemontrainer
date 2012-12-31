@@ -435,7 +435,6 @@ do
 		_G.wipe(player.aurastates); -- wipe old aurastate data
 		
 		local slot;
-		local hasStates, auraTable;
 		
 		-- there are three types of auras
 		--  1. Weather (applies on both player and enemy)
@@ -550,8 +549,8 @@ do
 			if( type(mods) == "number" ) then
 				glow[ab] = lookup_state(player, mods);
 			elseif( type(mods) == "table" ) then
-				if(	lookup_state(enemy,  mods[1]) or				-- check for enemy debuff which empowers our ability
-						lookup_state(player, mods[2]) or				-- check for weather which empowers our ability
+				if(	lookup_state(enemy,  mods[2]) or				-- check for enemy debuff which empowers our ability
+						lookup_state(player, mods[1]) or				-- check for weather which empowers our ability
 						lookup_state(player, mods[3]) ) then		-- check for weather state2 which empowers our ability
 					glow[ab] = true;
 				end
