@@ -1,5 +1,20 @@
+--@do-not-package@
+-- If Curse packages this file by accident, the contents are cut though
+
 local AddonName, PT = ...;
 local _G = _G;
+
+-- Please notice that I don't take care for overhead in this script as it is only for developing purposes
+-- This file isn't packaged to public Curse packages and only available at the repo
+
+--[[ My personal copy & paste snippets. :D
+	/script PT:GetModule("_Dev"):Clear()
+	/script PT:GetModule("_Dev"):GetAll()
+	
+	/script PT:GetModule("_Dev"):Dump()
+	/script PT:GetModule("_Dev"):CreateAuraStates(true)
+	/script PT:GetModule("_Dev"):CompileAbilityTables1(true)
+--]]
 
 local module = PT:NewModule("_Dev");
 function module:OnInitialize() -- fires when the saved var is loaded
@@ -7,14 +22,23 @@ function module:OnInitialize() -- fires when the saved var is loaded
 	_G.PTDevDB = _G.PTDevDB or {};
 	_G.PTDevDB.data = _G.PTDevDB.data or {};
 	_G.PTDevDB.aurastates = _G.PTDevDB.aurastates or {};
+	_G.PTDevDB.abilitymods = _G.PTDevDB.abilitymods or {};
 end
+
 function module:Clear()
 	self.dumped = false;
 	
 	_G.PTDevDB = {
 		data = {},
 		aurastates = {},
+		abilitymods = {},
 	};
+end
+
+function module:GetAll() -- Just a shortcut
+	self:Clear();
+	self:CreateAuraStates(true); -- do not delete dumped data
+	self:CompileAbilityTables(); -- delete dumped data
 end
 
 -------------------
@@ -25,52 +49,141 @@ module.dumped = false; -- set by :Dump
 
 local MAX_INVALID_ABILITY_ID = 2000;
 
--- Please notice that I don't take care for overhead in this script as it is only for developing purposes
--- This file isn't packaged to public Curse packages and only available at the repo
+-- state familys which in fact can boost ability power
+local statefamilys = {
+	--"Add", 			-- not clear if it increases our damage, need to check
+	"Mechanic_Is",-- status codes, f.e. Stunned, Blinded
+	"Mod_Damage",	-- direct damage increase values
+	--"Mod_Pet",		-- pet type id of abilities which deal more damage, all available here
+	"Weather",		-- weather states
+};
 
---[[ My personal copy & paste snippets. :D
-	/script PT:GetModule("_Dev"):Clear()
-	/script PT:GetModule("_Dev"):Dump()
-	/script PT:GetModule("_Dev"):CreateAuraStates()
---]]
+local wantedeffects = {
+	"requiredtargetstate",
+};
+
+-- Both LookupState functions are for developing purposes - I can check states during battles
+-- or simply retrieve state names of state IDs
+function PT.LookupState(state)
+	for stateName, stateID in pairs(PT.states) do
+		if( stateID == state ) then
+			return stateName;
+		end
+	end
+	return "none";
+end
+
+function PT.LookupStates()
+	print("=======================================");
+	print("States: Player");
+	for k in pairs(PT.PlayerInfo.aurastates) do
+		print("  "..PT.LookupState(k));
+	end
+	print("States: Enemy");
+	for k in pairs(PT.EnemyInfo.aurastates) do
+		print("  "..PT.LookupState(k));
+	end
+end
+
+--------------------------------
+-- Compile Ability Tables
+--------------------------------
+
+function module:CompileAbilityTables(nodel)
+	self:Dump();
+	local t = {};
+	
+	for i,a in ipairs(_G.PTDevDB.data) do
+		local e = a.events;
+		-- check if not aura but real ability and whether or not it does damage
+		if( not a.isAura and e and e.On_Damage_Taken ) then
+			local info = {};
+			
+			-- info indexes			
+			--  1 = weather
+			--  2 = status
+			--  3 = weather2
+			
+			for _,effectName in ipairs(wantedeffects) do
+				if( e.On_Damage_Dealt and e.On_Damage_Dealt[effectName] and e.On_Damage_Dealt[effectName] > 0 ) then
+					local value = e.On_Damage_Dealt[effectName];
+					local stateName = PT.LookupState(value);
+					local match = stateName:match("%w+");
+					
+					if( match == "Weather" ) then
+						info[3] = value;
+					elseif( match == "Mechanic" ) then
+						info[2] = value;
+					end
+				end
+			end
+			
+			-- mechanical attacks gain bonus from lightning storm
+			if( a.type == 10 ) then -- mechanical pet type
+				info[1] = PT.states.Weather_LightningStorm;
+			-- aquatic attacks gain bonus from rain
+			elseif( a.type == 9 ) then
+				info[1] = PT.states.Weather_Rain;
+			-- magic attacks gain bonus from moonlight
+			elseif( a.type == 6 ) then
+				info[1] = PT.states.Weather_Moonlight;
+			end
+			
+			if( info[1] and not info[2] and not info[3] ) then
+				t[a.id] = info[1];
+			elseif( info[1] or info[2] or info[3] ) then
+				t[a.id] = info;
+			end
+		end
+	end
+	
+	_G.PTDevDB.abilitymods = t;
+	if( not nodel ) then
+		_G.PTDevDB.data = nil;
+		self.dumped = false;
+	end
+end
 
 -------------------------------------------
 -- Create Table with all Aura States
 -------------------------------------------
 
-function module:CreateAuraStates()
+function module:CreateAuraStates(nodel)
 	self:Dump();
-	
 	local t = {};
-	
-	-- state familys which in fact can boost ability power
-	local statefamilys = {
-		--"Add", 			-- not clear if it increases our damage, need to check
-		"Mechanic_Is",-- status codes, f.e. Stunned, Blinded
-		"Mod_Damage",	-- direct damage increase values
-		"Mod_Pet",		-- pet type id of abilities which deal more damage, all available here
-		"Weather",		-- weather states
-	};
-	
+
 	-- loop all abilitys
 	for i,a in ipairs(_G.PTDevDB.data) do
 		-- check if aura
 		if( a.isAura ) then
+			local info = {};
+			
 			-- loop all dumped states
 			for stateName, data in pairs(a.states) do
 				-- loop our state family list
 				for _,family in ipairs(statefamilys) do
 					-- check whether or not the state interests us
 					if( stateName:sub(1, strlen(family)) == family ) then
-						t[a.id] = t[a.id] or {};
-						t[a.id][data.id] = data.value;
+						table.insert(info, data.id);
 					end -- endif
 				end -- endfor
 			end -- endfor
+			
+			if( #info > 0 ) then
+				if( #info == 1 ) then
+					t[a.id] = info[1];
+				else
+					t[a.id] = info;
+				end
+			end
 		end --endif
 	end --endfor
 	
 	_G.PTDevDB.aurastates = t;
+	if( not nodel ) then
+		_G.PTDevDB.data = nil;
+		self.dumped = false;
+	end
 end
 
 ------------------------------------------
@@ -83,7 +196,7 @@ function module:Dump()
 	
 	local t = {}; -- stores all ability info data
 	
-	-- stores banned ability IDs who passed all validity checks
+	-- stores banned ability IDs which passed all my validity checks
 	local banned = {86};
 	
 	-- loop to ability % and check if it's a valid ability
@@ -94,15 +207,13 @@ function module:Dump()
 		
 		if( not id ) then
 			-- invalid ability
+		elseif( tContains(banned, id) ) then
+			print(" Banned Ability", id, name);
+		elseif( desc == "" ) then
+			print(" GM Ability", id, name)
+		-- supposed to be valid
 		else
-			-- GM abilities apparently have no description and weird names
-			if( desc == "" ) then
-				print(" GM Ability", id, name)
-			elseif( tContains(banned, id) ) then
-				print(" Banned Ability", id, name);
-			else -- valid
-				table.insert(valid, id);
-			end
+			table.insert(valid, id);
 		end
 	end
 	print("Highest ability ID: "..valid[#valid] );
@@ -123,7 +234,7 @@ function module:Dump()
 			events = {}, -- stores eventual events
 			states = {}, -- stores eventual states
 			procs  = {}, -- stores eventual procs
-			isAura = false, -- if this ability is an aura, see end of this method
+			isAura = false, -- whether or not this ability is an aura, see end of this method
 		};
 		
 		-- now we loop thru all possible ability "meta data", as I call it
@@ -163,7 +274,7 @@ function module:Dump()
 		end --endfor
 		
 		-- ability state modifications are commonly known as auras
-		-- we check if our ability is an aura, because auras are client-side available as ability IDs
+		-- we check if our ability is an aura, because auras are ability IDs as well
 		for stateName, stateID in pairs(PT.states) do
 			local result = _G.C_PetBattles.GetAbilityStateModification(ability, stateID);
 			
@@ -181,3 +292,5 @@ function module:Dump()
 	
 	_G.PTDevDB.data = t;
 end
+
+--@end-do-not-package@

@@ -40,8 +40,6 @@ PT.BONUS_SPEED_FASTER = 2;
 PT.BONUS_SPEED_EQUAL  = 1;
 PT.BONUS_SPEED_SLOWER = 0;
 
-PT.DATALOADED = false; -- will be set by the _Data module when it was loaded
-
 PT.alpha = false; -- is this an alpha package?
 --@alpha@
 PT.alpha = true;
@@ -282,6 +280,7 @@ do
 		t.side = side;
 		t.numPets = numPets;
 		t.activePet = activePet;
+		t.aurastates = t.aurastates or {}; -- won't get deleted by wipe_pets() and we don't want to redeclare thousands of tables
 		t.scanned = true;
 		
 		for pet = 1, numPets do
@@ -335,6 +334,7 @@ do
 		t.side = side;
 		t.numPets = numPets;
 		t.activePet = activePet;
+		t.aurastates = t.aurastates or {};
 		t.scanned = true;
 		
 		local abID; -- for random ability creation
@@ -391,17 +391,20 @@ do
 	end
 end
 
+-- initially scans both player and enemy pets and initializes all important data
 function PT:ScanPets()
 	scan_pets(PT.PLAYER, self.PlayerInfo);
 	scan_pets(PT.ENEMY , self.EnemyInfo );
 end
 
+-- when no pets were scanned before, fill the tables with dummy data
 function PT:ScanDummyPets()
 	scan_dummys(PT.PLAYER, self.PlayerInfo);
 	scan_dummys(PT.ENEMY , self.EnemyInfo );
 end
 
-function PT:RoundUpPets(side, event)
+-- rounds up the pet data (speed, hp)
+function PT:RoundUpPets(side)
 	if( not side or side == PT.PLAYER ) then
 		roundup_pets(PT.PLAYER, self.PlayerInfo);
 	end
@@ -410,121 +413,154 @@ function PT:RoundUpPets(side, event)
 	end
 end
 
---@do-not-package@
+-- this chunk is our aura and state scanner
 do
-	function PT:ScanWeather()
-		self:ScanPetAuras(PT.WEATHER, PT.PAD_INDEX, 1, true); -- weather just has one aura slot
+	-- retrieve aurastates from Data for given aura ID and add them to players .aurastates
+	local function add_aura_states(player, aura)
+		local states = PT.Data.aurastates[aura];
+		
+		if( type(states) == "number" ) then
+			player.aurastates[states] = true;
+		elseif( type(states) == "table" ) then
+			for _,stateID in ipairs(states) do
+				player.aurastates[stateID] = true;
+			end
+		end
 	end
 	
-	local weather_current = 0;
-	local WeatherStates = {};
-	
-	function PT:ScanPetAuras(side, pet, slot, weather)
-		slot = slot or _G.C_PetBattles.GetNumAuras(side, pet);
-		local aura;
+	-- Loops thru all pet auras and scans for buff and debuff states
+	-- all states are stored in the .auratable and have to be treated as table indexes (simple lookup)
+	-- called by the event handler
+	function PT:ScanPetAuras(player)		
+		_G.wipe(player.aurastates); -- wipe old aurastate data
 		
-		if( weather ) then
-			aura = _G.C_PetBattles.GetAuraInfo(side, pet, slot) or 0; -- 0 means no aura
-			
-			print("Scan Weather!", weather_current, aura)
-			
-			if( weather_current ~= aura ) then
-				weather_current = aura;
-				WeatherStates = _G.PTDevDB.aurastates[aura];
-				print("Weather Changed!")
-			end
-			return;
+		local slot;
+		local hasStates, auraTable;
+		
+		-- there are three types of auras
+		--  1. Weather (applies on both player and enemy)
+		--  2. Player-wide (applies on all pets of a player)
+		--  3. Pet-only (applies on one pet)
+		
+		-- get weather states
+		add_aura_states(player, (_G.C_PetBattles.GetAuraInfo(PT.WEATHER, PT.PAD_INDEX, 1)) );
+		
+		-- get player-wide states
+		slot = _G.C_PetBattles.GetNumAuras(player.side, PT.PAD_INDEX);
+		for slot = 1, slot do
+			add_aura_states(player, (_G.C_PetBattles.GetAuraInfo(player.side, PT.PAD_INDEX, slot)) );
+		end
+		
+		-- get pet-only states
+		slot = _G.C_PetBattles.GetNumAuras(player.side, player.activePet);
+		for slot = 1, slot do
+			add_aura_states(player, (_G.C_PetBattles.GetAuraInfo(player.side, player.activePet, slot)) );
 		end
 	end
 
-	local env = {};
-	local effects = {_G.C_PetBattles.GetAllEffectNames()};
+	local get = {}; -- an ability-effect-retrieve-function storage
+	
+	local effects = {"points"};
+	--@do-not-package@
+	-- As a developer, we have access to all existing effects since the "normal" addon user only needs some effects
+	effects = {_G.C_PetBattles.GetAllEffectNames()};
+	--@end-do-not-package@
+	
+	-- loop all effects and create retrieve functions
 	for i, effect in ipairs(effects) do
-		env[effect] = function(abilityID, turnIndex, event)
+		get[effect] = function(abilityID, turnIndex, event)
 			return _G.C_PetBattles.GetAbilityEffectInfo(abilityID, turnIndex, event, effects[i]) or 0;
 		end;
 	end
 
+	-- table of event IDs used by the pet battle system. also called procs by Blizzard
 	local events = {
-		On_Apply = _G.PET_BATTLE_EVENT_ON_APPLY,
+		On_Apply				= _G.PET_BATTLE_EVENT_ON_APPLY,
 		On_Damage_Taken	= _G.PET_BATTLE_EVENT_ON_DAMAGE_TAKEN,
-		On_Damage_Dealt = _G.PET_BATTLE_EVENT_ON_DAMAGE_DEALT,
-		On_Heal_Taken = _G.PET_BATTLE_EVENT_ON_HEAL_TAKEN,
-		On_Heal_Dealt = _G.PET_BATTLE_EVENT_ON_HEAL_DEALT,
-		On_Aura_Removed = _G.PET_BATTLE_EVENT_ON_AURA_REMOVED,
-		On_Round_Start = _G.PET_BATTLE_EVENT_ON_ROUND_START,
-		On_Round_End = _G.PET_BATTLE_EVENT_ON_ROUND_END,
-		On_Turn = _G.PET_BATTLE_EVENT_ON_TURN,
-		On_Ability = _G.PET_BATTLE_EVENT_ON_ABILITY,
-		On_Swap_In = _G.PET_BATTLE_EVENT_ON_SWAP_IN,
-		On_Swap_Out = _G.PET_BATTLE_EVENT_ON_SWAP_OUT,
+		On_Damage_Dealt	= _G.PET_BATTLE_EVENT_ON_DAMAGE_DEALT,
+		On_Heal_Taken		= _G.PET_BATTLE_EVENT_ON_HEAL_TAKEN,
+		On_Heal_Dealt		= _G.PET_BATTLE_EVENT_ON_HEAL_DEALT,
+		On_Aura_Removed	= _G.PET_BATTLE_EVENT_ON_AURA_REMOVED,
+		On_Round_Start	= _G.PET_BATTLE_EVENT_ON_ROUND_START,
+		On_Round_End		= _G.PET_BATTLE_EVENT_ON_ROUND_END,
+		On_Turn					= _G.PET_BATTLE_EVENT_ON_TURN,
+		On_Ability			= _G.PET_BATTLE_EVENT_ON_ABILITY,
+		On_Swap_In			= _G.PET_BATTLE_EVENT_ON_SWAP_IN,
+		On_Swap_Out			= _G.PET_BATTLE_EVENT_ON_SWAP_OUT,
 	};
 	
+	-- table of states, which can be modifiers, debuffs, weathers, stats, everything
+	-- the normal user wouldn't need all of these, but I don't want to procude more code to prevent fetching all states
 	local states = {};
 	for stateName, stateID in pairs(_G.C_PetBattles.GetAllStates()) do
-		stateName = stateName:sub(7, -1);
+		stateName = stateName:sub(7, -1); -- cuts off, regex ^STATE_(.*)$ replace $1
 		states[stateName] = stateID;
-		--states[stateID] = stateName;
 	end
 	
-	PT.effects, PT.states, PT.events, PT.env = effects, states, events, env;
+	--@do-not-package@
+	-- I need that for developing stuff since Developer.lua uses this tables as well. Normal users don't have direct access to this tables
+	PT.effects, PT.states, PT.events, PT.get = effects, states, events, get;
+	--@end-do-not-package@
 	
-	local function isset(state, checkfor)
-		if( checkfor ) then
-			return state == checkfor;
-		end
-		return state > 0;
-	end
-	
-	local function check_aura_states(aurastate, abilityID)
-		local turnIndex = 1; -- huh?
-		
-		-- check if ability requires a specific aura state on the enemy pet to get more damage
-		if( isset(env.requiredtargetstate(abilityID, turnIndex, events.On_Damage_Dealt), aurastate) ) then
+	-- checks whether or not a state is currently active on the given player
+	local function lookup_state(player, state)
+		if( state and player.aurastates[state] ) then
 			return true;
 		end
-		
 		return false;
 	end
 	
-	local glow = {};
-	local function g(i,v) glow[i]=glow[i] and not v and true or v;end
+	-- checks whether or not an ability actually does damage
+	local function does_damage(ability)
+		return get.points(ability, 1, events.On_Damage_Taken) > 0; -- 1 is turn index
+	end
 	
+	-- static table which stores glowing informations, each index is an ability index
+	local glow = {};
+	
+	-- called by combat displays to get info about whether or not an ability button shall glow
 	function PT:GetStateBonuses(player, enemy)		
-		local Data = PT:GetModule("_Data");
-		local playerPet, enemyPet = player[player.activePet], enemy[enemy.activePet];
+		local playerPet = player[player.activePet];
 		
 		glow[1], glow[2], glow[3] = false, false, false;
 		
-		-- We have a buff which leads us in dealing more damage
-		-- So we check if an ability does damage and if yes, let it glow
-		if( isset(_G.C_PetBattles.GetStateValue(player.side, player.activePet, states.Mod_DamageDealtPercent)) ) then
+		-- Check if we are currently buffed with a damage modifier
+		-- if yes, returns since the other checks aren't necessary anymore
+		if( lookup_state(player, states.Mod_DamageDealtPercent ) ) then
 			for ab = 1, playerPet.numAbilities do
-				g(ab, env.points(playerPet["ab"..ab], 1, events.On_Damage_Taken) > 0);
+				glow[ab] = does_damage(playerPet["ab"..ab]);
 			end
-			return unpack(glow); -- we do not need the other checks anymore
+			return unpack(glow);
 		end
 		
-		-- Our enemy has a debuff which leads us in dealing more damage
-		-- SO we check if an ability does damage and if yes, let it glow
-		if( isset(_G.C_PetBattles.GetStateValue(enemy.side, enemy.activePet, states.Mod_DamageTakenPercent)) ) then
+		-- Check if the enemy currently has a debuff which boosts our ability power
+		-- if yes, returns since the other checks aren't necessary anymore
+		if( lookup_state(enemy, states.Mod_DamageTakenPercent ) ) then
 			for ab = 1, playerPet.numAbilities do
-				g(ab, env.points(playerPet["ab"..ab], 1, events.On_Damage_Taken) > 0);
+				glow[ab] = does_damage(playerPet["ab"..ab]);
 			end
-			return unpack(glow); -- we do not need the other checks anymore
+			return unpack(glow);
 		end
 		
-		-- Looping through all current aura states and check if there are abilities that need one of that states
-		--for _,aurastate in ipairs(Data:GetAuraStates(player)) do
-		--	for ab = 1, playerPet.numAbilities do
-		--		g(ab, check_aura_states(aurastate, playerPet["ab"..ab]) );
-		--	end
-		--end
+		-- Looping thru our abilities and check for enemy debuffs and weather modificators
+		local mods;
+		for ab = 1, playerPet.numAbilities do
+			mods = PT.Data.abilitymods[playerPet["ab"..ab]];
+			
+			if( type(mods) == "number" ) then
+				glow[ab] = lookup_state(player, mods);
+			elseif( type(mods) == "table" ) then
+				if(	lookup_state(enemy,  mods[1]) or				-- check for enemy debuff which empowers our ability
+						lookup_state(player, mods[2]) or				-- check for weather which empowers our ability
+						lookup_state(player, mods[3]) ) then		-- check for weather state2 which empowers our ability
+					glow[ab] = true;
+				end
+			end
+		end
 		
 		return unpack(glow);
 	end
 end
---@end-do-not-package@
 
 -----------------------------
 -- Configuration stuff
