@@ -11,6 +11,8 @@ externals:
     url: svn://svn.wowace.com/wow/libstub/mainline/trunk
   Libs/LibPetJournal-2.0:
     url: http://hg.curseforge.net/wow/libpetjournal-2-0/mainline
+  Libs/LibCrayon-3.0:
+    url: svn://svn.wowace.com/wow/libcrayon-3-0/mainline/trunk
   Libs/AceAddon-3.0:
     url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceAddon-3.0
   Libs/AceGUI-3.0:
@@ -35,3 +37,4 @@ optional-dependencies:
   - ilib
   - libpetjournal-2-0
   - libpetbreedinfo
+  - libcrayon-3-0
