@@ -46,55 +46,31 @@
 		</Layers>
 	</Button>
 	
+	<Frame name="PTFrameRampingTemplate" virtual="true" hidden="true">
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture parentKey="bg" file="Interface\Addons\PokemonTrainer\Images\Ramping" setallpoints="true">
+					<Color r="0" g="0" b="0" a="1" />
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture parentKey="tex" file="Interface\Addons\PokemonTrainer\Images\Ramping">
+					<Size>
+						<AbsDimension x="6" y="6" />
+					</Size>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Frame>
+	
 	<Button name="PTButtonAbilityTemplate" inherits="PTButtonTemplate" virtual="true" hidden="true">
 		<Scripts>
-			<OnEvent>
-				local db = PT:GetModule("FrameCombatDisplay").db.profile;
-				if( not db.cd_text and not db.cd_highlight ) then
-					return;
-				end
-				
-				-- love the frame widget id system :D
-				local master = self:GetParent():GetParent();
-				local pet  = self:GetParent():GetID();
-				local ab = self:GetID();
-				
-				-- if pet index is higher than max pets OR ability index higher than max abilities
-				if( pet > master.player.numPets or ab > master.player[pet].numAbilities ) then
-					return;
-				end
-				
-				local available, cdleft = PT:GetAbilityCooldown(master:GetID(), pet, ab);
-				
-				if( available ) then
-					self.Cooldown:SetText("");
-					self.CooldownBG:Hide();
-				else
-					if( db.cd_text ) then
-						self.Cooldown:SetTextColor(db.cd_text_r, db.cd_text_g, db.cd_text_b, db.cd_text_a);
-						self.Cooldown:SetText(cdleft &gt; <!-- yes &gt, actually &gt; xD --> 0 and cdleft or "");
-					end
-					if( db.cd_highlight ) then
-						self.CooldownBG:SetTexture(db.cd_highlight_r, db.cd_highlight_g, db.cd_highlight_b, db.cd_highlight_a);
-						self.CooldownBG:Show();
-					else
-						self.CooldownBG:Hide();
-					end
-				end
-			</OnEvent>
 			<OnShow>
-				local db = PT:GetModule("FrameCombatDisplay").db.profile;
-				
-				-- during the battle opening scene, buttons glow red until the player can actually use them - if highlights are enabled
-				self.Cooldown:SetText("");
-				
-				if( db.cd_highlight ) then
-					self.CooldownBG:SetTexture(db.cd_highlight_r, db.cd_highlight_g, db.cd_highlight_b, db.cd_highlight_a);
-					self.CooldownBG:Show();
-				else
-					self.CooldownBG:Hide();
-				end
+				PT:GetModule("FrameCombatDisplay").BattleFrame_AbilityButton_Show(self);
 			</OnShow>
+			<OnHide>
+				PT:GetModule("FrameCombatDisplay").BattleFrame_AbilityButton_Hide(self);
+			</OnHide>
 			<OnEnter>				
 				local parent = self:GetParent();
 				local master = parent:GetParent();
@@ -218,55 +194,12 @@
 								<OnPlay>
 									self:GetParent():SetAlpha(0);
 								</OnPlay>
-								<OnStop>
-									self:GetParent():SetAlpha(0);
-								</OnStop>
 								<OnFinished>
 									self:Play();
 								</OnFinished>
 							</Scripts>
 						</AnimationGroup>
 					</Animations>
-				</Texture>
-			</Layer>
-			<Layer level="ARTWORK">
-				<Texture parentKey="Type" inherits="PTButtonTemplate">
-					<TexCoords left="0.79687500" right="0.49218750" top="0.50390625" bottom="0.65625000" />
-					<Anchors>
-						<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="0" y="1" />
-					</Anchors>
-				</Texture>
-				<Texture parentKey="SpeedBG1" inherits="PTTextureBonusTemplate">
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Type" relativePoint="RIGHT" x="3" y="0" />
-				</Anchors>
-				</Texture>
-				<Texture parentKey="SpeedBG2" inherits="PTTextureBonusTemplate">
-					<Anchors>
-				<Anchor point="LEFT" relativeKey="$parent.SpeedBG1" relativePoint="RIGHT" x="3" y="0" />
-					</Anchors>
-				</Texture>
-				<Texture parentKey="SpeedBG3" inherits="PTTextureBonusTemplate">
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.SpeedBG2" relativePoint="RIGHT" x="3" y="0" />
-					</Anchors>
-				</Texture>
-			</Layer>
-			<Layer level="OVERLAY">
-				<Texture parentKey="Speed1" inherits="PTTextureSpeedTemplate">
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.SpeedBG1" />
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Speed2" inherits="PTTextureSpeedTemplate">
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.SpeedBG2" />
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Speed3" inherits="PTTextureSpeedTemplate">
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.SpeedBG3" />
-					</Anchors>
 				</Texture>
 			</Layer>
 		</Layers>
@@ -317,6 +250,71 @@
 						</Texture>
 					</Layer>
 				</Layers>
+			</Button>
+			<Button parentKey="Type" inherits="PTButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="0" y="1" />
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="Icon" setallpoints="true">
+							<TexCoords left="0.79687500" right="0.49218750" top="0.50390625" bottom="0.65625000" />
+						</Texture>
+						<Texture parentKey="SpeedBG1" inherits="PTTextureBonusTemplate">
+							<Anchors>
+								<Anchor point="LEFT" relativeKey="$parent.Type" relativePoint="RIGHT" x="3" y="0" />
+							</Anchors>
+						</Texture>
+						<Texture parentKey="SpeedBG2" inherits="PTTextureBonusTemplate">
+							<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.SpeedBG1" relativePoint="RIGHT" x="3" y="0" />
+							</Anchors>
+						</Texture>
+						<Texture parentKey="SpeedBG3" inherits="PTTextureBonusTemplate">
+							<Anchors>
+								<Anchor point="LEFT" relativeKey="$parent.SpeedBG2" relativePoint="RIGHT" x="3" y="0" />
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="OVERLAY">
+						<Texture parentKey="Speed1" inherits="PTTextureSpeedTemplate">
+							<Anchors>
+								<Anchor point="CENTER" relativeKey="$parent.SpeedBG1" />
+							</Anchors>
+						</Texture>
+						<Texture parentKey="Speed2" inherits="PTTextureSpeedTemplate">
+							<Anchors>
+								<Anchor point="CENTER" relativeKey="$parent.SpeedBG2" />
+							</Anchors>
+						</Texture>
+						<Texture parentKey="Speed3" inherits="PTTextureSpeedTemplate">
+							<Anchors>
+								<Anchor point="CENTER" relativeKey="$parent.SpeedBG3" />
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnEnter>
+						local parent = self:GetParent();
+						local master = parent:GetParent();
+							
+						local aura = _G.PET_BATTLE_PET_TYPE_PASSIVES[master.player[parent:GetID()].type];
+						
+						if( aura ) then
+							_G.PetBattleAbilityTooltip_SetAuraID(master:GetID(), parent:GetID(), aura);
+							
+							if( PT:GetModule("FrameCombatDisplay").GetTooltipPosition() ) then
+								_G.PetBattleAbilityTooltip_Show("TOPLEFT", self, "RIGHT", 10, 0);
+							else
+								_G.PetBattleAbilityTooltip_Show("TOPRIGHT", self, "LEFT", -10, 0);
+							end
+						end
+					</OnEnter>
+					<OnLeave>
+						_G.PetBattlePrimaryAbilityTooltip:Hide();
+					</OnLeave>
+				</Scripts>
 			</Button>
 			<Button parentKey="Ability1" id="1" inherits="PTButtonAbilityTemplate">
 				<Anchors>
@@ -401,7 +399,7 @@
 				module.BattleFrame_Options_Apply(self);
 			</OnShow>
 			<OnHide>
-				PT:GetModule("FrameCombatDisplay").hideall_glowing(self);
+				PT:GetModule("FrameCombatDisplay").glowing_hideall(self);
 			</OnHide>
 			<OnDragStart>
 				PT:GetModule("FrameCombatDisplay").BattleFrame_StartDrag(self);

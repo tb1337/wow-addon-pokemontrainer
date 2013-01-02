@@ -94,7 +94,7 @@ LibPetJournal:RegisterCallback("PetListUpdated", module.PetUpdate, module);
 -- "|cff1eff00|Hbattlepet:200:4:2:292:34:53:0000000000000000|h[Fr\195\188hlingshase]|h|r"
 local function parse_link(link)
 	if( not link ) then return; end
-	local speciesID, level, quality, health, power, speed = string.match(link, "|Hbattlepet:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):%d+|h");
+	local speciesID, level, quality, health, power, speed = link:match("|Hbattlepet:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):%d+|h");
 	return tonumber(speciesID), tonumber(level), tonumber(quality), tonumber(health), tonumber(power), tonumber(speed);
 end
 

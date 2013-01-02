@@ -6,7 +6,7 @@
 ## X-Crew: grdn, Possible, Detritis
 ## SavedVariables: PokemonTrainerDB, PTDevDB
 ## Dependencies: Blizzard_PetJournal, Blizzard_PetBattleUI
-## OptionalDeps: Ace3, iLib, LibPetBreedInfo-1.0, LibPetJournal-2.0
+## OptionalDeps: Ace3, iLib, LibCrayon-3.0, LibPetBreedInfo-1.0, LibPetJournal-2.0
 
 
 # Libraries
@@ -14,6 +14,7 @@ Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
 Libs\LibStub\Libstub.lua
 
 Libs\iLib\lib.xml
+Libs\LibCrayon-3.0\lib.xml
 LibPetBreedInfo-1.0\LibPetBreedInfo-1.0.lua
 Libs\LibPetJournal-2.0\LibPetJournal-2.0.lua
 
