@@ -13,7 +13,7 @@ local _G = _G;
 	
 	/script PT:GetModule("_Dev"):Dump()
 	/script PT:GetModule("_Dev"):CreateAuraStates(true)
-	/script PT:GetModule("_Dev"):CompileAbilityTables1(true)
+	/script PT:GetModule("_Dev"):CompileAbilityTables(true)
 --]]
 
 local module = PT:NewModule("_Dev");
@@ -49,6 +49,11 @@ module.dumped = false; -- set by :Dump
 
 local MAX_INVALID_ABILITY_ID = 2000;
 
+local MOD_WEATHER = 1;
+local MOD_STATUS = 2;
+local MOD_WEATHER2 = 3;
+local MOD_RAMPING = 4;
+
 -- state familys which in fact can boost ability power
 local statefamilys = {
 	--"Add", 			-- not clear if it increases our damage, need to check
@@ -60,6 +65,7 @@ local statefamilys = {
 
 local wantedeffects = {
 	"requiredtargetstate",
+	"pointsincreaseperuse",
 };
 
 -- Both LookupState functions are for developing purposes - I can check states during battles
@@ -99,39 +105,47 @@ function module:CompileAbilityTables(nodel)
 		if( not a.isAura and e and e.On_Damage_Taken ) then
 			local info = {};
 			
-			-- info indexes			
-			--  1 = weather
-			--  2 = status
-			--  3 = weather2
-			
 			for _,effectName in ipairs(wantedeffects) do
+				-- whenever we dealt damage
 				if( e.On_Damage_Dealt and e.On_Damage_Dealt[effectName] and e.On_Damage_Dealt[effectName] > 0 ) then
 					local value = e.On_Damage_Dealt[effectName];
 					local stateName = PT.LookupState(value);
 					local match = stateName:match("%w+");
 					
 					if( match == "Weather" ) then
-						info[3] = value;
+						info[MOD_WEATHER2] = value;
 					elseif( match == "Mechanic" ) then
-						info[2] = value;
+						info[MOD_STATUS] = value;
+					end
+				end
+				
+				-- whenever the enemy took damage
+				if( e.On_Damage_Taken and e.On_Damage_Taken[effectName] and e.On_Damage_Taken[effectName] > 0 ) then
+					local value = e.On_Damage_Taken[effectName];
+					
+					if( effectName == "pointsincreaseperuse" ) then
+						local pointsmax = e.On_Damage_Taken["pointsmax"];
+						pointsmax = pointsmax and pointsmax > 0 and pointsmax or (value * 5);
+						info[MOD_RAMPING] = math.ceil(pointsmax / value);
 					end
 				end
 			end
 			
 			-- mechanical attacks gain bonus from lightning storm
 			if( a.type == 10 ) then -- mechanical pet type
-				info[1] = PT.states.Weather_LightningStorm;
+				info[MOD_WEATHER] = PT.states.Weather_LightningStorm;
 			-- aquatic attacks gain bonus from rain
 			elseif( a.type == 9 ) then
-				info[1] = PT.states.Weather_Rain;
+				info[MOD_WEATHER] = PT.states.Weather_Rain;
 			-- magic attacks gain bonus from moonlight
 			elseif( a.type == 6 ) then
-				info[1] = PT.states.Weather_Moonlight;
+				info[MOD_WEATHER] = PT.states.Weather_Moonlight;
 			end
 			
-			if( info[1] and not info[2] and not info[3] ) then
-				t[a.id] = info[1];
-			elseif( info[1] or info[2] or info[3] ) then
+			-- if only MOD_WEATHER is set, the table value becomes a number
+			if( info[MOD_WEATHER] and not info[MOD_STATUS] and not info[MOD_WEATHER2] and not info[MOD_RAMPING] ) then
+				t[a.id] = info[MOD_WEATHER];
+			elseif( info[MOD_WEATHER] or info[MOD_STATUS] or info[MOD_WEATHER2] or info[MOD_RAMPING] ) then
 				t[a.id] = info;
 			end
 		end
@@ -197,7 +211,7 @@ function module:Dump()
 	local t = {}; -- stores all ability info data
 	
 	-- stores banned ability IDs which passed all my validity checks
-	local banned = {86};
+	local banned = {86, 292, 295, 562, 684, 714, 722, 725, 728, 733};
 	
 	-- loop to ability % and check if it's a valid ability
 	-- invalid IDs and GM abilities are filtered
@@ -207,10 +221,10 @@ function module:Dump()
 		
 		if( not id ) then
 			-- invalid ability
+		elseif( desc == "" ) then
+			--print(" GM Ability", id, name)
 		elseif( tContains(banned, id) ) then
 			print(" Banned Ability", id, name);
-		elseif( desc == "" ) then
-			print(" GM Ability", id, name)
 		-- supposed to be valid
 		else
 			table.insert(valid, id);
@@ -237,6 +251,11 @@ function module:Dump()
 			isAura = false, -- whether or not this ability is an aura, see end of this method
 		};
 		
+		-- initial aura check
+		if( info.numTurns == 0 ) then
+			info.isAura = true;
+		end
+		
 		-- now we loop thru all possible ability "meta data", as I call it
 		
 		-- scan all ability events
@@ -250,8 +269,8 @@ function module:Dump()
 			-- loop thru all effects and check if there is some data available
 			for _,effect in ipairs(PT.effects) do
 				-- when no procs are available, simply fill data into a table
-				if( not proc ) then
-					local result = _G.C_PetBattles.GetAbilityEffectInfo(ability, 1, event, effect); -- proc turn = 1
+				if( numTurns < 2 ) then
+					local result = _G.C_PetBattles.GetAbilityEffectInfo(ability, 1, event, effect);
 					
 					if( result ) then
 						info.events[eventName] = info.events[eventName] or {id = event};
@@ -260,11 +279,11 @@ function module:Dump()
 				-- procs are available, so we need to fill a table with even more tables
 				else
 					-- loop thru all proc turns
-					for turn = 1, proc do
+					for turn = 1, numTurns do
 						local result = _G.C_PetBattles.GetAbilityEffectInfo(ability, turn, event, effect);
 						
 						if( result ) then
-							info.events[eventName] = info.events[eventName] or {id = event, numTurns = proc};
+							info.events[eventName] = info.events[eventName] or {id = event};
 							info.events[eventName][turn] = info.events[eventName][turn] or {turn = turn};
 							info.events[eventName][turn][effect] = result;
 						end -- endif

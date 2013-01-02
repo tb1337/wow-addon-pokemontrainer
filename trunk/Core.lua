@@ -10,6 +10,7 @@ local AceTimer = LibStub("AceTimer-3.0"); -- no need for embedding it
 local LibBreed = LibStub("LibPetBreedInfo-1.0");
 
 local _G = _G;
+local ipairs, pairs = _G.ipairs, _G.pairs;
 
 _G.PT = PT;
 
@@ -364,7 +365,7 @@ do
 				while( not abID ) do
 					abID = _G.C_PetBattles.GetAbilityInfoByID(random(200, 800));
 				end
-				t[pet]["ab"..ab] = abID;
+				t[pet]["ab"..ab] = 421; --abID;
 				abID = nil;
 			end
 		end
@@ -502,7 +503,7 @@ do
 	--@end-do-not-package@
 	
 	-- checks whether or not a state is currently active on the given player
-	local function lookup_state(player, state)
+	local function lookup_aurastate(player, state)
 		if( state and player.aurastates[state] ) then
 			return true;
 		end
@@ -518,14 +519,14 @@ do
 	local glow = {};
 	
 	-- called by combat displays to get info about whether or not an ability button shall glow
-	function PT:GetStateBonuses(player, enemy)		
+	function PT:GetAbilityStateBonuses(player, enemy)		
 		local playerPet = player[player.activePet];
 		
 		glow[1], glow[2], glow[3] = false, false, false;
 		
 		-- Check if we are currently buffed with a damage modifier
 		-- if yes, returns since the other checks aren't necessary anymore
-		if( lookup_state(player, states.Mod_DamageDealtPercent ) ) then
+		if( lookup_aurastate(player, states.Mod_DamageDealtPercent ) ) then
 			for ab = 1, playerPet.numAbilities do
 				glow[ab] = does_damage(playerPet["ab"..ab]);
 			end
@@ -534,7 +535,7 @@ do
 		
 		-- Check if the enemy currently has a debuff which boosts our ability power
 		-- if yes, returns since the other checks aren't necessary anymore
-		if( lookup_state(enemy, states.Mod_DamageTakenPercent ) ) then
+		if( lookup_aurastate(enemy, states.Mod_DamageTakenPercent ) ) then
 			for ab = 1, playerPet.numAbilities do
 				glow[ab] = does_damage(playerPet["ab"..ab]);
 			end
@@ -547,17 +548,36 @@ do
 			mods = PT.Data.abilitymods[playerPet["ab"..ab]];
 			
 			if( type(mods) == "number" ) then
-				glow[ab] = lookup_state(player, mods);
+				glow[ab] = lookup_aurastate(player, mods);
 			elseif( type(mods) == "table" ) then
-				if(	lookup_state(enemy,  mods[2]) or				-- check for enemy debuff which empowers our ability
-						lookup_state(player, mods[1]) or				-- check for weather which empowers our ability
-						lookup_state(player, mods[3]) ) then		-- check for weather state2 which empowers our ability
+				if(	lookup_aurastate(enemy,  mods[2]) or				-- check for enemy debuff which empowers our ability
+						lookup_aurastate(player, mods[1]) or				-- check for weather which empowers our ability
+						lookup_aurastate(player, mods[3]) ) then		-- check for weather state2 which empowers our ability
 					glow[ab] = true;
 				end
 			end
 		end
 		
 		return unpack(glow);
+	end
+	
+	-- Checks whether or not ramping is available for that ability ID
+	-- and returns the max ramping value (how much stacks apply additional power)
+	function PT:GetAbilityRamping(ability)
+		if( type(self.Data.abilitymods[ability]) ~= "table" ) then
+			return;
+		end
+		return self.Data.abilitymods[ability][4];
+	end
+	
+	-- Checks the current ramping state of abilityID
+	-- Returns either 0 if it fails or the actual value (which can be also 0)
+	function PT:GetAbilityRampingState(side, pet, ability)
+		if( _G.C_PetBattles.GetStateValue(side, pet, states.Ramping_DamageID) ~= ability ) then
+			return 0;
+		else
+			return _G.C_PetBattles.GetStateValue(side, pet, states.Ramping_DamageUses);
+		end
 	end
 end
 

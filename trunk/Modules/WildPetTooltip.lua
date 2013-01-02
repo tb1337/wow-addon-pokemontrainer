@@ -89,7 +89,7 @@ function module:ProcessTooltip()
 	
 	_G.GameTooltip:AddLine(" ");
 	
-	for pet = 1, PT.MAX_COMBAT_PETS do
+	for pet = PT.PET_INDEX, PT.MAX_COMBAT_PETS do
 		petID, ab1, ab2, ab3, slotLocked = _G.C_PetJournal.GetPetLoadOutInfo(pet);
 		
 		if( not slotLocked and petID ) then
