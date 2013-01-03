@@ -723,6 +723,16 @@ do
 				glowing_blast(glow.animOut);
 			end
 		end
+		
+		-- player also may have glowing ability buttons
+		if( self:GetID() == PT.PLAYER ) then
+			for ab = 1, PT.MAX_PET_ABILITY do
+				glow = _G.PetBattleFrame.BottomFrame.abilityButtons[ab].glowFrame;
+				if( glow ) then
+					glowing_blast(glow.animOut);
+				end
+			end
+		end
 	end
 	
 	-- Updates ability button highlights, retrieves state bonuses from the core and either shows or hides glowing frames
