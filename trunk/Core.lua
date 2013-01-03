@@ -365,7 +365,7 @@ do
 				while( not abID ) do
 					abID = _G.C_PetBattles.GetAbilityInfoByID(random(200, 800));
 				end
-				t[pet]["ab"..ab] = 421; --abID;
+				t[pet]["ab"..ab] = abID;
 				abID = nil;
 			end
 		end
@@ -446,13 +446,13 @@ do
 		add_aura_states(player, (_G.C_PetBattles.GetAuraInfo(PT.WEATHER, PT.PAD_INDEX, 1)) );
 		
 		-- get player-wide states
-		slot = _G.C_PetBattles.GetNumAuras(player.side, PT.PAD_INDEX);
+		slot = _G.C_PetBattles.GetNumAuras(player.side, PT.PAD_INDEX) or 0; -- apparently can be nil
 		for slot = 1, slot do
 			add_aura_states(player, (_G.C_PetBattles.GetAuraInfo(player.side, PT.PAD_INDEX, slot)) );
 		end
 		
 		-- get pet-only states
-		slot = _G.C_PetBattles.GetNumAuras(player.side, player.activePet);
+		slot = _G.C_PetBattles.GetNumAuras(player.side, player.activePet) or 0; -- apparently can be nil
 		for slot = 1, slot do
 			add_aura_states(player, (_G.C_PetBattles.GetAuraInfo(player.side, player.activePet, slot)) );
 		end
@@ -509,6 +509,13 @@ do
 		end
 		return false;
 	end
+	-- same check but involves weather / elemental bonus (Elementals ignore ALL weather effects, thus they receive no bonus from them, too!)
+	local function lookup_aurastate_weather(player, petType, state)
+		if( _G.PET_TYPE_SUFFIX[petType] == "Elemental" ) then
+			return false;
+		end
+		return lookup_aurastate(player, state);
+	end
 	
 	-- checks whether or not an ability actually does damage
 	local function does_damage(ability)
@@ -548,13 +555,13 @@ do
 			mods = PT.Data.abilitymods[playerPet["ab"..ab]];
 			
 			if( type(mods) == "number" ) then
-				glow[ab] = lookup_aurastate(player, mods);
+				glow[ab] = lookup_aurastate_weather(player, playerPet.type, mods);
 			elseif( type(mods) == "table" ) then
 				if(	lookup_aurastate(enemy,  mods[2]) or				-- check for enemy debuff which empowers our ability
-						lookup_aurastate(player, mods[1]) or				-- check for weather which empowers our ability
-						lookup_aurastate(player, mods[3]) ) then		-- check for weather state2 which empowers our ability
+						lookup_aurastate_weather(player, playerPet.type, mods[1]) or				-- check for weather which empowers our ability
+						lookup_aurastate_weather(player, playerPet.type, mods[3]) ) then		-- check for weather state2 which empowers our ability
 					glow[ab] = true;
-				end
+				end				
 			end
 		end
 		

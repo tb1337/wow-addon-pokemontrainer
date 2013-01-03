@@ -16,7 +16,7 @@ local ipairs, pairs, table = _G.ipairs, _G.pairs, _G.table;
 ----------------------
 
 module.order = 1;
-module.displayName = function() return (module:IsEnabled() and "|cff00ff00%s|r" or "|cffff0000%s|r"):format(L["Display: Frames"]) end
+module.displayName = function() return "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..(module:IsEnabled() and "|cff00ff00%s|r" or "|cffff0000%s|r"):format(L["Display: Frames"]) end
 module.desc = L["True frame based combat display for Pet Battles and the next generation of Pokemon Trainer. Disable it if you want to use the tooltip based combat display."];
 module.noEnableButton = true;
 
@@ -193,6 +193,7 @@ function module:OnEvent(event, ...)
 		PT:RoundUpPets(side);
 		PT:ScanPetAuras(frame.player);
 		
+		self.BattleFrame_SetActiveEnemy(get_enemy(frame));
 		self.BattleFrame_UpdateActivePetHighlight(frame);
 		
 		if( frame.firstRound or not self.db.profile.reorganize_use ) then
@@ -363,6 +364,13 @@ function module.BattleFrame_Resize(self)
 	self:SetHeight(y);
 end
 
+-- function to move the "active enemy" border
+function module.BattleFrame_SetActiveEnemy(self)
+	self.EnemyActive:ClearAllPoints();
+	self.EnemyActive:SetPoint("TOP", _G[self:GetName().."Header"]["Enemy"..self.enemy.activePet], 0, -21);
+	self.EnemyActive:SetPoint("BOTTOM", 0, -6);
+end
+
 -- returns true if on the left side of the screen, false otherwise
 -- called by xml for displaying tooltips
 function module.GetTooltipPosition()
@@ -388,15 +396,16 @@ do
 	-- called by xml
 	function module.BattleFrame_OnLoad(self)
 		local frame_name = self:GetName();
-		self:SetID( frame_name == FRAME_PLAYER and PT.PLAYER or PT.ENEMY );
 		
-		-- we store the table ID's for further use
+		-- we store the table ID's for further use and set the backdrop border colors, which need to be set once
 		if( self:GetID() == PT.PLAYER ) then
 			self.player = PT.PlayerInfo;
 			self.enemy  = PT.EnemyInfo;
+			self.EnemyActive:SetBackdropBorderColor(1, 0, 0, 1);
 		else
 			self.player = PT.EnemyInfo;
 			self.enemy  = PT.PlayerInfo;
+			self.EnemyActive:SetBackdropBorderColor(0, 1, 0, 1);
 		end
 		
 		-- add self to BattleFrames
@@ -531,6 +540,9 @@ function module.BattleFrame_Initialize(self)
 	
 	-- set health state
 	module.BattleFrame_UpdateHealthState(self);
+	
+	-- set active enemy
+	module.BattleFrame_SetActiveEnemy(self);
 end
 
 ---------------------------------------------
@@ -618,6 +630,8 @@ do
 	local heap = {}; -- stores unused glow frames
 	local glownum = 0;
 	
+	PT.heap=heap;
+	
 	-- "blasts" glowing frames: instantly hides them out, removes them from the parent object and puts them into the heap
 	local function glowing_blast(self)
 		if( not self ) then return end;
@@ -664,10 +678,6 @@ do
 			
 			glow:SetParent(self);
 			glow:ClearAllPoints();
-			-- Why did Blizzard do that? Didn't they know about anchoring to center?
-			--glow:SetSize(width * 1.4, height * 1.4);
-			--glow:SetPoint("TOPLEFT", self, "TOPLEFT", -width * 0.2, height * 0.2);
-			--glow:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", width * 0.2, -height * 0.2);
 			glow:SetSize(width * 1.6, height * 1.6);
 			glow:SetPoint("CENTER");
 			glow.animIn:Play();
@@ -1318,7 +1328,7 @@ function module:GetPositionOptions()
 			spacer3 = { type = "description", name = "", order = 4.1 },
 			breeds = {
 				type = "select",
-				name = L["Display breeds"],
+				name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["Display breeds"],
 				desc = L["Perhaps, you heard of battle pet breeds before. Any pet has an assigned breed ID which defines which stats will grow larger than others while leveling up. Stats are health, power and speed. When this option is enabled, you can actually see pet breeds in during battles."],
 				order = 4.5,
 				get = function()
@@ -1367,7 +1377,7 @@ function module:GetPositionOptions()
 				arg = FRAME_ENEMY,
 			},
 			activepets = {
-				name = L["Pet highlightning"],
+				name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["Pet highlightning"],
 				type = "group",
 				inline = true,
 				order = 7,
@@ -1389,7 +1399,7 @@ function module:GetPositionOptions()
 					},
 					active_animate = {
 						type = "toggle",
-						name = L["With animation"],
+						name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["With animation"],
 						desc = L["In addition, the background of active pets gets animated with a smooth effect."],
 						order = 1.1,
 						get = function()
@@ -1490,7 +1500,7 @@ function module:GetOptions()
 				},
 				drag = {
 					type = "execute",
-					name = L["More settings"],
+					name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["More settings"],
 					order = 2,
 					func = OpenPositioning,
 				},
@@ -1530,7 +1540,7 @@ function module:GetOptions()
 			},
 		},
 		ability = {
-			name = L["General ability settings"],
+			name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["General ability settings"],
 			type = "group",
 			inline = true,
 			order = 5,
@@ -1552,7 +1562,7 @@ function module:GetOptions()
 				},
 				ability_highlight = {
 					type = "toggle",
-					name = L["Highlight buffed abilities"],
+					name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["Highlight buffed abilities"],
 					desc = L["Whenever your abilities are doing more damage based on buffs or weather, they will glow."],
 					order = 2,
 					get = function()
@@ -1564,7 +1574,7 @@ function module:GetOptions()
 				},
 				ability_highlight_blizzard = {
 					type = "toggle",
-					name = L["...on Blizzard Bar"],
+					name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["...on Blizzard Bar"],
 					desc = L["Applys ability glowing states on Blizzards Pet Action Buttons, too."],
 					order = 3,
 					get = function()
@@ -1577,7 +1587,7 @@ function module:GetOptions()
 				},
 				ability_ramping = {
 					type = "toggle",
-					name = L["Display ability amplifying state"],
+					name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["Display ability amplifying state"],
 					desc = L["Some abilities get stronger on each usage. If this option is enabled, you will see a red dot which gets more green the more you are using these abilities."],
 					order = 4,
 					width = "full",

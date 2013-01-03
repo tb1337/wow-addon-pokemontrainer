@@ -409,6 +409,21 @@
 			</OnDragStop>			
 		</Scripts>
 		<Frames>
+			<Frame parentKey="EnemyActive" frameLevel="6">
+				<Size>
+					<AbsDimension x="26" />
+				</Size>
+				<Backdrop edgeFile="Interface\Tooltips\UI-Tooltip-Border">
+					<EdgeSize>
+						<AbsValue val="14" />
+					</EdgeSize>
+				</Backdrop>
+				<Scripts>
+					<OnLoad>
+						self:Raise(); -- makes it overlay the parent and all other frames
+					</OnLoad>
+				</Scripts>
+			</Frame>
 			<Frame name="$parentHeader" inherits="PTFrameHeaderTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="0" y="1" />
@@ -457,9 +472,9 @@
 	</Frame>
 	
 	<!-- Player Frame -->
-	<Frame name="PTPlayer" inherits="PTFrameTemplate" />
+	<Frame name="PTPlayer" id="1" inherits="PTFrameTemplate" />
 	
 	<!-- Enemy Frame -->
-	<Frame name="PTEnemy"  inherits="PTFrameTemplate" />
+	<Frame name="PTEnemy"  id="2" inherits="PTFrameTemplate" />
 	
 </Ui>
