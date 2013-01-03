@@ -64,6 +64,8 @@ L["...on Blizzard Bar"] = true
 L["Applys ability glowing states on Blizzards Pet Action Buttons, too."] = true
 L["Display ability amplifying state"] = true
 L["Some abilities get stronger on each usage. If this option is enabled, you will see a red dot which gets more green the more you are using these abilities."] = true
+L["Display active enemy borders"] = true
+L["Draws a border around the column of currently active enemys, so it is easier to detect the active pet on your frame for comparing bonuses."] = true
 
 -- module TooltipCombatDisplay
 L["Display: Tooltip"] = true

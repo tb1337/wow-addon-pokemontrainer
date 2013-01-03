@@ -4,7 +4,7 @@
 local AddonName, PT = ...;
 local _G = _G;
 
--- Please notice that I don't take care for overhead in this script as it is only for developing purposes
+-- Please note that I don't take care for overhead in this script as it is only for developing purposes
 -- This file isn't packaged to public Curse packages and only available at the repo
 
 --[[ My personal copy & paste snippets. :D

@@ -67,6 +67,7 @@ function module:OnInitialize()
 			highlight_active_r = 0.99,
 			highlight_active_g = 0.82,
 			highlight_active_b = 0,
+			active_enemy_border = true,
 			bg = false,
 			bg_r = 0.30,
 			bg_g = 0.30,
@@ -630,8 +631,6 @@ do
 	local heap = {}; -- stores unused glow frames
 	local glownum = 0;
 	
-	PT.heap=heap;
-	
 	-- "blasts" glowing frames: instantly hides them out, removes them from the parent object and puts them into the heap
 	local function glowing_blast(self)
 		if( not self ) then return end;
@@ -727,9 +726,9 @@ do
 		-- player also may have glowing ability buttons
 		if( self:GetID() == PT.PLAYER ) then
 			for ab = 1, PT.MAX_PET_ABILITY do
-				glow = _G.PetBattleFrame.BottomFrame.abilityButtons[ab].glowFrame;
-				if( glow ) then
-					glowing_blast(glow.animOut);
+				glow = _G.PetBattleFrame.BottomFrame.abilityButtons[ab]; -- bitching glow variable
+				if( glow and glow.glowFrame ) then					
+					glowing_blast(glow.glowFrame.animOut);
 				end
 			end
 		end
@@ -865,26 +864,24 @@ do
 			script = false;
 		end
 		
-		if( _G.C_PetBattles.IsInBattle() ) then			
-			if( module.db.profile.ability_ramping ) then
-				local ability = master.player[parent:GetID()]["ab"..self:GetID()];
-				local ramping = PT:GetAbilityRamping(ability);
-				
-				if( ramping ) then
-					ramping_show(self, master:GetID(), parent:GetID(), ability, ramping);
-					script = true;
-				end
-			else
-				ramping_blast(self);
-				-- not changing the script var here
+		-- check for ability ramping
+		if( module.db.profile.ability_ramping ) then
+			local ability = master.player[parent:GetID()]["ab"..self:GetID()];
+			local ramping = PT:GetAbilityRamping(ability);
+			
+			if( ramping ) then
+				ramping_show(self, master:GetID(), parent:GetID(), ability, ramping);
+				script = true;
 			end
 		else
-			-- when not engaging another pet, we don't need to set the event script
-			script = false;
+			ramping_blast(self);
 		end
 		
+		-- when not engaging another pet, we don't need to set the event script
+		if( not _G.C_PetBattles.IsInBattle() ) then
+			script = false;		
 		-- if pet index is higher than max pets OR ability index higher than max abilities
-		if( parent:GetID() > master.player.numPets or self:GetID() > master.player[parent:GetID()].numAbilities ) then
+		elseif( parent:GetID() > master.player.numPets or self:GetID() > master.player[parent:GetID()].numAbilities ) then
 			script = false;
 		end
 		
@@ -1131,6 +1128,13 @@ function module.BattleFrame_Options_Apply(self)
 	
 	-- adjust frame scale
 	self:SetScale(module.db.profile.scale);
+	
+	-- show or hide the active enemy border
+	if( module.db.profile.active_enemy_border ) then
+		self.EnemyActive:Show();
+	else
+		self.EnemyActive:Hide();
+	end
 end
 
 -----------------------------------
@@ -1432,6 +1436,21 @@ function module:GetPositionOptions()
 							module.db.profile.highlight_active_r = r;
 							module.db.profile.highlight_active_g = g;
 							module.db.profile.highlight_active_b = b;
+							module.BattleFrame_Options_Apply(_G[FRAME_PLAYER]);
+							module.BattleFrame_Options_Apply(_G[FRAME_ENEMY]);
+						end,
+					},
+					active_enemy_border = {
+						type = "toggle",
+						name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["Display active enemy borders"],
+						desc = L["Draws a border around the column of currently active enemys, so it is easier to detect the active pet on your frame for comparing bonuses."],
+						order = 1.3,
+						width = "full",
+						get = function()
+							return module.db.profile.active_enemy_border;
+						end,
+						set = function(_, value)
+							module.db.profile.active_enemy_border = value;
 							module.BattleFrame_Options_Apply(_G[FRAME_PLAYER]);
 							module.BattleFrame_Options_Apply(_G[FRAME_ENEMY]);
 						end,
