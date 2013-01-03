@@ -263,11 +263,23 @@ function module:Dump()
 			-- check for procs
 			local proc = _G.C_PetBattles.GetAbilityProcTurnIndex(ability, event);
 			if( proc ) then
-				info.procs[eventName] = proc;
+				info.procs[eventName] = {proc = proc};
 			end
 			
 			-- loop thru all effects and check if there is some data available
 			for _,effect in ipairs(PT.effects) do
+				if( proc ) then
+					for turn = 1, proc do
+						local result = _G.C_PetBattles.GetAbilityEffectInfo(ability, turn, event, effect);
+						
+						if( result ) then
+							info.procs[eventName] = info.procs[eventName] or {id = event};
+							info.procs[eventName][turn] = info.procs[eventName][turn] or {turn = turn};
+							info.procs[eventName][turn][effect] = result;
+						end
+					end
+				end
+			
 				-- when no procs are available, simply fill data into a table
 				if( numTurns < 2 ) then
 					local result = _G.C_PetBattles.GetAbilityEffectInfo(ability, 1, event, effect);

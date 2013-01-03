@@ -13,7 +13,7 @@ local _G = _G;
 -- Variables
 ----------------------
 
-module.displayName = L["Auto Safari Hat"];
+module.displayName = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["Auto Safari Hat"];
 module.desc = L["Small module which will always equip your Safari Hat when engaging a battle pet. After the battle is over and the XP is gained, it will switch back to your previous weared head gear."];
 
 local hat_exists = false;
