@@ -65,7 +65,7 @@ function module:PetBattleStart()
 	
 	if( hat_exists ) then
 		if( self:WearingHat() ) then
-			msg = L["Hat already put on."];
+			msg = L["Hat already put on!"];
 		elseif( hat_bag and hat_slot ) then
 			err, msg = false, L["Hat put on successfully."];
 			_G.PickupContainerItem(hat_bag, hat_slot);
