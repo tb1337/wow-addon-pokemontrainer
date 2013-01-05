@@ -550,29 +550,155 @@ end
 -- Battle Frame: Setup Ability Buttons
 ---------------------------------------------
 
-function module.BattleFrame_SetupAbilityButtons(self, pet)
-	local abID, abName, abIcon, abMaxCD, abDesc, abNumTurns, abType, noStrongWeak;
-
-	for ab = 1, PT.MAX_PET_ABILITY do
-		if( ab <= self.player[pet].numAbilities ) then
-			abID, abName, abIcon, abMaxCD, abDesc, abNumTurns, abType, noStrongWeak = _G.C_PetBattles.GetAbilityInfoByID( self.player[pet]["ab"..ab] );
-			
-			-- set ability icon
-			_G[self:GetName().."Pet"..pet]["Ability"..ab].bg:SetTexture(abIcon);
-			
-			-- show ability row on self
-			BattleFrame_SetRowVisibility(self, pet, ab, true);
-			
-			-- setup vulnerability bonus buttons
-			for enemPet = PT.PET_INDEX, self.enemy.numPets do
-				_G[self:GetName().."Pet"..pet]["Ability"..ab]["Bonus"..enemPet]:SetTexture( PT:GetTypeBonusIcon(abType, self.enemy[enemPet].type, noStrongWeak) );
+do
+	local heap = {}; -- stores unused ramping frames
+	local rampnum = 0;
+	
+	-- Crayon is used for coloring the ramping state
+	local LibCrayon = LibStub("LibCrayon-3.0");
+	
+	-- Either generates a new ramping frame from template or uses an unused one
+	local function ramping_show(self, side, pet, ability, ramping)
+		if( not self.rampFrame ) then
+			local ramp = table.remove(heap);
+			if( not ramp ) then
+				rampnum = rampnum + 1;
+				ramp = _G.CreateFrame("Frame", "PTRampingFrame"..rampnum, self, "PTFrameRampingTemplate");
 			end
-		else
-			-- hide ability row on self
-			BattleFrame_SetRowVisibility(self, pet, ab, false);
+			
+			ramp.side		 = side;
+			ramp.pet		 = pet;
+			ramp.ability = ability;
+			ramp.rampMax = ramping;
+			
+			ramp:ClearAllPoints();
+			ramp:SetSize(8, 8);
+			ramp:SetPoint("TOPLEFT", -1, 1);
+			
+			ramp.tex:ClearAllPoints();
+			ramp.tex:SetPoint("CENTER", ramp.bg);
+			ramp.tex:SetVertexColor(1, 0, 0, 1);
+			
+			ramp:Show();
+			self.rampFrame = ramp;
 		end
 	end
+	
+	-- Updates a ramping frame, if it exists
+	local function ramping_update(self)
+		if( self.rampFrame ) then
+			local ramp = self.rampFrame;
+			local r, g, b =  LibCrayon:GetThresholdColor(PT:GetAbilityRampingState(ramp.side, ramp.pet, ramp.ability), ramp.rampMax);
+			
+			ramp.tex:SetVertexColor(r, g, b, 1);
+		end
+	end
+	
+	-- Hides an existing ramping frame and puts it to the heap
+	local function ramping_blast(self)
+		if( self.rampFrame ) then
+			self.rampFrame:Hide();
+			table.insert(heap, self.rampFrame);
+			self.rampFrame = nil;
+		end
+	end
+	
+	-- Setup ability buttons, initializing their ability icons and visibility
+	function module.BattleFrame_SetupAbilityButtons(self, pet)
+		local abID, abName, abIcon, abMaxCD, abDesc, abNumTurns, abType, noStrongWeak;
+		local abilityButton, script;
+		
+		for ab = 1, PT.MAX_PET_ABILITY do
+			script = true;
+			abilityButton = _G[self:GetName().."Pet"..pet]["Ability"..ab];
+			
+			-- during the battle opening scene, buttons glow red until the player can actually use them - if highlights are enabled
+			abilityButton.Cooldown:SetText("");
+			
+			if( module.db.profile.cd_highlight ) then
+				abilityButton.CooldownBG:SetTexture(module.db.profile.cd_highlight_r, module.db.profile.cd_highlight_g, module.db.profile.cd_highlight_b, module.db.profile.cd_highlight_a);
+				abilityButton.CooldownBG:Show();
+			else
+				abilityButton.CooldownBG:Hide();
+			end
+			
+			if( ab <= self.player[pet].numAbilities ) then
+				abID, abName, abIcon, abMaxCD, abDesc, abNumTurns, abType, noStrongWeak = _G.C_PetBattles.GetAbilityInfoByID( self.player[pet]["ab"..ab] );
+				
+				-- set ability icon
+				abilityButton.bg:SetTexture(abIcon);
+				
+				-- check for ability ramping
+				if( module.db.profile.ability_ramping ) then
+					local ramping = PT:GetAbilityRamping(abID);
+					
+					if( ramping ) then
+						ramping_show(abilityButton, self:GetID(), pet, abID, ramping);
+					end
+				else
+					ramping_blast(abilityButton);
+				end
+				
+				-- show ability row on self
+				BattleFrame_SetRowVisibility(self, pet, ab, true);
+				
+				-- setup vulnerability bonus buttons
+				for enemPet = PT.PET_INDEX, self.enemy.numPets do
+					abilityButton["Bonus"..enemPet]:SetTexture( PT:GetTypeBonusIcon(abType, self.enemy[enemPet].type, noStrongWeak) );
+				end
+			else
+				-- hide ability row on self and don't attach a script
+				script = false;
+				BattleFrame_SetRowVisibility(self, pet, ab, false);
+			end
+			
+			-- when not engaging another pet, we don't need to set the event script
+			if( not _G.C_PetBattles.IsInBattle() ) then
+				script = false;		
+			end
+			
+			-- we do not need to listen for events, when the button is unused.
+			if( script ) then
+				abilityButton:SetScript("OnEvent", module.BattleFrame_UpdateAbilityCooldowns);
+			else
+				abilityButton:SetScript("OnEvent", nil);
+			end
+		end
+	end
+	
+	-- called by xml
+	function module.BattleFrame_AbilityButton_Hide(self)
+		ramping_blast(self);
+		self:SetScript("OnEvent", nil);
+	end
+	
+	-- Updates ability cooldown highlights and cooldown round number
+	function module.BattleFrame_UpdateAbilityCooldowns(self)
+		local available, cdleft = PT:GetAbilityCooldown(self:GetParent():GetParent():GetID(), self:GetParent():GetID(), self:GetID());
+		
+		if( available ) then
+			self.Cooldown:SetText("");
+			self.CooldownBG:Hide();
+		else
+			if( module.db.profile.cd_text ) then
+				self.Cooldown:SetTextColor(module.db.profile.cd_text_r, module.db.profile.cd_text_g, module.db.profile.cd_text_b, module.db.profile.cd_text_a);
+				self.Cooldown:SetText(cdleft > 0 and cdleft or "");
+			end
+			if( module.db.profile.cd_highlight ) then
+				self.CooldownBG:SetTexture(module.db.profile.cd_highlight_r, module.db.profile.cd_highlight_g, module.db.profile.cd_highlight_b, module.db.profile.cd_highlight_a);
+				self.CooldownBG:Show();
+			else
+				self.CooldownBG:Hide();
+			end
+		end
+		
+		ramping_update(self);
+	end
 end
+
+---------------------------------------------
+-- Battle Frame: Misc Update functions
+---------------------------------------------
 
 function module.BattleFrame_UpdateSpeedButtons(self)
 	local speed, flying;
@@ -652,6 +778,21 @@ do
 		end
 	end
 	
+	function glowing_OnFinished(self)
+		local frame = self:GetParent();
+		print("Finish!", frame:GetName())
+		
+		local frameWidth, frameHeight = frame:GetSize();
+    frame.spark:SetAlpha(0);
+    frame.innerGlow:SetAlpha(0);
+    frame.innerGlow:SetSize(frameWidth, frameHeight);
+    frame.innerGlowOver:SetAlpha(0.0);
+    frame.outerGlow:SetSize(frameWidth, frameHeight);
+    frame.outerGlowOver:SetAlpha(0.0);
+    frame.outerGlowOver:SetSize(frameWidth, frameHeight);
+    frame.ants:SetAlpha(1.0);
+	end
+	
 	-- retrieves a glowing frame from the heap or, if there are no unused frames, creates a new
 	local function glowing_get()
 		local glow = table.remove(heap);
@@ -660,6 +801,7 @@ do
 			glow = _G.CreateFrame("Frame", "PTGlowFrame"..glownum, _G.UIParent, "ActionBarButtonSpellActivationAlert");
 			glow.animOut:SetScript("OnFinished", glowing_blast);
 			glow:SetScript("OnHide", glowing_OnHide);
+			glow.animIn:SetScript("OnFinished", glowing_OnFinished);
 		end
 		return glow;
 	end
@@ -767,135 +909,6 @@ do
 			glowing_hide(petFrame.Ability2);
 			glowing_hide(petFrame.Ability3);
 		end
-	end
-end
-	
-do
-	local heap = {}; -- stores unused ramping frames
-	local rampnum = 0;
-	
-	-- Crayon is used for coloring the ramping state
-	local LibCrayon = LibStub("LibCrayon-3.0");
-	
-	-- Either generates a new ramping frame from template or uses an unused one
-	local function ramping_show(self, side, pet, ability, ramping)
-		if( not self.rampFrame ) then
-			local ramp = table.remove(heap);
-			if( not ramp ) then
-				rampnum = rampnum + 1;
-				ramp = _G.CreateFrame("Frame", "PTRampingFrame"..rampnum, self, "PTFrameRampingTemplate");
-			end
-			
-			ramp.side		 = side;
-			ramp.pet		 = pet;
-			ramp.ability = ability;
-			ramp.rampMax = ramping;
-			
-			ramp:ClearAllPoints();
-			ramp:SetSize(8, 8);
-			ramp:SetPoint("TOPLEFT", -1, 1);
-			
-			ramp.tex:ClearAllPoints();
-			ramp.tex:SetPoint("CENTER", ramp.bg);
-			ramp.tex:SetVertexColor(1, 0, 0, 1);
-			
-			ramp:Show();
-			self.rampFrame = ramp;
-		end
-	end
-	
-	-- Updates a ramping frame, if it exists
-	local function ramping_update(self)
-		if( self.rampFrame ) then
-			local ramp = self.rampFrame;
-			local r, g, b =  LibCrayon:GetThresholdColor(PT:GetAbilityRampingState(ramp.side, ramp.pet, ramp.ability), ramp.rampMax);
-			
-			ramp.tex:SetVertexColor(r, g, b, 1);
-		end
-	end
-	
-	-- Hides an existing ramping frame and puts it to the heap
-	local function ramping_blast(self)
-		if( self.rampFrame ) then
-			self.rampFrame:Hide();
-			table.insert(heap, self.rampFrame);
-			self.rampFrame = nil;
-		end
-	end
-	
-	-- Updates ability cooldown highlights and cooldown round number
-	function module.BattleFrame_UpdateAbilityCooldowns(self)
-		local available, cdleft = PT:GetAbilityCooldown(self:GetParent():GetParent():GetID(), self:GetParent():GetID(), self:GetID());
-		
-		if( available ) then
-			self.Cooldown:SetText("");
-			self.CooldownBG:Hide();
-		else
-			if( module.db.profile.cd_text ) then
-				self.Cooldown:SetTextColor(module.db.profile.cd_text_r, module.db.profile.cd_text_g, module.db.profile.cd_text_b, module.db.profile.cd_text_a);
-				self.Cooldown:SetText(cdleft > 0 and cdleft or "");
-			end
-			if( module.db.profile.cd_highlight ) then
-				self.CooldownBG:SetTexture(module.db.profile.cd_highlight_r, module.db.profile.cd_highlight_g, module.db.profile.cd_highlight_b, module.db.profile.cd_highlight_a);
-				self.CooldownBG:Show();
-			else
-				self.CooldownBG:Hide();
-			end
-		end
-		
-		ramping_update(self);
-	end
-	
-	-- called by xml
-	function module.BattleFrame_AbilityButton_Show(self)
-		local parent = self:GetParent();
-		local master = parent:GetParent();
-		local script = false;
-		
-		-- during the battle opening scene, buttons glow red until the player can actually use them - if highlights are enabled
-		self.Cooldown:SetText("");
-		
-		if( module.db.profile.cd_highlight ) then
-			self.CooldownBG:SetTexture(module.db.profile.cd_highlight_r, module.db.profile.cd_highlight_g, module.db.profile.cd_highlight_b, module.db.profile.cd_highlight_a);
-			self.CooldownBG:Show();
-			script = true;
-		else
-			self.CooldownBG:Hide();
-			script = false;
-		end
-		
-		-- check for ability ramping
-		if( module.db.profile.ability_ramping ) then
-			local ability = master.player[parent:GetID()]["ab"..self:GetID()];
-			local ramping = PT:GetAbilityRamping(ability);
-			
-			if( ramping ) then
-				ramping_show(self, master:GetID(), parent:GetID(), ability, ramping);
-				script = true;
-			end
-		else
-			ramping_blast(self);
-		end
-		
-		-- when not engaging another pet, we don't need to set the event script
-		if( not _G.C_PetBattles.IsInBattle() ) then
-			script = false;		
-		-- if pet index is higher than max pets OR ability index higher than max abilities
-		elseif( parent:GetID() > master.player.numPets or self:GetID() > master.player[parent:GetID()].numAbilities ) then
-			script = false;
-		end
-		
-		if( script ) then
-			self:SetScript("OnEvent", module.BattleFrame_UpdateAbilityCooldowns);
-		else
-			self:SetScript("OnEvent", nil);
-		end
-	end
-	
-	-- called by xml
-	function module.BattleFrame_AbilityButton_Hide(self)
-		ramping_blast(self);
-		self:SetScript("OnEvent", nil);
 	end
 end
 
