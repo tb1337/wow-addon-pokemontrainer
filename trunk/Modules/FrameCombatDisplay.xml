@@ -65,9 +65,6 @@
 	
 	<Button name="PTButtonAbilityTemplate" inherits="PTButtonTemplate" virtual="true" hidden="true">
 		<Scripts>
-			<OnShow>
-				PT:GetModule("FrameCombatDisplay").BattleFrame_AbilityButton_Show(self);
-			</OnShow>
 			<OnHide>
 				PT:GetModule("FrameCombatDisplay").BattleFrame_AbilityButton_Hide(self);
 			</OnHide>
