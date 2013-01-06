@@ -564,7 +564,7 @@ do
 			local ramp = table.remove(heap);
 			if( not ramp ) then
 				rampnum = rampnum + 1;
-				ramp = _G.CreateFrame("Frame", "PTRampingFrame"..rampnum, self, "PTFrameRampingTemplate");
+				ramp = _G.CreateFrame("Frame", "PTRampingFrame"..rampnum, _G.UIParent, "PTFrameRampingTemplate");
 			end
 			
 			ramp.side		 = side;
@@ -572,6 +572,7 @@ do
 			ramp.ability = ability;
 			ramp.rampMax = ramping;
 			
+			ramp:SetParent(self);
 			ramp:ClearAllPoints();
 			ramp:SetSize(8, 8);
 			ramp:SetPoint("TOPLEFT", -1, 1);
@@ -779,35 +780,51 @@ do
 		end
 	end
 	
-	function glowing_OnPlay(self)
-		local frame = self:GetParent();
-		local frameWidth, frameHeight = frame:GetSize();
-		frame.spark:SetSize(frameWidth, frameHeight);
-    frame.spark:SetAlpha(0.3)
-    frame.innerGlow:SetSize(frameWidth / 2, frameHeight / 2);
-    frame.innerGlow:SetAlpha(1.0);
-    frame.innerGlowOver:SetAlpha(1.0);
-    frame.outerGlow:SetSize(frameWidth * 2, frameHeight * 2);
-    frame.outerGlow:SetAlpha(1.0);
-    frame.outerGlowOver:SetAlpha(1.0);
-    frame.ants:SetSize(frameWidth * 0.85, frameHeight * 0.85)
-    frame.ants:SetAlpha(0);
-    frame:Show();
-    --print("OnPlay!", frame:GetName())
-	end
-	
-	function glowing_OnFinished(self)
+	-- re-defined this function because it needs to set finished = true
+	local function glowing_OnFinished(self)
 		local frame = self:GetParent();		
 		local frameWidth, frameHeight = frame:GetSize();
-    frame.spark:SetAlpha(0);
-    frame.innerGlow:SetAlpha(0);
-    frame.innerGlow:SetSize(frameWidth, frameHeight);
-    frame.innerGlowOver:SetAlpha(0.0);
-    frame.outerGlow:SetSize(frameWidth, frameHeight);
-    frame.outerGlowOver:SetAlpha(0.0);
-    frame.outerGlowOver:SetSize(frameWidth, frameHeight);
-    frame.ants:SetAlpha(1.0);
-    --print("Finish!", frame:GetName())
+		frame.spark:SetAlpha(0);
+		frame.innerGlow:SetAlpha(0);
+		frame.innerGlow:SetSize(frameWidth, frameHeight);
+		frame.innerGlowOver:SetAlpha(0.0);
+		frame.outerGlow:SetSize(frameWidth, frameHeight);
+		frame.outerGlowOver:SetAlpha(0.0);
+		frame.outerGlowOver:SetSize(frameWidth, frameHeight);
+		frame.ants:SetAlpha(1.0);
+		
+    frame.finished = true;
+	end
+	
+	-- OnUpdate script as used by Blizzard, too
+	local function glowing_OnUpdate(self, elapsed)
+		_G.AnimateTexCoords(self.ants, 256, 256, 48, 48, 22, elapsed, 0.01);
+	end
+	
+	-- This function is needed because sometimes the animation isn't playing
+	-- Sometimes the OnFinish script didn't apply the new alphas, so this function
+	-- waits until OnFinished is called, then checks for correct alphas and replaces itself in the OnUpdate handler
+	-- when everything works allright
+	local function glowing_OnUpdate_Bugfix(self, elapsed)
+		glowing_OnUpdate(self, elapsed);
+		
+		self.elapsed = self.elapsed + elapsed;
+		if( self.elapsed > 0.25 ) then
+			if( self.finished ) then
+				if( self.spark:GetAlpha() == 0 and self.innerGlow:GetAlpha() == 0 and self.innerGlowOver:GetAlpha() == 0 
+					and self.outerGlowOver:GetAlpha() == 0 and self.ants:GetAlpha() == 1 ) then
+					self:SetScript("OnUpdate", nil);
+					self:SetScript("OnUpdate", glowing_OnUpdate);
+				else
+					self.spark:SetAlpha(0);
+					self.innerGlow:SetAlpha(0);
+					self.innerGlowOver:SetAlpha(0);
+					self.outerGlowOver:SetAlpha(0);
+					self.ants:SetAlpha(1);
+				end
+			end
+			self.elapsed = 0;
+		end
 	end
 	
 	-- retrieves a glowing frame from the heap or, if there are no unused frames, creates a new
@@ -816,11 +833,16 @@ do
 		if( not glow ) then
 			glownum = glownum + 1;
 			glow = _G.CreateFrame("Frame", "PTGlowFrame"..glownum, _G.UIParent, "ActionBarButtonSpellActivationAlert");
+			
 			glow.animOut:SetScript("OnFinished", glowing_blast);
-			glow:SetScript("OnHide", glowing_OnHide);
-			glow.animIn:SetScript("OnPlay", glowing_OnPlay);
 			glow.animIn:SetScript("OnFinished", glowing_OnFinished);
+			glow:SetScript("OnHide", glowing_OnHide);
 		end
+		
+		glow.elapsed = 0;
+		glow.finished = false;
+		glow:SetScript("OnUpdate", glowing_OnUpdate_Bugfix);
+		
 		return glow;
 	end
 	
