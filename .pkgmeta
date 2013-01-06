@@ -6,7 +6,7 @@ ignore:
 
 externals:
   Libs/CallbackHandler-1.0:
-    url: svn://svn.wowace.com/wow/callbackhandler/mainline/trunk
+    url: svn://svn.wowace.com/wow/callbackhandler/mainline/trunk/CallbackHandler-1.0
   Libs/LibStub:
     url: svn://svn.wowace.com/wow/libstub/mainline/trunk
   Libs/LibPetJournal-2.0:
