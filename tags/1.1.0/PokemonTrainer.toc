@@ -1,0 +1,49 @@
+## Interface: 50100
+## Title: Pokemon Trainer
+## Version: 1.1.0
+## Notes: The pet battle addon with many helpers!
+## Author: grdn
+## X-Crew: grdn, Possible, Detritis
+## SavedVariables: PokemonTrainerDB, PTDevDB
+## Dependencies: Blizzard_PetJournal, Blizzard_PetBattleUI
+## OptionalDeps: Ace3, iLib, LibCrayon-3.0, LibPetBreedInfo-1.0, LibPetJournal-2.0
+
+
+# Libraries
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+Libs\LibStub\Libstub.lua
+
+Libs\iLib\lib.xml
+Libs\LibCrayon-3.0\lib.xml
+Libs\LibPetBreedInfo-1.0\LibPetBreedInfo-1.0.lua
+Libs\LibPetJournal-2.0\LibPetJournal-2.0.lua
+
+Libs\AceAddon-3.0\AceAddon-3.0.xml
+Libs\AceBucket-3.0\AceBucket-3.0.xml
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml
+Libs\AceEvent-3.0\AceEvent-3.0.xml
+Libs\AceHook-3.0\AceHook-3.0.xml
+Libs\AceLocale-3.0\AceLocale-3.0.xml
+Libs\AceTimer-3.0\AceTimer-3.0.xml
+
+# Locales
+Locales\Locales.xml
+
+# Main
+Core.lua
+Data.lua
+#@do-not-package@
+_scripts\Developer.lua
+#@end-do-not-package@
+
+# Combat Displays
+Modules\FrameCombatDisplay.xml
+Modules\TooltipCombatDisplay.lua
+
+# Misc modules
+Modules\AuctionSearch.lua
+Modules\WildPetTooltip.lua
+Modules\HealBandageButtons.xml
+Modules\AutoSafariHat.lua
