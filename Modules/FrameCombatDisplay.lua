@@ -188,19 +188,20 @@ function module:OnEvent(event, ...)
 	elseif( event == "PET_BATTLE_PET_CHANGED" ) then
 		local side = ...;
 		local frame = get_frame(side);
+		local enemy = get_enemy(frame);
 		
 		self.glowing_hideall(frame);
 		
 		PT:RoundUpPets(side);
 		PT:ScanPetAuras(frame.player);
 		
-		self.BattleFrame_SetActiveEnemy(get_enemy(frame));
+		self.BattleFrame_SetActiveEnemy(enemy);
 		self.BattleFrame_UpdateActivePetHighlight(frame);
 		
 		if( frame.firstRound or not self.db.profile.reorganize_use ) then
 			frame.firstRound = nil;
 			self.BattleFrame_UpdateAbilityHighlights(frame);
-			self.BattleFrame_UpdateAbilityHighlights(get_enemy(frame)); -- enemy needs update, too!
+			self.BattleFrame_UpdateAbilityHighlights(enemy); -- enemy needs update, too!
 		else
 			-- update ability highlight is called by Reorganize_Show_Finished too, after reorganizing is done.
 			self.BattleFrame_Pets_Reorganize_Init(frame);
@@ -673,7 +674,9 @@ do
 	end
 	
 	-- Updates ability cooldown highlights and cooldown round number
-	function module.BattleFrame_UpdateAbilityCooldowns(self)
+	function module.BattleFrame_UpdateAbilityCooldowns(self, event)
+		ramping_update(self);
+		
 		local available, cdleft = PT:GetAbilityCooldown(self:GetParent():GetParent():GetID(), self:GetParent():GetID(), self:GetID());
 		
 		if( available ) then
@@ -691,8 +694,6 @@ do
 				self.CooldownBG:Hide();
 			end
 		end
-		
-		ramping_update(self);
 	end
 end
 
@@ -778,10 +779,25 @@ do
 		end
 	end
 	
-	function glowing_OnFinished(self)
+	function glowing_OnPlay(self)
 		local frame = self:GetParent();
-		print("Finish!", frame:GetName())
-		
+		local frameWidth, frameHeight = frame:GetSize();
+		frame.spark:SetSize(frameWidth, frameHeight);
+    frame.spark:SetAlpha(0.3)
+    frame.innerGlow:SetSize(frameWidth / 2, frameHeight / 2);
+    frame.innerGlow:SetAlpha(1.0);
+    frame.innerGlowOver:SetAlpha(1.0);
+    frame.outerGlow:SetSize(frameWidth * 2, frameHeight * 2);
+    frame.outerGlow:SetAlpha(1.0);
+    frame.outerGlowOver:SetAlpha(1.0);
+    frame.ants:SetSize(frameWidth * 0.85, frameHeight * 0.85)
+    frame.ants:SetAlpha(0);
+    frame:Show();
+    --print("OnPlay!", frame:GetName())
+	end
+	
+	function glowing_OnFinished(self)
+		local frame = self:GetParent();		
 		local frameWidth, frameHeight = frame:GetSize();
     frame.spark:SetAlpha(0);
     frame.innerGlow:SetAlpha(0);
@@ -791,6 +807,7 @@ do
     frame.outerGlowOver:SetAlpha(0.0);
     frame.outerGlowOver:SetSize(frameWidth, frameHeight);
     frame.ants:SetAlpha(1.0);
+    --print("Finish!", frame:GetName())
 	end
 	
 	-- retrieves a glowing frame from the heap or, if there are no unused frames, creates a new
@@ -801,6 +818,7 @@ do
 			glow = _G.CreateFrame("Frame", "PTGlowFrame"..glownum, _G.UIParent, "ActionBarButtonSpellActivationAlert");
 			glow.animOut:SetScript("OnFinished", glowing_blast);
 			glow:SetScript("OnHide", glowing_OnHide);
+			glow.animIn:SetScript("OnPlay", glowing_OnPlay);
 			glow.animIn:SetScript("OnFinished", glowing_OnFinished);
 		end
 		return glow;
