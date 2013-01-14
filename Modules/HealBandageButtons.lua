@@ -54,8 +54,8 @@ end
 
 function module:OnDisable()
 	self:UnregisterEvent("MINIMAP_UPDATE_TRACKING");
-	self:UnregisterEvent("PLAYER_ENTER_COMBAT");
-	self:UnregisterEvent("PLAYER_LEAVE_COMBAT");
+	self:UnregisterEvent("PLAYER_REGEN_DISABLED");
+	self:UnregisterEvent("PLAYER_REGEN_ENABLED");
 	
 	_G.PTHealBandageFrame:Hide();
 end

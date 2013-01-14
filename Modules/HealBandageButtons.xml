@@ -103,6 +103,9 @@
 			<Anchor point="CENTER" />
 		</Anchors>
 		<Scripts>
+			<OnLoad>
+				self:Hide();
+			</OnLoad>
 			<OnDragStart>
 				self:StartMoving();
 			</OnDragStart>
