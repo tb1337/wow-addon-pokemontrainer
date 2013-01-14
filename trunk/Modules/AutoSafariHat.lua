@@ -3,7 +3,7 @@
 -----------------------------------
 
 local AddonName, PT = ...;
-local module = PT:NewModule("AutoSafariHat", "AceEvent-3.0");
+local module = PT:NewModule("AutoSafariHat", "AceEvent-3.0", "AceTimer-3.0");
 
 local L = LibStub("AceLocale-3.0"):GetLocale(AddonName);
 
@@ -22,7 +22,7 @@ local hat_slot;
 
 local head_slot = 1;
 
-local SAFARI_HAT = 92738; -- Safari Hat == 92738, my testing hat == 81578
+local SAFARI_HAT = 92738; -- Safari Hat == 92738, my testing hat == 61935
 
 -------------------------
 -- Module Handling
@@ -44,7 +44,7 @@ end
 
 function module:OnEnable()	
 	self:RegisterEvent("BAG_UPDATE_DELAYED", "ScanForHat");
-	self:RegisterEvent("PET_BATTLE_OPENING_DONE", "PetBattleStart"); -- during OPENING_START we cannot change equip
+	self:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE", "PetBattleStart"); -- during OPENING_START we cannot change equip
 	self:RegisterEvent("PET_BATTLE_CLOSE", "PetBattleStop");
 end
 
@@ -58,7 +58,19 @@ end
 -- Event Handlers
 ------------------------
 
-function module:PetBattleStart()
+function module:Message(err, msg)
+	if( self.db.profile.messages and msg ) then
+		if( self.db.profile.errors and not err ) then
+			return;
+		end
+		print(("|cff00aaff%s|r %s - %s"):format(AddonName, L["Safari Hat"], msg));
+	end
+end
+
+function module:PetBattleStart(event, round)
+	if( round ~= 0 ) then
+		return;
+	end
 	self.battlestop = false;
 	
 	local err, msg = true, nil;
@@ -75,12 +87,13 @@ function module:PetBattleStart()
 		end
 	end
 	
-	if( self.db.profile.messages and msg ) then
-		if( self.db.profile.errors and not err ) then
-			return;
-		end
-		print(("|cff00aaff%s|r %s - %s"):format(AddonName, L["Safari Hat"], msg));
-	end
+	self:Message(err, msg);
+end
+
+function module:PutOnOriginalHat()
+	_G.PickupContainerItem(hat_bag, hat_slot);
+	_G.PickupInventoryItem(head_slot);
+	self:Message(false, L["Original hat put on succesfully."]);
 end
 
 function module:PetBattleStop()
@@ -93,20 +106,14 @@ function module:PetBattleStop()
 	
 	if( self:WearingHat() ) then
 		if( hat_bag and hat_slot ) then
-			err, msg = false, L["Original hat put on succesfully."];
-			_G.PickupContainerItem(hat_bag, hat_slot);
-			_G.PickupInventoryItem(head_slot);
+			err, msg = false, nil;
+			self:ScheduleTimer("PutOnOriginalHat", 2);
 		else
 			msg = L["Cannot put original hat on, it is unknown."];
 		end
 	end
 	
-	if( self.db.profile.messages and msg ) then
-		if( self.db.profile.errors and not err ) then
-			return;
-		end
-		print(("|cff00aaff%s|r %s - %s"):format(AddonName, L["Safari Hat"], msg));
-	end
+	self:Message(err, msg);
 end
 
 --------------------------------------
