@@ -56,6 +56,11 @@ PT.developer = true;
 
 function PT:OnInitialize()
 	self.db = LibStub("AceDB-3.0"):New("PokemonTrainerDB", { profile = { activeBattleDisplay = 1, version = "", alpha = false } }, "Default");
+	
+	-- hook pet battle queue frame to bring sounds back
+	-- not implemented with Ace3 Hook because this is very little code and isn't worth using Ace3
+	hooksecurefunc(_G.PetBattleQueueReadyFrame, "Show", function() PlaySound("ReadyCheck") end);
+	_G.PetBattleQueueReadyFrame.DeclineButton:HookScript("OnClick", function() PlaySound("LFG_Denied") end);
 end
 
 function PT:OnEnable()
