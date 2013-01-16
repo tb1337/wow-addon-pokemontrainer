@@ -46,4 +46,3 @@ Modules\TooltipCombatDisplay.lua
 Modules\AuctionSearch.lua
 Modules\WildPetTooltip.lua
 Modules\HealBandageButtons.xml
-Modules\AutoSafariHat.lua
