@@ -1,6 +1,6 @@
 ## Interface: 50100
 ## Title: Pokemon Trainer
-## Version: 1.1.2
+## Version: 1.1.3
 ## Notes: The pet battle addon with many helpers!
 ## Author: grdn
 ## X-Crew: grdn, Possible, Detritis
