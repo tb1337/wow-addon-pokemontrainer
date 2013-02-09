@@ -59,8 +59,8 @@ function PT:OnInitialize()
 	
 	-- hook pet battle queue frame to bring sounds back
 	-- not implemented with Ace3 Hook because this is very little code and isn't worth using Ace3
-	hooksecurefunc(_G.PetBattleQueueReadyFrame, "Show", function() PlaySound("ReadyCheck") end);
-	_G.PetBattleQueueReadyFrame.DeclineButton:HookScript("OnClick", function() PlaySound("LFG_Denied") end);
+	hooksecurefunc(_G.PetBattleQueueReadyFrame, "Show", function() _G.PlaySound("ReadyCheck") end);
+	_G.PetBattleQueueReadyFrame.DeclineButton:HookScript("OnClick", function() _G.PlaySound("LFG_Denied") end);
 end
 
 function PT:OnEnable()
@@ -262,6 +262,19 @@ do
 		t[''] = nil
 	end
 	
+	-- Checks how many abilities a pet actually has
+	local function get_num_abilities(side, pet)
+		local num = 0;
+		
+		for i = 1, PT.MAX_PET_ABILITY do
+			if( (_G.C_PetBattles.GetAbilityInfo(side, pet, i)) ) then
+				num = num + 1;
+			end
+		end
+		
+		return num;
+	end
+	
 	-- enables new table keys whose data isn't directly saved in the table
 	local mt = {
 		__index = function(t, k)
@@ -301,7 +314,8 @@ do
 			petHP = _G.C_PetBattles.GetHealth(side, pet);
 			petMaxHP = _G.C_PetBattles.GetMaxHealth(side, pet);
 			
-			numAbilities = petLevel >= 4 and 3 or petLevel >= 2 and 2 or 1;
+			--numAbilities = petLevel >= 4 and 3 or petLevel >= 2 and 2 or 1;
+			numAbilities = get_num_abilities(side, pet); -- Apparently some trainers ignore the above rule :/
 			
 			-- the t[pet] tables will be reused even after wipe_pets() got executed, the garbagecollector doesn't get something to eat *sob*
 			if( not t[pet] or not(type(t[pet]) == "table") ) then
