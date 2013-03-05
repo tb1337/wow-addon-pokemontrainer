@@ -1,4 +1,4 @@
-## Interface: 50100
+## Interface: 50200
 ## Title: Pokemon Trainer
 ## Version: 1.1.4
 ## Notes: The pet battle addon with many helpers!
