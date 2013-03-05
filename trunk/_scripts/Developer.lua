@@ -38,7 +38,7 @@ end
 function module:GetAll() -- Just a shortcut
 	self:Clear();
 	self:CreateAuraStates(true); -- do not delete dumped data
-	self:CompileAbilityTables(); -- delete dumped data
+	self:CompileAbilityTables(true); -- delete dumped data
 end
 
 -------------------
