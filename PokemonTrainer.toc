@@ -10,8 +10,8 @@
 
 
 # Libraries
-Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
 Libs\LibStub\Libstub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
 
 Libs\iLib\lib.xml
 Libs\LibCrayon-3.0\lib.xml
