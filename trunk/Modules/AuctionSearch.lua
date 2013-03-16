@@ -92,10 +92,12 @@ LibPetJournal:RegisterCallback("PetListUpdated", module.PetUpdate, module);
 ------------------------------
 
 -- "|cff1eff00|Hbattlepet:200:4:2:292:34:53:0000000000000000|h[Fr\195\188hlingshase]|h|r"
+-- |cff0070dd|Hbattlepet:1111:2222:3333:4444:5555:6666:0x00000000000000000|h[Aschesteinkern]|h|r
 local function parse_link(link)
 	if( not link ) then return; end
-	local speciesID, level, quality, health, power, speed = link:match("|Hbattlepet:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):%d+|h");
-	return tonumber(speciesID), tonumber(level), tonumber(quality), tonumber(health), tonumber(power), tonumber(speed);
+	--local speciesID, level, quality, health, power, speed = link:match("|Hbattlepet:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):%s+|h");
+	--return tonumber(speciesID), tonumber(level), tonumber(quality), tonumber(health), tonumber(power), tonumber(speed);
+	return tonumber( link:match("|Hbattlepet:(%d+):") );
 end
 
 function module:AuctionFrame_Show()

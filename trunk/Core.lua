@@ -59,8 +59,8 @@ function PT:OnInitialize()
 	
 	-- hook pet battle queue frame to bring sounds back
 	-- not implemented with Ace3 Hook because this is very little code and isn't worth using Ace3
-	hooksecurefunc(_G.PetBattleQueueReadyFrame, "Show", function() _G.PlaySound("ReadyCheck") end);
-	_G.PetBattleQueueReadyFrame.DeclineButton:HookScript("OnClick", function() _G.PlaySound("LFG_Denied") end);
+	--hooksecurefunc(_G.PetBattleQueueReadyFrame, "Show", function() _G.PlaySound("ReadyCheck") end);
+	--_G.PetBattleQueueReadyFrame.DeclineButton:HookScript("OnClick", function() _G.PlaySound("LFG_Denied") end);
 end
 
 function PT:OnEnable()
