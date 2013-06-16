@@ -114,6 +114,7 @@ function module:OnEnable()
 	self:RegisterEvent("PET_BATTLE_PET_CHANGED", "OnEvent");
 	self:RegisterEvent("PET_BATTLE_HEALTH_CHANGED", "OnEvent");
 	self:RegisterEvent("PET_BATTLE_MAX_HEALTH_CHANGED", "OnEvent");
+	self:RegisterEvent("CHAT_MSG_PET_BATTLE_COMBAT_LOG", "OnEvent");
 	
 	-- registering aura events into a bucket to throttle PetAura update calls
 	self:RegisterBucketEvent({"PET_BATTLE_AURA_APPLIED", "PET_BATTLE_AURA_CHANGED", "PET_BATLE_AURA_CANCELED"}, 2, "OnAuraBucket");
@@ -214,6 +215,33 @@ function module:OnEvent(event, ...)
 		if( pet == frame.player.activePet ) then
 			PT:RoundUpPets(side);
 			self.BattleFrame_UpdateHealthState(frame);
+		end
+	elseif( event == "CHAT_MSG_PET_BATTLE_COMBAT_LOG") then
+		if( not PT:IsPVPBattle() ) then return end
+		
+		local check, _, abID, maxHealth, power, speed = string.find(..., "HbattlePetAbil:([%d]+):([%d]+):([%d]+):([%d]+).*");
+		if( not check ) then return end
+		
+		abID, power, speed = tonumber(abID), tonumber(power), tonumber(speed);
+		
+		local pet = PT.EnemyInfo[PT.EnemyInfo.activePet];
+		
+		if( pet.power == power and pet.speed == speed ) then
+			local changed = false;
+					
+			for ab = 1, pet.numAbilities do
+				if( not pet["ab"..ab.."ok"] ) then
+					if( pet.tableAbilities[ab] == abID or pet.tableAbilities[ab + 3] == abID ) then
+						pet["ab"..ab] = abID;
+						pet["ab"..ab.."ok"] = true;
+						changed = true;
+					end
+				end
+			end
+			
+			if( changed ) then
+				module.BattleFrame_SetupAbilityButtons(_G.PTEnemy, PT.EnemyInfo.activePet);
+			end
 		end
 	--@do-not-package@
 	else
@@ -613,6 +641,14 @@ do
 		for ab = 1, PT.MAX_PET_ABILITY do
 			script = true;
 			abilityButton = _G[self:GetName().."Pet"..pet]["Ability"..ab];
+			
+			if( self:GetID() == PT.ENEMY and PT:IsPVPBattle() ) then
+				if( self.player[pet]["ab"..ab.."ok"] ) then
+					abilityButton.Approved:SetTexture("Interface\\RAIDFRAME\\ReadyCheck-Ready");
+				else
+					abilityButton.Approved:SetTexture("Interface\\RAIDFRAME\\ReadyCheck-NotReady");
+				end
+			end
 			
 			-- during the battle opening scene, buttons glow red until the player can actually use them - if highlights are enabled
 			abilityButton.Cooldown:SetText("");
