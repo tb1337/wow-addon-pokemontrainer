@@ -1,4 +1,4 @@
-local MAJOR, MINOR = "LibPetBreedInfo-1.0", 12
+local MAJOR, MINOR = "LibPetBreedInfo-1.0", 16
 local lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR)
 
 if not lib then return end
@@ -44,11 +44,13 @@ end
 --Returns arg1: petIndex that can be used by GetBreedName to return the breeds name. arg2: a confidence indicator, lower numbers are better. A good cutoff for high confidence is .15
 --Returns nil if the species cannot battle or does not have a base stats profile or if the petID is not valid
 function lib:GetBreedByPetID(petID)
-	local speciesID, _, level, _, _, _,_ ,_, _, _, _, _, _, _, canBattle = C_PetJournal.GetPetInfoByPetID(petID)
-	if not canBattle then return end
-	local _, maxHealth, power, speed, rarity = C_PetJournal.GetPetStats(petID)
-	
-	return self:GetBreedByStats(speciesID,level,rarity,maxHealth,power,speed)
+	if petID then
+		local speciesID, _, level, _, _, _,_ ,_, _, _, _, _, _, _, canBattle = C_PetJournal.GetPetInfoByPetID(petID)
+		if not canBattle then return end
+		local _, maxHealth, power, speed, rarity = C_PetJournal.GetPetStats(petID)
+		
+		return self:GetBreedByStats(speciesID,level,rarity,maxHealth,power,speed)
+	end
 end
 
 
@@ -210,6 +212,17 @@ end]]
 	end
 end]]
 
+--/run LibStub("LibPetBreedInfo-1.0"):ExtractData()
+--[[function lib:ExtractData()
+	BPBID.InitializeArrays()
+	local speciesToBaseStatProfile= self.breedData.speciesToBaseStatProfile
+	for k,v in pairs(BPBID.BasePetStats) do
+		if not speciesToBaseStatProfile[k] then 
+			print(k)
+		end
+	end
+end]]
+
 
 
 
@@ -283,13 +296,24 @@ lib.breedData.baseStatsProfiles = {
 	{8.5, 8.5, 8.5},--36
 	{9, 9, 9},--37
 	{6.75, 10.5, 6.75},--38
-	{7.5, 8.5, 8.5} --39
+	{7.5, 8.5, 8.5}, --39
+	{25.5, 11.5, 7.25},--40
+	{510.5, 8, 9.5}, --41
+	{7.75, 8, 8.25}, --42
+	{7.75, 8.25, 8}, --43
+	{8.25, 8.5, 7.25}, --44
+	{8.25, 8, 7.75}, --45
+	{8, 8.25, 7.75}, --46
+	{11, 16, 7}, --47
+	{8.25, 8, 7.75}, --45
+	{7.25, 8.75, 8.25}, --48
 }
 
 
 
 
 lib.breedData.speciesToBaseStatProfile = {
+	[2] = 41,
 	[39] = 1,
 	[40] = 2,
 	[41] = 2,
@@ -1007,7 +1031,62 @@ lib.breedData.speciesToBaseStatProfile = {
 	[1165] = 15,
 	[1166] = 15,
 	[1167] = 15,
-	[1168] = 10
+	--end 5.1
+	[1168] = 10,
+	[1168] = 10,
+	[1174] = 14,
+	[1175] = 10,
+	[1176] = 10,
+	[1177] = 8,
+	[1178] = 10,
+	[1179] = 15,
+	[1180] = 2,
+	[1181] = 18,
+	[1182] = 1,
+	[1183] = 10,
+	[1184] = 2,
+	[1185] = 10,
+	[1187] = 40,
+	[1188] = 40,
+	[1189] = 40,
+	[1190] = 40,
+	[1191] = 40,
+	[1192] = 40,
+	[1193] = 40,
+	[1194] = 40,
+	[1195] = 40,
+	[1196] = 10,
+	[1197] = 10,
+	[1198] = 10,
+	[1200] = 2,
+	[1201] = 2,
+	[1202] = 6,
+	[1204] = 1,
+	[1205] = 2,
+	[1206] = 18,
+	[1207] = 39,
+	[1208] = 18,
+	[1209] = 18,
+	[1211] = 2,
+	[1212] = 2,
+	[1213] = 2,
+	--end 5.2
+	[1226] = 14,
+	[1227] = 9,
+	[1229] = 42,
+	[1231] = 10,
+	[1232] = 43,
+	[1233] = 44,
+	[1234] = 45,
+	[1235] = 10,
+	[1237] = 46,
+	[1238] = 17,
+	[1244] = 10,
+	[1245] = 10,
+	[1247] = 47,
+	[1248] = 45,
+	[1255] = 48,
+	--end 5.3
 }
 
 
@@ -1085,6 +1164,7 @@ lib.breedData.speciesToAvailableBreeds = {
 	[146] = {3, 5, 9, 12},
 	[149] = {9},
 	[153] = {7},
+	[155] = {7},
 	[156] = {3},
 	[157] = {3},
 	[158] = {3},
@@ -1156,7 +1236,7 @@ lib.breedData.speciesToAvailableBreeds = {
 	[238] = {11},
 	[239] = {4},
 	[240] = {3},
-	[241] = {3},
+	[241] = {12},
 	[242] = {8},
 	[243] = {10},
 	[244] = {7},
@@ -1355,6 +1435,7 @@ lib.breedData.speciesToAvailableBreeds = {
 	[509] = {6, 7, 9},
 	[511] = {3, 5, 11},
 	[512] = {4, 6, 9, 12},
+	[513] = {4, 5, 7, 10},
 	[514] = {3, 4, 5, 6, 7, 8, 9, 10, 11, 12},
 	[515] = {3, 4, 5, 6, 7, 8, 9, 10, 11, 12},
 	[517] = {3, 8},
@@ -1539,6 +1620,10 @@ lib.breedData.speciesToAvailableBreeds = {
 	[902] = {9},
 	[903] = {10},
 	[904] = {9},
+	[905] = {8},
+	[906] = {5},
+	[907] = {9},
+	[908] = {8},
 	[909] = {5},
 	[911] = {7},
 	[912] = {4},
@@ -1654,6 +1739,7 @@ lib.breedData.speciesToAvailableBreeds = {
 	[1126] = {7},
 	[1127] = {8},
 	[1128] = {3, 12},
+	[1129] = {7},
 	[1130] = {8},
 	[1131] = {11},
 	[1132] = {5},
@@ -1691,6 +1777,56 @@ lib.breedData.speciesToAvailableBreeds = {
 	[1165] = {4, 8, 10},
 	[1166] = {4, 8, 10},
 	[1167] = {4, 8, 10},
+	[1168] = {12},
+	[1174] = {12},
+	[1175] = {3, 12},
+	[1176] = {3},
+	[1177] = {6, 7, 9, 10},
+	[1178] = {4},
+	[1179] = {3},
+	[1180] = {4, 5, 8, 10},
+	[1181] = {6, 9},
+	[1182] = {3, 12},
+	[1183] = {4},
+	[1184] = {4},
+	[1185] = {9},
+	[1187] = {4},
+	[1188] = {3},
+	[1189] = {9},
+	[1190] = {11},
+	[1191] = {6},
+	[1192] = {10},
+	[1193] = {12},
+	[1194] = {8},
+	[1195] = {5},
+	[1196] = {9},
+	[1197] = {7},
+	[1198] = {8},
+	[1200] = {8},
+	[1201] = {10},
+	[1202] = {3, 10},
+	[1204] = {11}, -- CURRENTLY UNUSED Pierre
+	[1205] = {9, 10},
+	[1206] = {10},
+	[1207] = {12},
+	[1208] = {11},
+	[1209] = {3},
+	[1211] = {4, 5, 8, 10},
+	[1212] = {4, 5, 8, 10},
+	[1213] = {4, 5, 8, 10},
+	[1226] = {8},
+	[1227] = {6, 7},
+	[1229] = {5, 10},
+	[1231] = {3, 10},
+	[1232] = {3},
+	[1233] = {6, 8},
+	[1234] = {7},
+	[1235] = {5, 11},
+	[1237] = {8},
+	[1238] = {3, 6},
+	[1244] = {7},
+	[1245] = {3},
+	[1248] = {3},
 }
 
 --[[

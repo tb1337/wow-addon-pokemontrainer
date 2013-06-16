@@ -72,7 +72,15 @@
 				local parent = self:GetParent();
 				local master = parent:GetParent();
 				
-				_G.PetBattleAbilityTooltip_SetAbility(master:GetID(), parent:GetID(), self:GetID());
+				if( master:GetID() == PT.ENEMY and PT:IsPVPBattle() ) then					
+					_G.PetBattleAbilityTooltip_SetAbilityByID(
+						master:GetID(),
+						parent:GetID(),
+						master.player[parent:GetID()]["ab"..self:GetID()]
+					);
+				else
+					_G.PetBattleAbilityTooltip_SetAbility(master:GetID(), parent:GetID(), self:GetID());
+				end				
 				
 				if( PT:GetModule("FrameCombatDisplay").GetTooltipPosition() ) then
 					_G.PetBattleAbilityTooltip_Show("TOPLEFT", self, "RIGHT", 10, 0);
@@ -111,6 +119,14 @@
 				<Texture parentKey="Bonus3" inherits="PTTextureBonusTemplate">
 					<Anchors>
 						<Anchor point="LEFT" relativeKey="$parent.Bonus2" relativePoint="RIGHT" x="3" y="0" />
+					</Anchors>
+				</Texture>
+				<Texture parentKey="Approved">
+					<Size>
+						<AbsDimension x="12" y="12" />
+					</Size>
+					<Anchors>
+						<Anchor point="RIGHT" relativePoint="LEFT" x="0" y="0" />
 					</Anchors>
 				</Texture>
 			</Layer>
