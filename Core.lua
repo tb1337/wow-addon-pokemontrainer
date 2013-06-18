@@ -95,7 +95,21 @@ end
 -- Event Callbacks
 -------------------------
 
+-- Both hooks only apply for the FrameCombatDisplay
+-- When hiding the UI, PT's frames are hidden as well
+_G.UIParent:HookScript("OnShow", function()
+	if( _G.C_PetBattles.IsInBattle() and PT.db.profile.activeBattleDisplay == 1 ) then
+		_G.PTPlayer:Show();
+		_G.PTEnemy:Show();
+	end
+end);
 
+_G.UIParent:HookScript("OnHide", function()
+	if( _G.C_PetBattles.IsInBattle() and PT.db.profile.activeBattleDisplay == 1 ) then
+		_G.PTPlayer:Hide();
+		_G.PTEnemy:Hide();
+	end
+end);
 
 ---------------------------
 -- Compare Functions
