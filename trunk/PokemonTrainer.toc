@@ -1,6 +1,6 @@
-## Interface: 50300
+## Interface: 50400
 ## Title: Pokemon Trainer
-## Version: 1.3.0
+## Version: 5.4-r1
 ## Notes: The pet battle addon with many helpers!
 ## Author: grdn
 ## SavedVariables: PokemonTrainerDB, PTDevDB
