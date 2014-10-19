@@ -357,7 +357,7 @@ do
 			t[pet].numAbilities = numAbilities;
 			t[pet].breed = LibBreed:GetBreedName( LibBreed:GetBreedByPetBattleSlot(side, pet) or 0 );
 			
-			if( side == PT.ENEMY ) then
+			if( side == PT.ENEMY and PT:IsPVPBattle() ) then -- the ability scanner is only required during PvP battles
 				local t1, t2 = {}, {};
 				_G.C_PetJournal.GetPetAbilityList(species, t1, t2);
 				
@@ -379,9 +379,9 @@ do
 				end
 			else
 			
-			for ab = 1, numAbilities do
-				t[pet]["ab"..ab] = _G.C_PetBattles.GetAbilityInfo(side, pet, ab); -- ability id
-			end
+				for ab = 1, numAbilities do
+					t[pet]["ab"..ab] = _G.C_PetBattles.GetAbilityInfo(side, pet, ab); -- ability id
+				end
 			
 			end
 		end
