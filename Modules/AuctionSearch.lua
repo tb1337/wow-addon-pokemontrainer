@@ -19,6 +19,7 @@ module.desc = L["When searching for pets in the auction house, this module sets 
 
 local owned_pets = {};
 local pet_list_update = false;
+_G.own = owned_pets;
 
 -------------------------
 -- Module Handling
@@ -97,7 +98,24 @@ local function parse_link(link)
 	if( not link ) then return; end
 	--local speciesID, level, quality, health, power, speed = link:match("|Hbattlepet:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):%s+|h");
 	--return tonumber(speciesID), tonumber(level), tonumber(quality), tonumber(health), tonumber(power), tonumber(speed);
-	return tonumber( link:match("|Hbattlepet:(%d+):") );
+	--return tonumber( link:match("|Hbattlepet:(%d+):") );
+	local match;
+	
+	-- check if item is a battle pet
+	match = link:match("|Hbattlepet:(%d+):");
+	if( match ) then
+		return tonumber(match);
+	end
+	
+	-- check if item ID can be converted to battle pet ID
+	match = link:match("|Hitem:(%d+):");
+	if( match ) then
+		match = tonumber(match);
+		
+		if( PT.Data.item2pet[match] ) then
+			return tonumber(PT.Data.item2pet[match]);
+		end
+	end
 end
 
 function module:AuctionFrame_Show()
@@ -125,6 +143,9 @@ function module:AuctionFrameBrowse_Update()
 		bg = _G["PTBrowseButtonTex"..i];
 		local offset = _G.FauxScrollFrame_GetOffset(_G.BrowseScrollFrame);
 		local speciesID = parse_link(_G.GetAuctionItemLink("list", offset + i));
+		
+		--print(offset, gsub(_G.GetAuctionItemLink("list", offset+i) or "", "\124", "\124\124"));
+		print(offset, _G.GetAuctionItemLink("list", offset+i), speciesID);
 		
 		if( speciesID ) then
 			if ( owned_pets[speciesID] ) then
