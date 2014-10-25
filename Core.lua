@@ -89,6 +89,21 @@ function PT:OnEnable()
 		self.db.profile.version = version;
 		AceTimer.ScheduleTimer(self, function() print(msg) end, 15);
 	end
+	
+	-- Thanks to esiemiat on CurseForge
+	--
+	-- *************************************************************************************
+	-- **** Addresses a Blizzard issue in C_PetJournal when the UI is loading. Sometimes there is a lag
+	-- **** between C_PetJournal.GetPetInfoByIndex producing valid values and C_PetJournal.GetPetStats
+	-- **** producing valid values. This leads to the following:
+	-- ****      Error Message: ...e\AddOns\Blizzard_PetJournal\Blizzard_PetJournal.lua line 771:
+	-- ****      attempt to perform arithmetic on local 'rarity' (a nil value)
+	-- *************************************************************************************
+	local LibPetJournal = LibStub("LibPetJournal-2.0")
+	LibPetJournal.RegisterCallback(self, "PostPetListUpdated", function()
+		if not _G.IsAddOnLoaded("Blizzard_PetJournal") then _G.LoadAddOn("Blizzard_PetJournal") end
+		LibPetJournal.UnregisterCallback(self, "PostPetListUpdated")
+	end)
 end
 
 -------------------------
