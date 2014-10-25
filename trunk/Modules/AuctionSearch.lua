@@ -145,7 +145,7 @@ function module:AuctionFrameBrowse_Update()
 		local speciesID = parse_link(_G.GetAuctionItemLink("list", offset + i));
 		
 		--print(offset, gsub(_G.GetAuctionItemLink("list", offset+i) or "", "\124", "\124\124"));
-		print(offset, _G.GetAuctionItemLink("list", offset+i), speciesID);
+		--print(offset, _G.GetAuctionItemLink("list", offset+i), speciesID);
 		
 		if( speciesID ) then
 			if ( owned_pets[speciesID] ) then
