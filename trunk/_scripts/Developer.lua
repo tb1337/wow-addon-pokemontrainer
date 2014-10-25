@@ -38,7 +38,7 @@ end
 function module:GetAll() -- Just a shortcut
 	self:Clear();
 	self:CreateAuraStates(true); -- do not delete dumped data
-	self:CompileAbilityTables(true); -- delete dumped data
+	self:CompileAbilityTables(); -- delete dumped data
 end
 
 -------------------
@@ -120,15 +120,17 @@ function module:CompileAbilityTables(nodel)
 				end
 				
 				-- whenever the enemy took damage
-				if( e.On_Damage_Taken and e.On_Damage_Taken[effectName] and e.On_Damage_Taken[effectName] > 0 ) then
-					local value = e.On_Damage_Taken[effectName];
-					
-					if( effectName == "pointsincreaseperuse" ) then
-						local pointsmax = e.On_Damage_Taken["pointsmax"];
-						pointsmax = pointsmax and pointsmax > 0 and pointsmax or (value * 5);
-						info[MOD_RAMPING] = math.ceil(pointsmax / value);
-					end
-				end
+				-- THIS WAS USED FOR DETECTING RAMPING ABILITYS
+				-- RAMPING CANNOT BE TRACKED ANYMORE, SO THIS IS DISABLED.
+				--if( e.On_Damage_Taken and e.On_Damage_Taken[effectName] and e.On_Damage_Taken[effectName] > 0 ) then
+				--	local value = e.On_Damage_Taken[effectName];
+				--	
+				--	if( effectName == "pointsincreaseperuse" ) then
+				--		local pointsmax = e.On_Damage_Taken["pointsmax"];
+				--		pointsmax = pointsmax and pointsmax > 0 and pointsmax or (value * 5);
+				--		info[MOD_RAMPING] = math.ceil(pointsmax / value);
+				--	end
+				--end
 			end
 			
 			-- mechanical attacks gain bonus from lightning storm
