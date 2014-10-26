@@ -16,7 +16,7 @@ local ipairs, pairs, table = _G.ipairs, _G.pairs, _G.table;
 ----------------------
 
 module.order = 1;
-module.displayName = function() return "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..(module:IsEnabled() and "|cff00ff00%s|r" or "|cffff0000%s|r"):format(L["Display: Frames"]) end
+module.displayName = function() return (module:IsEnabled() and "|cff00ff00%s|r" or "|cffff0000%s|r"):format(L["Display: Frames"]) end
 module.desc = L["True frame based combat display for Pet Battles and the next generation of Pokemon Trainer. Disable it if you want to use the tooltip based combat display."];
 module.noEnableButton = true;
 
@@ -1431,7 +1431,7 @@ function module:GetPositionOptions()
 			spacer3 = { type = "description", name = "", order = 4.1 },
 			breeds = {
 				type = "select",
-				name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["Display breeds"],
+				name = L["Display breeds"],
 				desc = L["Perhaps, you heard of battle pet breeds before. Any pet has an assigned breed ID which defines which stats will grow larger than others while leveling up. Stats are health, power and speed. When this option is enabled, you can actually see pet breeds in during battles."],
 				order = 4.5,
 				get = function()
@@ -1480,7 +1480,7 @@ function module:GetPositionOptions()
 				arg = FRAME_ENEMY,
 			},
 			activepets = {
-				name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["Pet highlightning"],
+				name = L["Pet highlightning"],
 				type = "group",
 				inline = true,
 				order = 7,
@@ -1502,7 +1502,7 @@ function module:GetPositionOptions()
 					},
 					active_animate = {
 						type = "toggle",
-						name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["With animation"],
+						name = L["With animation"],
 						desc = L["In addition, the background of active pets gets animated with a smooth effect."],
 						order = 1.1,
 						get = function()
@@ -1531,7 +1531,7 @@ function module:GetPositionOptions()
 					},
 					active_enemy_border = {
 						type = "toggle",
-						name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["Display active enemy borders"],
+						name = L["Display active enemy borders"],
 						desc = L["Draws a border around the column of currently active enemys, so it is easier to detect the active pet on your frame for comparing bonuses."],
 						order = 1.3,
 						width = "full",
@@ -1618,7 +1618,7 @@ function module:GetOptions()
 				},
 				drag = {
 					type = "execute",
-					name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["More settings"],
+					name = L["More settings"],
 					order = 2,
 					func = OpenPositioning,
 				},
@@ -1658,7 +1658,7 @@ function module:GetOptions()
 			},
 		},
 		ability = {
-			name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["General ability settings"],
+			name = L["General ability settings"],
 			type = "group",
 			inline = true,
 			order = 5,
@@ -1680,7 +1680,7 @@ function module:GetOptions()
 				},
 				ability_highlight = {
 					type = "toggle",
-					name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["Highlight buffed abilities"],
+					name = L["Highlight buffed abilities"],
 					desc = L["Whenever your abilities are doing more damage based on buffs or weather, they will glow."],
 					order = 2,
 					get = function()
@@ -1692,7 +1692,7 @@ function module:GetOptions()
 				},
 				ability_highlight_blizzard = {
 					type = "toggle",
-					name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["...on Blizzard Bar"],
+					name = L["...on Blizzard Bar"],
 					desc = L["Applys ability glowing states on Blizzards Pet Action Buttons, too."],
 					order = 3,
 					get = function()
@@ -1705,7 +1705,7 @@ function module:GetOptions()
 				},
 				ability_ramping = {
 					type = "toggle",
-					name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["Display ability amplifying state"],
+					name = L["Display ability amplifying state"],
 					desc = L["Some abilities get stronger on each usage. If this option is enabled, you will see a red dot which gets more green the more you are using these abilities."],
 					order = 4,
 					width = "full",

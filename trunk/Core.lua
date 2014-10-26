@@ -1,6 +1,7 @@
 -----------------------------------
 -- Setting up scope, upvalues and libs
 -----------------------------------
+-- "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"
 
 local AddonName = ...;
 local PT = LibStub("AceAddon-3.0"):NewAddon(select(2, ...), AddonName, "AceEvent-3.0");

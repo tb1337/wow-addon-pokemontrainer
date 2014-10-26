@@ -13,7 +13,7 @@ local _G = _G;
 -- Variables
 ----------------------
 
-module.displayName = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t"..L["Heal Pet Buttons"];
+module.displayName = L["Heal Pet Buttons"];
 module.desc = L["When pet tracking is enabled, this module displays two buttons on a separate and draggable frame. One for healing your battle pets with the spellcast, another for healing with pet bandages. Clicking these buttons is allowed when not in combat."];
 
 module.petHealSpell = 125439; -- Blizzard_PetJournal.lua
