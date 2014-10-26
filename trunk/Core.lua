@@ -32,7 +32,7 @@ PT.PAD_INDEX = _G.PET_BATTLE_PAD_INDEX;
 PT.PET_INDEX = 1;
 
 PT.MAX_COMBAT_PETS = 3;
-PT.MAX_PET_ABILITY = 3;
+PT.MAX_PET_ABILITY = _G.NUM_BATTLE_PET_ABILITIES;
 
 PT.WEATHER= _G.LE_BATTLE_PET_WEATHER;	-- 0
 PT.PLAYER = _G.LE_BATTLE_PET_ALLY;		-- 1
@@ -328,7 +328,7 @@ do
 		
 		local species, speciesName, petIcon, petType;
 		local petLevel, petName, petPower, petSpeed, petQuality, petHP, petMaxHP;
-		local numAbilities;
+		local numAbilities, displayID;
 		
 		t.side = side;
 		t.numPets = numPets;
@@ -352,6 +352,8 @@ do
 			--numAbilities = petLevel >= 4 and 3 or petLevel >= 2 and 2 or 1;
 			numAbilities = get_num_abilities(side, pet); -- Apparently some trainers ignore the above rule :/
 			
+			displayID = _G.C_PetBattles.GetDisplayID(side, pet);
+			
 			-- the t[pet] tables will be reused even after wipe_pets() got executed, the garbagecollector doesn't get something to eat *sob*
 			if( not t[pet] or not(type(t[pet]) == "table") ) then
 				t[pet] = {};
@@ -371,6 +373,7 @@ do
 			t[pet].hp = petHP;
 			t[pet].hpM = petMaxHP;
 			t[pet].numAbilities = numAbilities;
+			t[pet].displayID = displayID;
 			t[pet].breed = LibBreed:GetBreedName( LibBreed:GetBreedByPetBattleSlot(side, pet) or 0 );
 			
 			if( side == PT.ENEMY and PT:IsPVPBattle() ) then -- the ability scanner is only required during PvP battles
@@ -439,6 +442,7 @@ do
 			t[pet].hp = random(0, 10);
 			t[pet].hpM = 10;
 			t[pet].numAbilities = random(1, 3);
+			t[pet].displayID = 7511;
 			t[pet].breed = LibBreed:GetBreedName( random(1, 10) );
 			
 			for ab = 1, t[pet].numAbilities do

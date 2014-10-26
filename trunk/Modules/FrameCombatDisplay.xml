@@ -18,6 +18,10 @@
 		<TexCoords left="0" right="0.5" top="0.5" bottom="1" />
 	</Texture>
 	
+	<Texture name="PTTextureModelShadow" file="Interface\Addons\PokemonTrainer\Images\Circle" virtual="true" >
+		<Size x="103" y="104"/>	
+	</Texture>
+	
 	<Button name="PTButtonEnemyTemplate" inherits="PTButtonTemplate" virtual="true">
 		<Layers>
 			<Layer level="BACKGROUND">
@@ -165,7 +169,7 @@
 		</Frames>
 	</Frame>
 	
-	<Frame name="PTFramePetTemplate" virtual="true">
+	<Frame name="PTFramePetTemplate" framestrata="LOW" virtual="true">
 		<Animations>
 			<AnimationGroup parentKey="animHide">
 				<Alpha change="-1" duration="0.5" order="1" step="0.02" />
@@ -215,9 +219,61 @@
 					</Animations>
 				</Texture>
 			</Layer>
+			<Layer level="OVERLAY">
+				<FontString parentKey="Level" inherits="SystemFont_Outline" justifyH="LEFT" justifyV="TOP">
+					<!--<Anchors>
+						<Anchor point="TOP" relativePoint="BOTTOM" x="0" y="-2" />
+					</Anchors>-->
+				</FontString>
+				<FontString parentKey="BreedText" font="Fonts\FRIZQT__.TTF" outline="NORMAL" justifyH="LEFT" justifyV="TOP" hidden="true">
+					<FontHeight>
+						<AbsValue val="8"/>
+					</FontHeight>
+				</FontString>
+				<Texture parentKey="BreedTexture" file="Interface\PetBattles\PetBattle-StatIcons" hidden="true">
+					<Size>
+						<AbsDimension x="12" y="12" />
+					</Size>
+				</Texture>
+			</Layer>
 		</Layers>
 		<Frames>
-			<Button parentKey="Button" hidden="false">
+			<PlayerModel parentKey="Model" hidden="false">
+				<Size x="80" y="80" />
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture parentKey="Shadow"  hidden="false">
+							<Color r="0" g="0" b="0" a="0.6" />
+							<Size>
+								<AbsDimension x="56" y="56" />
+							</Size>
+							<Anchors>
+								<Anchor point="CENTER" x="0" y="0" />
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="BORDER">
+						<Texture parentKey="Border" file="Interface\PetBattles\PetBattleHud">
+							<Size>
+								<AbsDimension x="70" y="70" />
+							</Size>
+							<TexCoords left="0.82519531" right="0.87109375" top="0.88085938" bottom="0.97265625" />  
+							<Anchors>
+								<Anchor point="CENTER" />
+							</Anchors>  
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad>
+						self:SetFrameLevel(self:GetParent():GetFrameLevel() - 1);
+					</OnLoad>
+					<OnShow>
+						PT:GetModule("FrameCombatDisplay").BattleFrame_UpdateModel(self);
+					</OnShow>
+				</Scripts>
+			</PlayerModel>
+			<Button parentKey="Button" framestrata="BACKGROUND" hidden="false">
 				<Size>
 					<AbsDimension x="30" y="30" />
 				</Size>
@@ -245,7 +301,7 @@
 							</Anchors>
 						</Texture>
 					</Layer>
-					<Layer level="OVERLAY">
+					<!--<Layer level="OVERLAY">
 						<FontString parentKey="Level" inherits="SystemFont_Outline" justifyH="LEFT" justifyV="TOP">
 							<Anchors>
 								<Anchor point="TOP" relativePoint="BOTTOM" x="0" y="-2" />
@@ -261,7 +317,7 @@
 								<AbsDimension x="12" y="12" />
 							</Size>
 						</Texture>
-					</Layer>
+					</Layer>-->
 				</Layers>
 			</Button>
 			<Button parentKey="Type" inherits="PTButtonTemplate">

@@ -74,6 +74,7 @@ function module:OnInitialize()
 			bg_b = 0.30,
 			bg_a = 0.48,
 			breeds = 3,
+			model3d = true,
 			reorganize_use = true,
 			reorganize_ani = true,
 			nactivealpha_use = false,
@@ -282,7 +283,8 @@ do
 		local fs;
 		
 		for pet = PT.PET_INDEX, PT.PlayerInfo.numPets do
-			fs = _G[FRAME_PLAYER.."Pet"..pet].Button.Level;
+			-- fs = _G[FRAME_PLAYER.."Pet"..pet].Button.Level; MODEL
+			fs = _G[FRAME_PLAYER.."Pet"..pet].Level;
 			font, size, outline = fs:GetFont();
 			fs:SetFont(font, FONT_LEVEL_DEFAULT + (pet == current_pet and FONT_LEVEL_ADJUST or 0), outline);
 		end
@@ -294,7 +296,8 @@ do
 		local fs;
 		
 		for pet = PT.PET_INDEX, PT.EnemyInfo.numPets do
-			fs = _G[FRAME_ENEMY.."Pet"..pet].Button.Level;
+			-- fs = _G[FRAME_ENEMY.."Pet"..pet].Button.Level; MODEL
+			fs = _G[FRAME_ENEMY.."Pet"..pet].Level;
 			font, size, outline = fs:GetFont();
 			fs:SetFont(font, FONT_LEVEL_DEFAULT + (bigger and FONT_LEVEL_ADJUST or 0), outline);
 		end
@@ -306,7 +309,8 @@ do
 		
 		for pet = PT.PET_INDEX, PT.EnemyInfo.numPets do
 			r, g, b = PT:GetDifficultyColor(level, PT.EnemyInfo[pet].level);
-			_G[FRAME_ENEMY.."Pet"..pet].Button.Level:SetTextColor(r, g, b, 1);
+			-- _G[FRAME_ENEMY.."Pet"..pet].Button.Level:SetTextColor(r, g, b, 1); MODEL
+			_G[FRAME_ENEMY.."Pet"..pet].Level:SetTextColor(r, g, b, 1);
 		end
 	end
 	
@@ -380,7 +384,7 @@ function module.BattleFrame_Resize(self)
   	if( not(pet > self.player.numPets) ) then
     	pet_y = FRAME_LINE_HEIGHT; -- type and speed icons
 			
-			for ab = 1, self.player[pet].numAbilities do
+			for ab = 1, (module.db.profile.model3d and PT.MAX_PET_ABILITY or self.player[pet].numAbilities) do
       	pet_y = pet_y + FRAME_LINE_HEIGHT + SPACE_ABILITIES;
 			end
 			
@@ -518,7 +522,8 @@ function module.BattleFrame_Initialize(self)
 			_G[enemy:GetName().."Header"]["Enemy"..pet].Border:SetVertexColor(color.r, color.g, color.b, 1);
 			
 			-- set level strings
-			_G[frame_name.."Pet"..pet].Button.Level:SetText( self.player[pet].level );
+			-- _G[frame_name.."Pet"..pet].Button.Level:SetText( self.player[pet].level ); MODEL
+			_G[frame_name.."Pet"..pet].Level:SetText( self.player[pet].level );
 			
 			-- display pet column on enemy frame
 			BattleFrame_SetColumnVisibility(enemy, pet, true);
@@ -533,7 +538,8 @@ function module.BattleFrame_Initialize(self)
 			if( breed and module.db.profile.breeds > 0 ) then
 				-- the breeds option has to be treated as an ORed value
 				if( bit.band(module.db.profile.breeds, 1) > 0 ) then
-					_G[frame_name.."Pet"..pet].Button.BreedText:SetText(breed);
+					-- _G[frame_name.."Pet"..pet].Button.BreedText:SetText(breed); MODEL
+					_G[frame_name.."Pet"..pet].BreedText:SetText(breed);
 					show1 = true;
 				end
 				
@@ -543,19 +549,24 @@ function module.BattleFrame_Initialize(self)
 					show2 = true;
 					
 					if( breed == "P" ) then
-						_G[frame_name.."Pet"..pet].Button.BreedTexture:SetTexCoord(0, 0.5, 0, 0.5);
+						-- _G[frame_name.."Pet"..pet].Button.BreedTexture:SetTexCoord(0, 0.5, 0, 0.5); MODEL
+						_G[frame_name.."Pet"..pet].BreedTexture:SetTexCoord(0, 0.5, 0, 0.5);
 					elseif( breed == "S" ) then
-						_G[frame_name.."Pet"..pet].Button.BreedTexture:SetTexCoord(0, 0.5, 0.5, 1);
+						-- _G[frame_name.."Pet"..pet].Button.BreedTexture:SetTexCoord(0, 0.5, 0.5, 1); MODEL
+						_G[frame_name.."Pet"..pet].BreedTexture:SetTexCoord(0, 0.5, 0.5, 1);
 					elseif( breed == "H" ) then
-						_G[frame_name.."Pet"..pet].Button.BreedTexture:SetTexCoord(0.5, 1, 0.5, 1);
+						-- _G[frame_name.."Pet"..pet].Button.BreedTexture:SetTexCoord(0.5, 1, 0.5, 1); MODEL
+						_G[frame_name.."Pet"..pet].BreedTexture:SetTexCoord(0.5, 1, 0.5, 1);
 					else
 						-- balanced means no special stuff, so no icon
 						show2 = false;
 					end
 				end
 			end
-			if( show1 ) then _G[frame_name.."Pet"..pet].Button.BreedText:Show() else _G[frame_name.."Pet"..pet].Button.BreedText:Hide() end
-			if( show2 ) then _G[frame_name.."Pet"..pet].Button.BreedTexture:Show() else _G[frame_name.."Pet"..pet].Button.BreedTexture:Hide() end
+			-- if( show1 ) then _G[frame_name.."Pet"..pet].Button.BreedText:Show() else _G[frame_name.."Pet"..pet].Button.BreedText:Hide() end MODEL
+			-- if( show2 ) then _G[frame_name.."Pet"..pet].Button.BreedTexture:Show() else _G[frame_name.."Pet"..pet].Button.BreedTexture:Hide() end MODEL
+			if( show1 ) then _G[frame_name.."Pet"..pet].BreedText:Show() else _G[frame_name.."Pet"..pet].BreedText:Hide() end
+			if( show2 ) then _G[frame_name.."Pet"..pet].BreedTexture:Show() else _G[frame_name.."Pet"..pet].BreedTexture:Hide() end
 			
 			-- display pet frame
 			_G[frame_name.."Pet"..pet]:Show();
@@ -781,7 +792,41 @@ function module.BattleFrame_UpdateHealthState(self)
 			_G[enemy_name.."Header"]["Enemy"..pet].Dead:Hide();
 			_G[enemy_name.."Header"]["Enemy"..pet].Border:Show();
 		end
+		
+		module.BattleFrame_UpdateModel(_G[frame_name.."Pet"..pet].Model);
+		module.BattleFrame_UpdateModel(_G[enemy_name.."Pet"..pet].Model);
 	end
+end
+
+---------------------------------------------
+-- Battle Frame: Update 3D Model Functions
+---------------------------------------------
+
+function module.BattleFrame_UpdateModel(self)
+	if( not module.db.profile.model3d ) then
+		return;
+	end
+	
+	local parent = self:GetParent();
+	local master = parent:GetParent();	
+	local pet;
+	
+	if( parent:GetID() > master.player.numPets ) then
+		return;
+	else
+		pet = master.player[parent:GetID()];
+	end
+	
+	self:SetDisplayInfo( pet.displayID );
+	self:SetRotation(master:GetName() == FRAME_PLAYER and 0.5 or -0.5);
+	self:SetDoBlend(true);
+	
+	-- choose right animation: pet standing or pet dead
+	self:SetAnimation( (pet.dead and 6 or 742), 0);
+	
+	-- pet quality fog color
+	local color = _G.ITEM_QUALITY_COLORS[pet.quality or 0];
+	self.Border:SetVertexColor(color.r, color.g, color.b, 1);
 end
 
 ----------------------------
@@ -1002,7 +1047,8 @@ function module.BattleFrame_UpdateActivePetHighlight(self)
 		r, g, b = PT:GetDifficultyColor(self.enemy[self.enemy.activePet], self.player[pet]);
 		
 		petFrame = _G[frame_name.."Pet"..pet];
-		petFrame.Button.Level:SetTextColor(r, g, b, 1);
+		--petFrame.Button.Level:SetTextColor(r, g, b, 1); MODEL
+		petFrame.Level:SetTextColor(r, g, b, 1);
 		
 		-- set alpha
 		if( module.db.profile.nactivealpha_use ) then
@@ -1167,29 +1213,75 @@ local mirrors = {
 function module.BattleFrame_Options_Apply(self)
 	local frame_name = self:GetName();
 	
-	local icon;
 	local value = module.db.profile[frame_name.."_icon"];
 	
 	for pet = PT.PET_INDEX, PT.MAX_COMBAT_PETS do
-		-- adjust pet icon anchors
-		icon = _G[frame_name.."Pet"..pet].Button;
-		icon:ClearAllPoints();
-		icon:SetPoint(mirrors[value], icon:GetParent(), value, (value == "TOPLEFT" and -6 or 4), 0);
+		local petFrame = _G[frame_name.."Pet"..pet];
 		
-		-- reanchor the breed textures and breed strings
-		icon.BreedText:ClearAllPoints();
-		icon.BreedTexture:ClearAllPoints();
+		-- reanchor level and breed infos
+		petFrame.Level:ClearAllPoints();
+		petFrame.BreedText:ClearAllPoints();
+		petFrame.BreedTexture:ClearAllPoints();
 		
-		if( value == "TOPLEFT" ) then
-			icon.BreedText:SetPoint("BOTTOMRIGHT", 1, 2);
-			icon.BreedTexture:SetPoint("BOTTOMLEFT", -4, -2);
+		-- display either 3d models for pets or not and reanchor level and breed strings
+		if( module.db.profile.model3d ) then
+			-- anchor model, level string
+			petFrame.Model:ClearAllPoints();
+			
+			if( value == "TOPLEFT" ) then
+				petFrame.Model:SetPoint("TOPRIGHT", petFrame.Model:GetParent(), "TOPLEFT", 0, 13);
+				petFrame.Level:SetPoint("BOTTOMRIGHT", petFrame.Model.Border, "BOTTOMRIGHT", 0, 0);
+								
+				if( module.db.profile.breeds == 1 ) then -- only text
+					petFrame.BreedText:SetPoint("BOTTOMLEFT", petFrame.Model.Border, "BOTTOMLEFT", 0, 2);
+				elseif( module.db.profile.breeds == 2 ) then -- only icon
+					petFrame.BreedTexture:SetPoint("BOTTOMLEFT", petFrame.Model.Border, "BOTTOMLEFT", 0, 0);
+				elseif( module.db.profile.breeds == 3 ) then -- both
+					petFrame.BreedTexture:SetPoint("BOTTOMLEFT", petFrame.Model.Border, "BOTTOMLEFT", 0, 0);
+					petFrame.BreedText:SetPoint("LEFT", petFrame.BreedTexture, "RIGHT", 2, 0);
+				end
+			else
+				petFrame.Model:SetPoint("TOPLEFT", petFrame.Model:GetParent(), "TOPRIGHT", -2, 13);
+				petFrame.Level:SetPoint("BOTTOMLEFT", petFrame.Model.Border, "BOTTOMLEFT", 0, 0);
+				
+				if( module.db.profile.breeds == 1 ) then -- only text
+					petFrame.BreedText:SetPoint("BOTTOMRIGHT", petFrame.Model.Border, "BOTTOMRIGHT", 0, 2);
+				elseif( module.db.profile.breeds == 2 ) then -- only icon
+					petFrame.BreedTexture:SetPoint("BOTTOMRIGHT", petFrame.Model.Border, "BOTTOMRIGHT", 0, 0);
+				elseif( module.db.profile.breeds == 3 ) then -- both
+					petFrame.BreedTexture:SetPoint("BOTTOMRIGHT", petFrame.Model.Border, "BOTTOMRIGHT", 0, 0);
+					petFrame.BreedText:SetPoint("RIGHT", petFrame.BreedTexture, "LEFT", -1, 0);
+				end
+			end
+			
+			petFrame.Model:Show();
+			
+			-- hide pet icon
+			petFrame.Button:Hide();
 		else
-			icon.BreedText:SetPoint("BOTTOMLEFT", 0, 2);
-			icon.BreedTexture:SetPoint("BOTTOMRIGHT", 4, -2);
+			-- adjust pet icon anchors
+			petFrame.Button:ClearAllPoints();
+			petFrame.Button:SetPoint(mirrors[value], petFrame.Button:GetParent(), value, (value == "TOPLEFT" and -6 or 4), 0);
+			petFrame.Button:Show();
+			
+			-- hide 3d model
+			petFrame.Model:Hide();
+			
+			-- anchor breed infos to icon 
+			if( value == "TOPLEFT" ) then
+				petFrame.BreedText:SetPoint("BOTTOMRIGHT", petFrame.Button, "BOTTOMRIGHT", 1, 2);
+				petFrame.BreedTexture:SetPoint("BOTTOMLEFT", petFrame.Button, "BOTTOMLEFT", -4, -2);
+			else
+				petFrame.BreedText:SetPoint("BOTTOMLEFT", petFrame.Button, "BOTTOMLEFT", 0, 2);
+				petFrame.BreedTexture:SetPoint("BOTTOMRIGHT", petFrame.Button, "BOTTOMRIGHT", 4, -2);
+			end
+			
+			-- anchor level string   <Anchor point="TOP" relativePoint="BOTTOM" x="0" y="-2" />
+			petFrame.Level:SetPoint("TOP", petFrame.Button, "BOTTOM", 0, -2);
 		end
 				
 		-- adjust active highlight colors
-		_G[frame_name.."Pet"..pet].activeBG:SetTexture(
+		petFrame.activeBG:SetTexture(
 			module.db.profile.highlight_active_r,
 			module.db.profile.highlight_active_g,
 			module.db.profile.highlight_active_b,
@@ -1199,11 +1291,11 @@ function module.BattleFrame_Options_Apply(self)
 		-- cut off ability icon borders, or not
 		if( module.db.profile.ability_zoom ) then
 			for ab = 1, PT.MAX_PET_ABILITY do
-				_G[frame_name.."Pet"..pet]["Ability"..ab].bg:SetTexCoord(0.078125, 0.921875, 0.078125, 0.921875);
+				petFrame["Ability"..ab].bg:SetTexCoord(0.078125, 0.921875, 0.078125, 0.921875);
 			end
 		else
 			for ab = 1, PT.MAX_PET_ABILITY do
-				_G[frame_name.."Pet"..pet]["Ability"..ab].bg:SetTexCoord(0, 1, 0, 1);
+				petFrame["Ability"..ab].bg:SetTexCoord(0, 1, 0, 1);
 			end
 		end
 	end
@@ -1429,6 +1521,20 @@ function module:GetPositionOptions()
 				end,
 			},
 			spacer3 = { type = "description", name = "", order = 4.1 },
+			model3d = {
+				type = "toggle",
+				name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:0|t".."Use 3D Models",
+				desc = "Display either 3D models for pets or not.",
+				order = 4.4,
+				get = function()
+					return module.db.profile.model3d;
+				end,
+				set = function(_, value)
+					module.db.profile.model3d = value;
+					module.BattleFrame_Options_Apply(_G[FRAME_PLAYER]);
+					module.BattleFrame_Options_Apply(_G[FRAME_ENEMY]);
+				end,
+			},
 			breeds = {
 				type = "select",
 				name = L["Display breeds"],
@@ -1452,7 +1558,7 @@ function module:GetPositionOptions()
 			hint1 = {
 				type = "description",
 				name = L["You need to re-open this window when changing breed settings."],
-				order = 4.6,
+				order = 4.9,
 			},
 			spacer4 = { type = "description", name = "", order = 4.9 },
 			peticon1 = {
