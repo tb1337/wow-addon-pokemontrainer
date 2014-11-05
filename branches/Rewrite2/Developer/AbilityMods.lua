@@ -14,10 +14,8 @@ local deli = function() print("-------------------------------------------------
 -------------------------------------------------------------
 
 function Dev:ScanAbilityMods()
-	self.Ability = self.Ability or _G.PokemonTrainer_Developer;
-	
 	-- we need the ability table
-	if( not self.Ability ) then return end
+	if( not self._scanned ) then self:ScanAbility() end
 	
 	wipe(self.AbilityMods);
 	
@@ -33,8 +31,13 @@ function Dev:ScanAbilityMods()
 				
 				if( targetState and targetState > 0 ) then
 					print("|cffffff00", a.name, "|r", "bonus damage on", Const.STATES[targetState]);
+					self.AbilityMods[a.id] = targetState;
 				end
 			end
 		end
 	end
+	
+	-- save to database
+	_G.PokemonTrainer_Developer = _G.PokemonTrainer_Developer or {};
+	_G.PokemonTrainer_Developer.AbilityMods = self.AbilityMods;
 end
