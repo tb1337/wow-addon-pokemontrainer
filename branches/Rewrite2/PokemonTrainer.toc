@@ -1,0 +1,24 @@
+## Interface: 60000
+## Title: Pokemon Trainer
+## Version: 6.0.2.3
+## Notes: The ultimate pet battle utility - be the best pet trainer!
+## Author: grdn
+## SavedVariables: PokemonTrainer_DB, PokemonTrainer_Developer
+## Dependencies: Blizzard_PetJournal, Blizzard_PetBattleUI
+## OptionalDeps: Ace3, iLib, LibCrayon-3.0, LibPetBreedInfo-1.0, LibPetJournal-2.0
+
+
+# Libraries
+Libs\Includes.xml
+
+# Locales
+Locales\Locales.xml
+
+# Addon
+PokemonTrainer.lua
+
+# Core
+Core\Includes.xml
+
+# Developer
+Developer\Includes.xml
