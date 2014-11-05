@@ -14,10 +14,8 @@ local deli = function() print("-------------------------------------------------
 -------------------------------------------------------------
 
 function Dev:ScanWeatherMods()
-	self.Ability = self.Ability or _G.PokemonTrainer_Developer;
-	
 	-- we need the ability table
-	if( not self.Ability ) then return end
+	if( not self._scanned ) then self:ScanAbility() end
 	
 	wipe(self.WeatherMods);
 	
@@ -33,4 +31,8 @@ function Dev:ScanWeatherMods()
 			end
 		end
 	end
+	
+	-- save to database
+	_G.PokemonTrainer_Developer = _G.PokemonTrainer_Developer or {};
+	_G.PokemonTrainer_Developer.WeatherMods = self.WeatherMods;
 end

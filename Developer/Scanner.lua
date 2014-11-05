@@ -69,6 +69,11 @@ function Dev:ScanAbility()
 		self:_ScanAbility(info, i);
 		table.insert(self.Ability, info);
 	end
+	
+	-- save to database
+	_G.PokemonTrainer_Developer = _G.PokemonTrainer_Developer or {};
+	_G.PokemonTrainer_Developer.Ability = self.Ability;
+	self._scanned = true;
 end
 
 function Dev:_BuildTable(t)
