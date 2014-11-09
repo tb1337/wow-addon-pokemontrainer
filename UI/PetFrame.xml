@@ -55,61 +55,11 @@
 				<Size x="38" y="38"/>
 				<Anchors>
 					<Anchor point="TOPLEFT" x="2" y="-2"/>
-				</Anchors>
-				<!--<Layers>
-					<Layer level="ARTWORK">
-						<Texture name="$parentIcon" parentKey="Icon" file="Interface\Common\WhiteIconFrame">
-							<Size x="38" y="38"/>
-							<Anchors>
-								<Anchor point="TOPLEFT" x="4" y="-4"/>
-							</Anchors>
-						</Texture>
-					</Layer>
-					<Layer level="ARTWORK" textureSubLevel="2">
-						<Texture name="$parentQualityBorder" parentKey="QualityBorder" file="Interface\Common\WhiteIconFrame">
-							<Anchors>
-								<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeKey="$parent.Icon"/>
-								<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeKey="$parent.Icon"/>
-							</Anchors>
-						</Texture>
-					</Layer>
-					<Layer level="OVERLAY" textureSubLevel="1">
-						<Texture name="$parentLevelBubble" parentKey="LevelBG" atlas="PetJournal-LevelBubble" useAtlasSize="true">
-							<Anchors>
-								<Anchor point="BOTTOMRIGHT" relativeTo="$parentIcon" x="5" y="-5"/>
-							</Anchors>
-						</Texture>
-						<FontString name="$parentLevel" inherits="GameFontNormalSmall" parentKey="Level" justifyH="CENTER" text="LVL">
-							<Size x="0" y="0"/>
-							<Anchors>
-								<Anchor point="CENTER" relativeTo="$parentLevelBubble" x="0" y="0"/>
-							</Anchors>
-						</FontString>
-					</Layer>
-				</Layers>-->
-				
+				</Anchors>				
 				<Layers>
 					<Layer level="BACKGROUND">
 						<Texture parentKey="Icon" setAllPoints="true"/>
 					</Layer>
-					<!--<Layer level="ARTWORK">
-						<Texture parentKey="HealthBarBG">
-							<Size x="35" y="7"/>
-							<Anchors>
-								<Anchor point="BOTTOMLEFT" x="2" y="1"/>
-							</Anchors>
-							<Color r="0" g="0" b="0"/>
-						</Texture>
-					</Layer>
-					<Layer level="ARTWORK" textureSubLevel="2">
-						<Texture parentKey="ActualHealthBar" file="Interface\RaidFrame\Raid-Bar-Resource-Fill">
-							<Size x="35" y="7"/>
-							<Anchors>
-								<Anchor point="BOTTOMLEFT" x="2" y="1"/>
-							</Anchors>
-							<Color r="0" g="1" b="0"/>
-						</Texture>
-					</Layer>-->
 					<Layer level="ARTWORK">
 						<Texture name="$parentBorderAlive" parentKey="BorderAlive" inherits="BackupPet-Frame">
 							<Anchors>
@@ -122,17 +72,20 @@
 							</Anchors>
 						</Texture>
 					</Layer>
-					<!--<Layer level="OVERLAY">
-						<Texture parentKey="HealthDivider">
-							<Size x="35" y="2"/>
+					<Layer level="OVERLAY" textureSubLevel="1">
+						<Texture name="$parentLevelBubble" parentKey="LevelBG" atlas="PetJournal-LevelBubble" useAtlasSize="true">
 							<Anchors>
-								<Anchor point="BOTTOM" relativeKey="$parent.HealthBarBG" relativePoint="TOP" x="0" y="0"/>
+								<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" x="5" y="-5"/>
 							</Anchors>
-							<Color r="0.25" g="0.25" b="0.25"/>
 						</Texture>
-					</Layer>-->
+						<FontString name="$parentLevel" inherits="GameFontNormalSmall" parentKey="Level" justifyH="CENTER" text="LVL">
+							<Size x="0" y="0"/>
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="$parentLevelBubble" x="1" y="0"/>
+							</Anchors>
+						</FontString>
+					</Layer>
 				</Layers>
-				
 				<Frames>
 					<Frame parentKey="Type">
 						<Size x="28" y="28"/>

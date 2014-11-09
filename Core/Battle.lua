@@ -31,7 +31,7 @@ end
 -- Weather state functions
 -------------------------------------------------------------
 
-function Battle:IsWeatherActive()
+function Battle:HasWeather()
 	return type(self.weatherAura) ~= "nil";
 end
 
@@ -49,7 +49,7 @@ end
 
 PT:RegisterEvent("BattleWeatherChange", nil, true);
 PT:RegisterEvent("BattlePetAuraChange", nil, true);
-PT:RegisterEvent("BattlePetPassiveChange", nil, true);
+PT:RegisterEvent("BattlePetAuraDataReady", nil, true);
 
 function Battle:BattleAuraChangeHandler(trainer, pet)
 	if( Const:IsWeather(trainer, pet) ) then
@@ -71,6 +71,7 @@ function Battle:BattleAuraChangeHandler(trainer, pet)
 	else
 		-- we only got a buff/debuff change
 		PT:FireEvent("BattlePetAuraChange", trainer, pet);
+		PT:FireEvent("BattlePetAuraDataReady");
 	end
 end
 
