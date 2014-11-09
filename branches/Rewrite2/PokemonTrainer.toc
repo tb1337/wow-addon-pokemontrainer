@@ -7,18 +7,14 @@
 ## Dependencies: Blizzard_PetJournal, Blizzard_PetBattleUI
 ## OptionalDeps: Ace3, iLib, LibCrayon-3.0, LibPetBreedInfo-1.0, LibPetJournal-2.0
 
-
-# Libraries
 Libs\Includes.xml
-
-# Locales
 Locales\Locales.xml
 
-# Addon
 PokemonTrainer.lua
 
-# Core
 Core\Includes.xml
+UI\Includes.xml
 
-# Developer
+Patchwerk\Patchwerk.lua
+
 Developer\Includes.xml

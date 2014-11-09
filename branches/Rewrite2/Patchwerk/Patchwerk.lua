@@ -18,6 +18,14 @@ for i = Const.PET_INDEX, Const.PET_MAX do
 	Player:SetPet(i, playerPet);
  	Enemy:SetPet(i, enemyPet);
  	
+ 	-- create the pet frames
+ 	playerPet.Frame = _G.CreateFrame("Frame", "PTTrainer"..Const.PLAYER.."Pet"..i, _G.UIParent, "PokemonTrainerPetTemplate");
+ 	playerPet.Frame._class = playerPet;
+ 	
+ 	enemyPet.Frame = _G.CreateFrame("Frame", "PTTrainer"..Const.ENEMY.."Pet"..i, _G.UIParent, "PokemonTrainerPetTemplate");
+ 	enemyPet.Frame._class = enemyPet;
+ 	
+ 	-- create the abilitys
  	for j = Const.ABILITY_MIN, Const.ABILITY_ALL do
  		-- the player only has 3 abilities
  		if( j < 4 ) then

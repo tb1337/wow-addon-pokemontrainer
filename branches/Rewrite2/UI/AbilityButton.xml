@@ -1,0 +1,79 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+	
+	<Button name="PokemonTrainerAbilityButtonTemplate" virtual="true">
+		<Size>
+			<AbsDimension x="36" y="36"/>
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Icon"/>
+			</Layer>
+			<Layer level="BORDER">
+				<Texture parentKey="CooldownShadow" inherits="BattleBar-Countdown-Shadow" hidden="true">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentCooldownFlash" parentKey="CooldownFlash" file="interface\cooldown\star4" alphaMode="ADD" alpha="0">
+					<Size x="44" y="44"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+					<Color r="0.31373" g="0.627451" b="1.0"/>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString parentKey="Cooldown" inherits="GameFont_Gigantic" hidden="true">
+					<Anchors>
+						<Anchor point="CENTER" x="0" y="0"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString parentKey="HotKey" inherits="NumberFontNormalSmallGray" justifyH="RIGHT" hidden="true">
+					<Size x="36" y="10"/>
+					<Anchors>
+						<Anchor point="TOPRIGHT" x="-1" y="-3"/>
+					</Anchors>
+				</FontString>
+				<Texture parentKey="SelectedHighlight" inherits="BattleBar-Button-Highlight" hidden="true">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="Lock" file="Interface\PetBattles\PetBattle-LockIcon" hidden="true">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="BetterIcon" file="Interface\PetBattles\BattleBar-AbilityBadge-Weak" hidden="true">
+					<Size x="32" y="32"/>
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" x="9" y="-9"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<NormalTexture parentKey="NormalTexture" file="Interface\Buttons\UI-Quickslot2">
+			<Anchors>
+				<Anchor point="TOPLEFT" x="-12" y="12" />
+				<Anchor point="BOTTOMRIGHT" x="12" y="-12" />
+			</Anchors>
+		</NormalTexture>
+		<PushedTexture file="Interface\Buttons\UI-Quickslot-Depress"/>
+		<HighlightTexture alphaMode="ADD" file="Interface\Buttons\ButtonHilight-Square"/>
+		<!-- TODO do we actually need events for our buttons? -->
+		<!--<Scripts>
+			<OnEvent function="PetBattleActionButton_OnEvent"/>
+		</Scripts>-->
+		<Animations>
+			<AnimationGroup parentKey="CooldownFlashAnim">
+				<Rotation childKey="CooldownFlash" degrees="-90" duration="0.5" order="1"/>
+				<Alpha childKey="CooldownFlash" change="0.50" duration="0.1667" order="1"/>
+				<Alpha childKey="CooldownFlash" change="-0.50" duration="0.3333" order="2"/>
+			</AnimationGroup>
+		</Animations>
+	</Button>
+	
+</Ui>
