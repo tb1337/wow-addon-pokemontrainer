@@ -49,6 +49,7 @@ end
 
 PT:RegisterEvent("BattleWeatherChange", nil, true);
 PT:RegisterEvent("BattlePetAuraChange", nil, true);
+PT:RegisterEvent("BattlePetPassiveChange", nil, true);
 
 function Battle:BattleAuraChangeHandler(trainer, pet)
 	if( Const:IsWeather(trainer, pet) ) then
@@ -69,7 +70,7 @@ function Battle:BattleAuraChangeHandler(trainer, pet)
 		PT:FireEvent("BattleWeatherChange", auraID, stateID);
 	else
 		-- we only got a buff/debuff change
-		PT:FireEvent("BattlePetAuraChange", owner, pet);
+		PT:FireEvent("BattlePetAuraChange", trainer, pet);
 	end
 end
 

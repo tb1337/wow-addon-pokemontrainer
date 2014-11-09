@@ -52,11 +52,11 @@
 		</Layers>
 		<Frames>
 			<Button name="$parentPetInfo" parentKey="PetInfo">
-				<Size x="275" y="42"/>
+				<Size x="38" y="38"/>
 				<Anchors>
-					<Anchor point="TOPLEFT" x="0" y="0"/>
+					<Anchor point="TOPLEFT" x="2" y="-2"/>
 				</Anchors>
-				<Layers>
+				<!--<Layers>
 					<Layer level="ARTWORK">
 						<Texture name="$parentIcon" parentKey="Icon" file="Interface\Common\WhiteIconFrame">
 							<Size x="38" y="38"/>
@@ -86,40 +86,94 @@
 							</Anchors>
 						</FontString>
 					</Layer>
-				</Layers>
-			</Button>
-			<!-- TODO do we actually need the type icon? -->
-			<!--<Frame name="$parentTypeInfo" parentKey="TypeInfo">
-				<Size x="28" y="28"/>
-				<Anchors>
-					<Anchor point="TOPRIGHT" x="-12" y="-12"/>
-				</Anchors>
+				</Layers>-->
+				
 				<Layers>
-					<Layer level="OVERLAY">
-						<Texture name="$parentTypeIcon" parentKey="TypeIcon" file="Interface\PetBattles\PetIcon-Mechanical">
-							<Size x="28" y="28"/>
-							<Anchors>
-								<Anchor point="TOPRIGHT" x="0" y="0"/>
-							</Anchors>
-							<TexCoords left="0.79687500" right="0.49218750" top="0.50390625" bottom="0.65625000"/>
-						</Texture>
-						<FontString name="$parentType" parentKey="Type" inherits="GameFontNormal" justifyH="RIGHT" text="PET_TYPE_TEXT">
-							<Size x="0" y="0"/>
-							<Anchors>
-								<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentTypeIcon" x="-4" y="2"/>
-							</Anchors> 
-						</FontString>
+					<Layer level="BACKGROUND">
+						<Texture parentKey="Icon" setAllPoints="true"/>
 					</Layer>
+					<!--<Layer level="ARTWORK">
+						<Texture parentKey="HealthBarBG">
+							<Size x="35" y="7"/>
+							<Anchors>
+								<Anchor point="BOTTOMLEFT" x="2" y="1"/>
+							</Anchors>
+							<Color r="0" g="0" b="0"/>
+						</Texture>
+					</Layer>
+					<Layer level="ARTWORK" textureSubLevel="2">
+						<Texture parentKey="ActualHealthBar" file="Interface\RaidFrame\Raid-Bar-Resource-Fill">
+							<Size x="35" y="7"/>
+							<Anchors>
+								<Anchor point="BOTTOMLEFT" x="2" y="1"/>
+							</Anchors>
+							<Color r="0" g="1" b="0"/>
+						</Texture>
+					</Layer>-->
+					<Layer level="ARTWORK">
+						<Texture name="$parentBorderAlive" parentKey="BorderAlive" inherits="BackupPet-Frame">
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="BorderDead" inherits="BackupPet-DeadFrame">
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+					<!--<Layer level="OVERLAY">
+						<Texture parentKey="HealthDivider">
+							<Size x="35" y="2"/>
+							<Anchors>
+								<Anchor point="BOTTOM" relativeKey="$parent.HealthBarBG" relativePoint="TOP" x="0" y="0"/>
+							</Anchors>
+							<Color r="0.25" g="0.25" b="0.25"/>
+						</Texture>
+					</Layer>-->
 				</Layers>
-				<Scripts>
-					<OnEnter>
-						PetJournal_ShowAbilityTooltip(self, self.abilityID, self.speciesID, self.petID);
-					</OnEnter>
-					<OnLeave>
-						PetJournal_HideAbilityTooltip(self);
-					</OnLeave>
-				</Scripts>
-			</Frame>-->
+				
+				<Frames>
+					<Frame parentKey="Type">
+						<Size x="28" y="28"/>
+						<Anchors>
+							<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentBorderAlive" x="8" y="-2"/>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture parentKey="BG" inherits="MainPet-PetFamilyFrame" setAllPoints="true"/>
+							</Layer>
+							<Layer level="ARTWORK">
+								<Texture parentKey="Icon">
+									<Size x="28" y="28"/>
+									<Anchors>
+										<Anchor point="CENTER"/>
+									</Anchors>
+									<TexCoords left="0.49218750" right="0.79687500" top="0.50390625" bottom="0.65625000"/>
+								</Texture>
+							</Layer>
+							<Layer level="OVERLAY">
+								<Texture parentKey="Active" inherits="MainPet-PetFamilyActivate">
+									<Size x="36" y="36"/>
+									<Anchors>
+										<Anchor point="CENTER"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnEnter>
+								local pet = self:GetParent():GetParent()._class;
+								PetBattleAbilityTooltip_SetAuraID(pet:GetSide(), pet:GetSlot(), pet:GetTypePassive());
+								PetBattleAbilityTooltip_Show("TOPLEFT", self, "BOTTOMRIGHT", 0, 0);
+							</OnEnter>
+							<OnLeave>
+								PetBattlePrimaryAbilityTooltip:Hide();
+							</OnLeave>
+						</Scripts>
+					</Frame>
+				</Frames>
+			</Button>
 			<Frame name="$parentSpeedFrame" parentKey="SpeedFrame">
 				<Size x="50" y="18"/>
 				<Anchors>
@@ -135,7 +189,7 @@
 							<Size x="16" y="16"/>
 							<TexCoords left="0.0" right="0.5" top="0.5" bottom="1.0"/>
 						</Texture>
-						<FontString parentKey="Speed" inherits="GameFontHighlight" justifyH="LEFT" text="PET_SPEED">
+						<FontString parentKey="Text" inherits="GameFontHighlight" justifyH="LEFT" text="PET_SPEED">
 							<Size x="0" y="0"/>
 							<Anchors>
 								<Anchor point="LEFT" x="19" y="0"/>
@@ -159,7 +213,7 @@
 							<Size x="16" y="16"/>
 							<TexCoords left="0.0" right="0.5" top="0.0" bottom="0.5"/>
 						</Texture>
-						<FontString parentKey="Power" inherits="GameFontHighlight" justifyH="LEFT" text="PET_POWER">
+						<FontString parentKey="Text" inherits="GameFontHighlight" justifyH="LEFT" text="PET_POWER">
 							<Size x="0" y="0"/>
 							<Anchors>
 								<Anchor point="LEFT" x="19" y="0"/>
@@ -183,7 +237,7 @@
 							<Size x="16" y="16"/>
 							<TexCoords left="0.5" right="1.0" top="0.5" bottom="1.0"/>
 						</Texture>
-						<FontString name="$parentHealthValue" inherits="GameFontHighlight" justifyH="LEFT" parentKey="Health" text="PET_HEALTH">
+						<FontString name="$parentHealthValue" inherits="GameFontHighlight" justifyH="LEFT" parentKey="Text" text="PET_HEALTH">
 							<Size x="0" y="0"/>
 							<Anchors>
 								<Anchor point="LEFT" relativeTo="$parentHealthTex" relativePoint="RIGHT" x="2" y="0"/>
@@ -239,11 +293,5 @@
 			</PlayerModel>
 		</Frames>
 	</Frame>
-	
-	<!--<Frame name="PTTest" inherits="PokemonTrainerPetTemplate" parent="UIParent">
-		<Anchors>
-			<Anchor point="CENTER" x="-200" y="200" />
-		</Anchors>
-	</Frame>-->
 	
 </Ui>

@@ -37,6 +37,8 @@ for i = 1, #Const.PET_TYPES do
 	Const[ "PET_TYPE_"..Const.PET_TYPES[i]:upper() ] = i;
 end
 
+Const.PET_TYPE_PASSIVES = _G.PET_BATTLE_PET_TYPE_PASSIVES;
+
 -- combat event types
 do
 	local events = {"APPLY", "DAMAGE_TAKEN", "DAMAGE_DEALT", "HEAL_TAKEN",
@@ -61,6 +63,14 @@ end
 
 function Const:IsWeather(trainer, pet)
 	return trainer == self.WEATHER and pet == self.PAD_INDEX;
+end
+
+function Const:GetTypeIcon(type)
+	return "Interface\\PetBattles\\PetIcon-"..self.PET_TYPES[type];
+end
+
+function Const:GetTypePassive(type)
+	return self.PET_TYPE_PASSIVES[type];
 end
 
 -------------------------------------------------------------
