@@ -24,6 +24,10 @@ function Pet:GetType()
 	return self.type;
 end
 
+function Pet:GetTypePassive()
+	return Const:GetTypePassive(self:GetType());
+end
+
 function Pet:GetModel()
 	return self.model;
 end
@@ -64,6 +68,10 @@ end
 
 function Pet:GetMaxHealth()
 	return _G.C_PetBattles.GetMaxHealth( self:GetSide(), self:GetSlot() );
+end
+
+function Pet:GetBaseMaxHealth()
+	return self.maxHealth;
 end
 
 function Pet:IsDead()
@@ -126,11 +134,18 @@ end
 PT:RegisterEvent("BattleInitAbilityData", nil, true);
 
 function Pet:BattleInitPetData(side, numPets)	
-	-- do not load wrong side or too much pets
-	if(	( side ~= self:GetSide() ) or
-			( numPets < self:GetSlot() )
-	) then return end
+	-- do not load wrong side
+	if(	side ~= self:GetSide() ) then return end
 	
+	-- do not load too much pet info and, if needed, hide unnecessary frames
+	if( numPets < self:GetSlot() ) then
+		self:GetFrame():Hide();
+		return;
+	else
+		self:GetFrame():Show();
+	end
+	
+	-- begin gather pet data
 	self.species = _G.C_PetBattles.GetPetSpeciesID( self:GetSide(), self:GetSlot() );
 	
 	-- request info from the journal about our pet species
@@ -144,6 +159,8 @@ function Pet:BattleInitPetData(side, numPets)
 	
 	self.level = self:GetLevel();
 	self.quality = self:GetQuality();
+	
+	self.maxHealth = self:GetMaxHealth(); -- initial health without buffs
 	
 	-- setup ability data
 	self.numAbility = self:GetNumAbility();
@@ -170,6 +187,14 @@ function Pet:BattleInitPetData(side, numPets)
 	
 	-- our pet class has loaded data!
 	self._loaded = true;
+	self:UpdateAll();
+end
+
+function Pet:BattleHealthChanged(side, pet)
+	-- don't handle event when this isn't the changed pet
+	if( self:GetSide() ~= side or self:GetSlot() ~= pet ) then return end
+	
+	self:UpdateHealth();
 end
 
 function Pet:BattleClose()
@@ -181,6 +206,8 @@ function Pet:BattleClose()
 	self.model = nil;
 	self.level = nil;
 	self.quality = nil;
+	
+	self.maxHealth = nil;
 	
 	self.numAbility = nil;
 	self.abilityStealth = nil;
@@ -212,6 +239,10 @@ function Pet:GetAbility(slot)
 		return self["Ability"..self.abilityBattleSlot[slot]];
 	end
 	return self["Ability"..slot];
+end
+
+function Pet:HasData()
+	return self._loaded;
 end
 
 function Pet:GetSlot()
