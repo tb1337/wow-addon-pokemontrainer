@@ -7,5 +7,4 @@
 	<Script file="Trainer.lua" />
 	<Script file="Pet.lua" />
 	<Script file="Ability.lua" />
-	<Script file="Patchwerk.lua" />
 </Ui>

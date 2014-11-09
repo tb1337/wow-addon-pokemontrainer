@@ -1,0 +1,249 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+	
+	<Frame name="PokemonTrainerPetTemplate" virtual="true">
+		<Size x="405" y="168"/>
+		<!--<Anchors>
+			<Anchor point="TOPLEFT" relativeTo="$parentPetCardInset" x="3" y="-3"/>
+		</Anchors>-->
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBG" atlas="PetJournal-PetCard-BG">
+					<Size x="405" y="166"/>	
+					<Anchors>
+						<Anchor point="TOPLEFT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<!--<Layer level="BACKGROUND" textureSubLevel="2">
+				<Texture name="$parentAbilitiesBG1" parentKey="AbilitiesBG1" atlas="PetJournal-PetCard-Abilities">
+					<Size x="57" y="104"/>	
+					<Anchors>
+						<Anchor point="TOPRIGHT" x="-119" y="-45"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentAbilitiesBG2" parentKey="AbilitiesBG2" atlas="PetJournal-PetCard-Abilities">
+					<Size x="57" y="104"/>	
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parentAbilitiesBG1" relativePoint="TOPRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentAbilitiesBG3" parentKey="AbilitiesBG3" atlas="PetJournal-PetCard-Abilities">
+					<Size x="57" y="104"/>	
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parentAbilitiesBG2" relativePoint="TOPRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentShadows" atlas="PetJournal-BattleSlot-Shadow" parentKey="shadows">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="25" y="-67"/>
+					</Anchors>
+					<Size x="207" y="108"/>		
+				</Texture>
+			</Layer>-->
+			<!--<Layer level="OVERLAY">
+				<FontString parentKey="CannotBattleText" inherits="GameFontNormal" text="BATTLE_PET_CANNOT_BATTLE">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parentAbilitiesBG1"/>
+						<Anchor point="BOTTOMRIGHT" relativeTo="$parentAbilitiesBG1"/>
+					</Anchors>
+				</FontString>
+			</Layer>-->
+		</Layers>
+		<Frames>
+			<Button name="$parentPetInfo" parentKey="PetInfo">
+				<Size x="275" y="42"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" x="0" y="0"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture name="$parentIcon" parentKey="Icon" file="Interface\Common\WhiteIconFrame">
+							<Size x="38" y="38"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="4" y="-4"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="ARTWORK" textureSubLevel="2">
+						<Texture name="$parentQualityBorder" parentKey="QualityBorder" file="Interface\Common\WhiteIconFrame">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeKey="$parent.Icon"/>
+								<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeKey="$parent.Icon"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="OVERLAY" textureSubLevel="1">
+						<Texture name="$parentLevelBubble" parentKey="LevelBG" atlas="PetJournal-LevelBubble" useAtlasSize="true">
+							<Anchors>
+								<Anchor point="BOTTOMRIGHT" relativeTo="$parentIcon" x="5" y="-5"/>
+							</Anchors>
+						</Texture>
+						<FontString name="$parentLevel" inherits="GameFontNormalSmall" parentKey="Level" justifyH="CENTER" text="LVL">
+							<Size x="0" y="0"/>
+							<Anchors>
+								<Anchor point="CENTER" relativeTo="$parentLevelBubble" x="0" y="0"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+			<!-- TODO do we actually need the type icon? -->
+			<!--<Frame name="$parentTypeInfo" parentKey="TypeInfo">
+				<Size x="28" y="28"/>
+				<Anchors>
+					<Anchor point="TOPRIGHT" x="-12" y="-12"/>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<Texture name="$parentTypeIcon" parentKey="TypeIcon" file="Interface\PetBattles\PetIcon-Mechanical">
+							<Size x="28" y="28"/>
+							<Anchors>
+								<Anchor point="TOPRIGHT" x="0" y="0"/>
+							</Anchors>
+							<TexCoords left="0.79687500" right="0.49218750" top="0.50390625" bottom="0.65625000"/>
+						</Texture>
+						<FontString name="$parentType" parentKey="Type" inherits="GameFontNormal" justifyH="RIGHT" text="PET_TYPE_TEXT">
+							<Size x="0" y="0"/>
+							<Anchors>
+								<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentTypeIcon" x="-4" y="2"/>
+							</Anchors> 
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnEnter>
+						PetJournal_ShowAbilityTooltip(self, self.abilityID, self.speciesID, self.petID);
+					</OnEnter>
+					<OnLeave>
+						PetJournal_HideAbilityTooltip(self);
+					</OnLeave>
+				</Scripts>
+			</Frame>-->
+			<Frame name="$parentSpeedFrame" parentKey="SpeedFrame">
+				<Size x="50" y="18"/>
+				<Anchors>
+					<!-- OLD <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentPowerFrame" x="0" y="-4"/>-->
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" x="2" y="5"/>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<Texture file="Interface\PetBattles\PetBattle-StatIcons">
+							<Anchors>
+								<Anchor point="TOPLEFT" x="1" y="-1"/>
+							</Anchors>
+							<Size x="16" y="16"/>
+							<TexCoords left="0.0" right="0.5" top="0.5" bottom="1.0"/>
+						</Texture>
+						<FontString parentKey="Speed" inherits="GameFontHighlight" justifyH="LEFT" text="PET_SPEED">
+							<Size x="0" y="0"/>
+							<Anchors>
+								<Anchor point="LEFT" x="19" y="0"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="$parentPowerFrame" parentKey="PowerFrame">
+				<Size x="50" y="18"/>
+				<Anchors>
+					<!-- OLD <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentHealthFrame" x="0" y="-2"/> -->
+					<Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" relativeTo="$parentSpeedFrame" x="0" y="0"/>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<Texture file="Interface\PetBattles\PetBattle-StatIcons">
+							<Anchors>
+								<Anchor point="TOPLEFT" x="1" y="-1"/>
+							</Anchors>
+							<Size x="16" y="16"/>
+							<TexCoords left="0.0" right="0.5" top="0.0" bottom="0.5"/>
+						</Texture>
+						<FontString parentKey="Power" inherits="GameFontHighlight" justifyH="LEFT" text="PET_POWER">
+							<Size x="0" y="0"/>
+							<Anchors>
+								<Anchor point="LEFT" x="19" y="0"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="$parentHealthFrame" parentKey="HealthFrame">
+				<Size x="50" y="18"/>
+				<Anchors>
+					<!-- OLD <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentPetInfo" x="6" y="-14"/> -->
+					<Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" relativeTo="$parentPowerFrame" x="0" y="0"/>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<Texture name="$parentHealthTex" file="Interface\PetBattles\PetBattle-StatIcons">
+							<Anchors>
+								<Anchor point="TOPLEFT" x="1" y="-1"/>
+							</Anchors>
+							<Size x="16" y="16"/>
+							<TexCoords left="0.5" right="1.0" top="0.5" bottom="1.0"/>
+						</Texture>
+						<FontString name="$parentHealthValue" inherits="GameFontHighlight" justifyH="LEFT" parentKey="Health" text="PET_HEALTH">
+							<Size x="0" y="0"/>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parentHealthTex" relativePoint="RIGHT" x="2" y="0"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			
+			<!--
+			<Button name="$parentSpell1" inherits="PokemonTrainerAbilityButtonTemplate" id="1" parentKey="spell1">
+				<Anchors>
+					<Anchor point="TOPRIGHT" realtivePoint="TOPRIGHT" relativeTo="$parentAbilitiesBG1" x="-11" y="-11"/>
+				</Anchors>
+			</Button>
+			<Button name="$parentSpell2" inherits="PokemonTrainerAbilityButtonTemplate" id="2" parentKey="spell2">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentSpell1" RelativePoint="RIGHT" x="21" y="0"/>
+				</Anchors>
+			</Button>
+			<Button name="$parentSpell3" inherits="PokemonTrainerAbilityButtonTemplate" id="3" parentKey="spell3">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentSpell2" RelativePoint="RIGHT" x="21" y="0"/>
+				</Anchors>
+			</Button>
+			<Button name="$parentSpell4" inherits="PokemonTrainerAbilityButtonTemplate" id="4" parentKey="spell4">
+				<Anchors>
+					<Anchor point="TOP" relativeTo="$parentSpell1" RelativePoint="BOTTOM" x="0" y="-12"/>
+				</Anchors>
+			</Button>
+			<Button name="$parentSpell5" inherits="PokemonTrainerAbilityButtonTemplate" id="5" parentKey="spell5">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentSpell4" RelativePoint="RIGHT" x="21" y="0"/>
+				</Anchors>
+			</Button>
+			<Button name="$parentSpell6" inherits="PokemonTrainerAbilityButtonTemplate" id="6" parentKey="spell6">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentSpell5" RelativePoint="RIGHT" x="21" y="0"/>
+				</Anchors>
+			</Button>
+			-->
+			
+			<PlayerModel name="$parentModelFrame" parentKey="Model" inherits="ModelTemplate">
+				<Size x="173" y="135"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" x="45" y="-21"/>
+				</Anchors>
+				<Scripts>
+					<OnShow>
+						self:SetDisplayInfo(31956);
+					</OnShow>
+				</Scripts>
+			</PlayerModel>
+		</Frames>
+	</Frame>
+	
+	<!--<Frame name="PTTest" inherits="PokemonTrainerPetTemplate" parent="UIParent">
+		<Anchors>
+			<Anchor point="CENTER" x="-200" y="200" />
+		</Anchors>
+	</Frame>-->
+	
+</Ui>
