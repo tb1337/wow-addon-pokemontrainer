@@ -2,6 +2,7 @@
 ..\FrameXML\UI.xsd">
 	
 	<Script file="Const.lua" />
+	<Script file="Util.lua" />
 	<Script file="Base.lua" />
 	<Script file="Battle.lua" />
 	<Script file="Trainer.lua" />

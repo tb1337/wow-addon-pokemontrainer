@@ -8,7 +8,7 @@ if( not PT.DEBUG ) then return end -- only load in debug mode
 -- scan all abilitys:			/script PT.Dev:ScanAbility()
 -- scan weather mods:			/script PT.Dev:ScanWeatherMods()
 -- scan ability mods:			/script PT.Dev:ScanAbilityMods()
---
+-- scan aura states:			/script PT.Dev:ScanAuraStates()
 --
 --
 --

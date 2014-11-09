@@ -12,6 +12,7 @@ Locales\Locales.xml
 
 PokemonTrainer.lua
 
+Data\Includes.xml
 Core\Includes.xml
 UI\Includes.xml
 

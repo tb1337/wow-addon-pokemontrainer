@@ -2,7 +2,7 @@ local AddonName, PT = ...;
 local Pet = PT:NewClass("Pet", PT.BaseClass);
 PT.PetClass = Pet;
 
-local Const, Battle = PT:GetComponent("Const", "Battle");
+local Const, Battle, Util = PT:GetComponent("Const", "Battle", "Util");
 
 -------------------------------------------------------------
 -- Pet related functions
@@ -159,8 +159,9 @@ function Pet:BattleInitPetData(side, numPets)
 	
 	self.level = self:GetLevel();
 	self.quality = self:GetQuality();
-	
 	self.maxHealth = self:GetMaxHealth(); -- initial health without buffs
+	
+	self.states = self.states or {}; -- pet related states
 	
 	-- setup ability data
 	self.numAbility = self:GetNumAbility();
@@ -190,13 +191,6 @@ function Pet:BattleInitPetData(side, numPets)
 	self:UpdateAll();
 end
 
-function Pet:BattleHealthChanged(side, pet)
-	-- don't handle event when this isn't the changed pet
-	if( self:GetSide() ~= side or self:GetSlot() ~= pet ) then return end
-	
-	self:UpdateHealth();
-end
-
 function Pet:BattleClose()
 	-- this data shall not persist between battles
 	self.species = nil;
@@ -206,7 +200,6 @@ function Pet:BattleClose()
 	self.model = nil;
 	self.level = nil;
 	self.quality = nil;
-	
 	self.maxHealth = nil;
 	
 	self.numAbility = nil;
@@ -216,6 +209,27 @@ function Pet:BattleClose()
 	self.abilityBattleSlot = nil;
 	
 	self._loaded = nil;
+end
+
+function Pet:BattleHealthChanged(side, pet)
+	-- don't handle event when this isn't the changed pet
+	if( self:GetSide() ~= side or self:GetSlot() ~= pet ) then return end
+	
+	self:UpdateHealth();
+end
+
+function Pet:BattleMaxHealthChanged(side, pet)
+	-- don't handle event when this isn't the changed pet
+	if( self:GetSide() ~= side or self:GetSlot() ~= pet ) then return end
+	
+	self:UpdateHealth();
+end
+
+function Pet:BattlePetAuraChange(side, pet)
+	-- don't handle event when this isn't the changed pet
+	if( self:GetSide() ~= side or self:GetSlot() ~= pet ) then return end
+	
+	Util:FillAuraStates(side, pet, self.states);
 end
 
 -------------------------------------------------------------

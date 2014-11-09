@@ -79,6 +79,12 @@ function Pet:UpdatePetInfo()
 	-- update quality border
 	local quality = _G.ITEM_QUALITY_COLORS[ self:GetQuality() ] or {r = 1, g = 1, b = 1};
 	info.BorderAlive:SetVertexColor(quality.r, quality.g, quality.b);
+	
+	-- update level
+	info.Level:SetText( self:GetLevel() );
+	
+	-- update model
+	self:GetFrame().Model:SetDisplayInfo( self:GetModel() );
 end
 
 -------------------------------------------------------------
