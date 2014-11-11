@@ -3,7 +3,7 @@
 	
 	<Button name="PokemonTrainerAbilityButtonTemplate" virtual="true">
 		<Size>
-			<AbsDimension x="36" y="36"/>
+			<AbsDimension x="28" y="28"/>
 		</Size>
 		<Layers>
 			<Layer level="BACKGROUND">
@@ -30,7 +30,7 @@
 					</Anchors>
 				</FontString>
 			</Layer>
-			<Layer level="OVERLAY">
+			<!--<Layer level="OVERLAY">
 				<FontString parentKey="HotKey" inherits="NumberFontNormalSmallGray" justifyH="RIGHT" hidden="true">
 					<Size x="36" y="10"/>
 					<Anchors>
@@ -48,12 +48,12 @@
 					</Anchors>
 				</Texture>
 				<Texture parentKey="BetterIcon" file="Interface\PetBattles\BattleBar-AbilityBadge-Weak" hidden="true">
-					<Size x="32" y="32"/>
+					<Size x="36" y="36"/>
 					<Anchors>
 						<Anchor point="BOTTOMRIGHT" x="9" y="-9"/>
 					</Anchors>
 				</Texture>
-			</Layer>
+			</Layer>-->
 		</Layers>
 		<NormalTexture parentKey="NormalTexture" file="Interface\Buttons\UI-Quickslot2">
 			<Anchors>
@@ -61,12 +61,13 @@
 				<Anchor point="BOTTOMRIGHT" x="12" y="-12" />
 			</Anchors>
 		</NormalTexture>
-		<PushedTexture file="Interface\Buttons\UI-Quickslot-Depress"/>
+		<PushedTexture file="Interface\Buttons\UI-Quickslot-Depress">
+			<Anchors>
+				<Anchor point="TOPLEFT" x="-2" y="2" />
+				<Anchor point="BOTTOMRIGHT" x="2" y="-2" />
+			</Anchors>
+		</PushedTexture>
 		<HighlightTexture alphaMode="ADD" file="Interface\Buttons\ButtonHilight-Square"/>
-		<!-- TODO do we actually need events for our buttons? -->
-		<!--<Scripts>
-			<OnEvent function="PetBattleActionButton_OnEvent"/>
-		</Scripts>-->
 		<Animations>
 			<AnimationGroup parentKey="CooldownFlashAnim">
 				<Rotation childKey="CooldownFlash" degrees="-90" duration="0.5" order="1"/>
