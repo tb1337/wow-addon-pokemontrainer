@@ -24,10 +24,10 @@ for i = Const.PET_INDEX, Const.PET_MAX do
  	Enemy:SetPet(i, enemyPet);
  	
  	-- create the pet frames
- 	playerPet.Frame = _G.CreateFrame("Frame", "PTTrainer"..Const.PLAYER.."Pet"..i, _G.PetBattleFrame, "PokemonTrainerPetTemplate");
+ 	playerPet.Frame = _G.CreateFrame("Frame", "PTTrainer"..Const.PLAYER.."Pet"..i, _G.PetBattleFrame, "PokemonTrainerPetTemplate-Player");
  	playerPet.Frame._class = playerPet;
  	
- 	enemyPet.Frame = _G.CreateFrame("Frame", "PTTrainer"..Const.ENEMY.."Pet"..i, _G.PetBattleFrame, "PokemonTrainerPetTemplate");
+ 	enemyPet.Frame = _G.CreateFrame("Frame", "PTTrainer"..Const.ENEMY.."Pet"..i, _G.PetBattleFrame, "PokemonTrainerPetTemplate-Enemy");
  	enemyPet.Frame._class = enemyPet;
  	
  	-- create the abilitys
