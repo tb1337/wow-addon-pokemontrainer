@@ -30,30 +30,6 @@
 					</Anchors>
 				</FontString>
 			</Layer>
-			<!--<Layer level="OVERLAY">
-				<FontString parentKey="HotKey" inherits="NumberFontNormalSmallGray" justifyH="RIGHT" hidden="true">
-					<Size x="36" y="10"/>
-					<Anchors>
-						<Anchor point="TOPRIGHT" x="-1" y="-3"/>
-					</Anchors>
-				</FontString>
-				<Texture parentKey="SelectedHighlight" inherits="BattleBar-Button-Highlight" hidden="true">
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Lock" file="Interface\PetBattles\PetBattle-LockIcon" hidden="true">
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="BetterIcon" file="Interface\PetBattles\BattleBar-AbilityBadge-Weak" hidden="true">
-					<Size x="36" y="36"/>
-					<Anchors>
-						<Anchor point="BOTTOMRIGHT" x="9" y="-9"/>
-					</Anchors>
-				</Texture>
-			</Layer>-->
 		</Layers>
 		<NormalTexture parentKey="NormalTexture" file="Interface\Buttons\UI-Quickslot2">
 			<Anchors>
