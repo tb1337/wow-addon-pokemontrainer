@@ -139,6 +139,7 @@ function Pet:BattleInitPetData(side, numPets)
 	
 	-- do not load too much pet info and, if needed, hide unnecessary frames
 	if( numPets < self:GetSlot() ) then
+		self:UpdateEnemyFrames();
 		self:GetFrame():Hide();
 		return;
 	else

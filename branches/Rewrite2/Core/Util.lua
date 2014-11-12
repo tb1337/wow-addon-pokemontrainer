@@ -22,3 +22,7 @@ function Util:FillAuraStates(side, pet, t, noWipe)
 		end
 	end
 end
+
+function Util:GetQualityColorTable(quality)
+	return _G.ITEM_QUALITY_COLORS[quality] or {r = 1, g = 1, b = 1};
+end

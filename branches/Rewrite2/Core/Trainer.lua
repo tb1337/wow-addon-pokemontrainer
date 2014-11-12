@@ -20,7 +20,14 @@ function Trainer:GetSide()
 	return self.side;
 end
 
+function Trainer:GetEnemyTrainer()
+	return self:IsPlayer() and PT.Component.Trainer2 or PT.Component.Trainer1;
+end
+
 function Trainer:GetNumPets()
+	if( not self.numPets ) then
+		return _G.C_PetBattles.GetNumPets(self:GetSide());
+	end
 	return self.numPets;
 end
 
@@ -39,7 +46,7 @@ end
 PT:RegisterEvent("BattleInitPetData", nil, true);
 
 function Trainer:BattleBeginStart()
-	self.numPets = _G.C_PetBattles.GetNumPets(self:GetSide());
+	self.numPets = self:GetNumPets();
 	self.activePet = _G.C_PetBattles.GetActivePet(self:GetSide());
 	
 	self.states = self.states or {}; -- setup "global" states, this data will be inherited by pet states

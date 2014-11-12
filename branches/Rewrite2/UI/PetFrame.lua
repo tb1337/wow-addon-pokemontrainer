@@ -1,7 +1,7 @@
 local AddonName, PT = ...;
 local Pet = PT.PetClass;
 
-local Const, Battle = PT:GetComponent("Const", "Battle");
+local Const, Battle, Util = PT:GetComponent("Const", "Battle", "Util");
 
 local LibCrayon = LibStub("LibCrayon-3.0");
 
@@ -15,6 +15,7 @@ function Pet:UpdateAll()
 	self:UpdateSpeed();
 	self:UpdateType();
 	self:UpdatePetInfo();
+	self:UpdateEnemyFrames();
 end
 
 function Pet:UpdateHealth()
@@ -41,6 +42,9 @@ function Pet:UpdateHealth()
 		info.BorderAlive:Show();
 		info.BorderDead:Hide();
 	end
+	
+	-- update enemy frames
+	self:UpdateEnemyFrames();
 end
 
 function Pet:UpdatePower()
@@ -70,14 +74,14 @@ function Pet:UpdateType()
 	end
 end
 
-function Pet:UpdatePetInfo()
+function Pet:UpdatePetInfo()	
 	local info = self:GetFrame().PetInfo;
 	
 	-- update pet icon
 	info.Icon:SetTexture(self:GetIcon());
 	
 	-- update quality border
-	local quality = _G.ITEM_QUALITY_COLORS[ self:GetQuality() ] or {r = 1, g = 1, b = 1};
+	local quality = Util:GetQualityColorTable(self:GetQuality());
 	info.BorderAlive:SetVertexColor(quality.r, quality.g, quality.b);
 	
 	-- update level
@@ -85,6 +89,36 @@ function Pet:UpdatePetInfo()
 	
 	-- update model
 	self:GetFrame().Model:SetDisplayInfo( self:GetModel() );
+	
+	-- update enemy frames
+	self:UpdateEnemyFrames(quality);
+end
+
+function Pet:UpdateEnemyFrames(quality)
+	quality = quality or Util:GetQualityColorTable(self:GetQuality());
+	
+	-- loop enemy frames and update our pet icon
+	local Trainer = self:GetTrainer():GetEnemyTrainer();
+	
+	for i = Const.PET_INDEX, Const.PET_MAX do
+		local frame = Trainer["Pet"..i].Frame.Spells["Enemy"..self:GetSlot()];
+		
+		if( i > Trainer:GetNumPets() ) then
+			frame:Hide();
+		else
+			frame:Show();
+			frame.Icon:SetTexture(self:GetIcon());
+			frame.BorderAlive:SetVertexColor(quality.r, quality.g, quality.b);
+			
+			if( self:IsDead() ) then
+				frame.BorderAlive:Hide();
+				frame.BorderDead:Show();
+			else
+				frame.BorderAlive:Show();
+				frame.BorderDead:Hide();
+			end
+		end
+	end
 end
 
 -------------------------------------------------------------

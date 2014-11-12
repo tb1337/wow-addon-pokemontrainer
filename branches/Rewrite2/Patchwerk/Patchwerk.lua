@@ -35,14 +35,18 @@ for i = Const.PET_INDEX, Const.PET_MAX do
  		-- the player only has 3 abilities
  		if( j < 4 ) then
  			playerPet:SetAbility(j, AbilityClass:new("Trainer"..Const.PLAYER.."Pet"..i.."Ability"..j, playerPet, j));
- 			-- add the ability class to ability button
+ 			
+ 			-- add the ability class to ability button and vice versa
  			playerPet.Frame.Spells["Spell"..j]._class = playerPet:GetAbility(j);
+ 			playerPet.Frame.Spells["Spell"..j]._class.Frame = playerPet.Frame.Spells["Spell"..j];
  		end
  		
  		-- since the enemy may have 6 (ability stealth until usage)
  		enemyPet:SetAbility(j,  AbilityClass:new("Trainer"..Const.ENEMY.. "Pet"..i.."Ability"..j, enemyPet , j));
- 		-- add the ability class to ability button
+ 		
+ 		-- add the ability class to ability button and vice versa
  		enemyPet.Frame.Spells["Spell"..j]._class = enemyPet:GetAbility(j);
+ 		enemyPet.Frame.Spells["Spell"..j]._class.Frame = enemyPet.Frame.Spells["Spell"..j];
  	end
 end
 
@@ -53,9 +57,15 @@ end
 
 for side = Const.PLAYER, Const.ENEMY do
 	for pet = Const.PET_INDEX, Const.PET_MAX do
-		-- save class to frame
+		-- save class to frame and enemy frame to class
 		for i = Const.PET_INDEX, Const.PET_MAX do
-			_G["PTTrainer"..side.."Pet"..pet.."SpellsFrameEnemy"..i]._class = PT.Component["Trainer"..(side == Const.PLAYER and Const.ENEMY or Const.PLAYER).."Pet"..i];
+			local class = PT.Component["Trainer"..(side == Const.PLAYER and Const.ENEMY or Const.PLAYER).."Pet"..i];
+			local frame = _G["PTTrainer"..side.."Pet"..pet.."SpellsFrameEnemy"..i];
+			
+			frame._class = class;
+			
+			class.PetFrames = class.PetFrames or {};
+			table.insert(class.PetFrames, frame);
 		end
 	end
 end
