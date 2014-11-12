@@ -35,14 +35,35 @@ for i = Const.PET_INDEX, Const.PET_MAX do
  		-- the player only has 3 abilities
  		if( j < 4 ) then
  			playerPet:SetAbility(j, AbilityClass:new("Trainer"..Const.PLAYER.."Pet"..i.."Ability"..j, playerPet, j));
+ 			-- add the ability class to ability button
+ 			playerPet.Frame.Spells["Spell"..j]._class = playerPet:GetAbility(j);
  		end
  		
  		-- since the enemy may have 6 (ability stealth until usage)
  		enemyPet:SetAbility(j,  AbilityClass:new("Trainer"..Const.ENEMY.. "Pet"..i.."Ability"..j, enemyPet , j));
+ 		-- add the ability class to ability button
+ 		enemyPet.Frame.Spells["Spell"..j]._class = enemyPet:GetAbility(j);
  	end
 end
 
--- anchor the frames
+-------------------------------------------------------------
+-- Flick enemy pet icons and their classes together
+-------------------------------------------------------------
+-- only works after the "big" frame creation above
+
+for side = Const.PLAYER, Const.ENEMY do
+	for pet = Const.PET_INDEX, Const.PET_MAX do
+		-- save class to frame
+		for i = Const.PET_INDEX, Const.PET_MAX do
+			_G["PTTrainer"..side.."Pet"..pet.."SpellsFrameEnemy"..i]._class = PT.Component["Trainer"..(side == Const.PLAYER and Const.ENEMY or Const.PLAYER).."Pet"..i];
+		end
+	end
+end
+
+-------------------------------------------------------------
+-- Anchor the battle frames
+-------------------------------------------------------------
+
 PTTrainer1Pet1:SetPoint("TOPLEFT", 2, -200);
 PTTrainer1Pet2:SetPoint("TOPLEFT", PTTrainer1Pet1, "BOTTOMLEFT", 0, 2);
 PTTrainer1Pet3:SetPoint("TOPLEFT", PTTrainer1Pet2, "BOTTOMLEFT", 0, 2);
