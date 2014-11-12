@@ -179,6 +179,9 @@ function Pet:BattleInitPetData(side, numPets)
 			[1] = 1,
 			[2] = 2,
 			[3] = 3,
+			[4] = 4,
+			[5] = 5,
+			[6] = 6
 		};
 		
 		_G.C_PetJournal.GetPetAbilityList(self:GetSpecies(), self.abilityTable, self.abilityLevels);
