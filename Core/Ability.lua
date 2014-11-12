@@ -43,6 +43,17 @@ function Ability:BattleInitAbilityData(side, pet, numAbility, stealth)
 			(not stealth and numAbility < self:GetSlot() )
 	) then return end
 	
+	-- do not load wrong side or wrong pet
+	if(	side ~= self:GetSide() or pet ~= self:GetPet():GetSlot() ) then return end
+	
+	-- do not load too much ability info and, if needed, hide unnecessary frames
+	if( not stealth and numAbility < self:GetSlot() ) then
+		self:GetFrame():Hide();
+		return;
+	else
+		self:GetFrame():Show();
+	end
+	
 	local id, name, icon, maxCooldown, _, numTurns, petType, noHints;
 	local slot = self:GetSlot();
 	
@@ -74,6 +85,7 @@ function Ability:BattleInitAbilityData(side, pet, numAbility, stealth)
 	
 	-- our ability has finally loaded data!
 	self._loaded = true;
+	self:UpdateAll();
 end
 
 function Ability:BattleClose()
@@ -84,7 +96,7 @@ function Ability:BattleClose()
 	self.maxCD = nil;
 	self.numTurns = nil;
 	self.type = nil;
-	self.noStrongWeak = nil;
+	self.noHints = nil;
 	
 	self.locked = nil;
 	
@@ -116,6 +128,10 @@ function Ability:GetSlot()
 end
 
 -- shortcuts
+function Ability:GetSide()
+	return self:GetTrainer():GetSide();
+end
+
 function Ability:GetStealthedAbility()
 	return self:GetPet():GetStealthedAbility(self:GetSlot());
 end
