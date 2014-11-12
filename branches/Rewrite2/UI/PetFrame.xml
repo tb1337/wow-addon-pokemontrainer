@@ -199,34 +199,35 @@
 					</Layer>
 				</Layers>
 				<Frames>
-					<Button name="$parentEnemy1" inherits="PokemonTrainerPetInfoTemplate-Mini" parentKey="Enemy1">
+					<Button name="$parentEnemy3" inherits="PokemonTrainerPetInfoTemplate-Mini" parentKey="Enemy3">
 						<Anchors>
-							<Anchor point="TOPLEFT" x="40" y="2" />
+							<Anchor point="TOPRIGHT" x="-2" y="0" />
 						</Anchors>
 					</Button>
 					<Button name="$parentEnemy2" inherits="PokemonTrainerPetInfoTemplate-Mini" parentKey="Enemy2">
 						<Anchors>
-							<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentEnemy1" x="10" y="0" />
+							<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentEnemy3" x="-10" y="0" />
 						</Anchors>
 					</Button>
-					<Button name="$parentEnemy3" inherits="PokemonTrainerPetInfoTemplate-Mini" parentKey="Enemy3">
+					<Button name="$parentEnemy1" inherits="PokemonTrainerPetInfoTemplate-Mini" parentKey="Enemy1">
 						<Anchors>
-							<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentEnemy2" x="10" y="0" />
+							<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentEnemy2" x="-10" y="0" />
 						</Anchors>
 					</Button>
+					
 					<Button name="$parentSpell1" inherits="PokemonTrainerAbilityButtonTemplate" id="1" parentKey="Spell1">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentEnemy1" x="-38" y="-6"/>
+							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentEnemy1" x="-38" y="-10"/>
 						</Anchors>
 					</Button>
 					<Button name="$parentSpell2" inherits="PokemonTrainerAbilityButtonTemplate" id="2" parentKey="Spell2">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSpell1" x="0" y="-6"/>
+							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSpell1" x="0" y="-10"/>
 						</Anchors>
 					</Button>
 					<Button name="$parentSpell3" inherits="PokemonTrainerAbilityButtonTemplate" id="3" parentKey="Spell3">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSpell2" x="0" y="-6"/>
+							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSpell2" x="0" y="-10"/>
 						</Anchors>
 					</Button>
 				</Frames>
@@ -249,51 +250,51 @@
 					</Layer>
 				</Layers>
 				<Frames>
-					<Button name="$parentEnemy1" inherits="PokemonTrainerPetInfoTemplate-Mini" parentKey="Enemy1">
+					<Button name="$parentEnemy3" inherits="PokemonTrainerPetInfoTemplate-Mini" parentKey="Enemy3">
 						<Anchors>
-							<Anchor point="TOPLEFT" x="40" y="2" />
+							<Anchor point="TOPRIGHT" x="-2" y="0" />
 						</Anchors>
 					</Button>
 					<Button name="$parentEnemy2" inherits="PokemonTrainerPetInfoTemplate-Mini" parentKey="Enemy2">
 						<Anchors>
-							<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentEnemy1" x="10" y="0" />
+							<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentEnemy3" x="-10" y="0" />
 						</Anchors>
 					</Button>
-					<Button name="$parentEnemy3" inherits="PokemonTrainerPetInfoTemplate-Mini" parentKey="Enemy3">
+					<Button name="$parentEnemy1" inherits="PokemonTrainerPetInfoTemplate-Mini" parentKey="Enemy1">
 						<Anchors>
-							<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentEnemy2" x="10" y="0" />
+							<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentEnemy2" x="-10" y="0" />
 						</Anchors>
 					</Button>
 					
 					<Button name="$parentSpell1" inherits="PokemonTrainerAbilityButtonTemplate" id="1" parentKey="Spell1">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentEnemy1" x="-38" y="-8"/>
+							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentEnemy1" x="-38" y="-10"/>
 						</Anchors>
 					</Button>
 					<Button name="$parentSpell2" inherits="PokemonTrainerAbilityButtonTemplate" id="2" parentKey="Spell2">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSpell1" x="0" y="-8"/>
+							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSpell1" x="0" y="-10"/>
 						</Anchors>
 					</Button>
 					<Button name="$parentSpell3" inherits="PokemonTrainerAbilityButtonTemplate" id="3" parentKey="Spell3">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSpell2" x="0" y="-8"/>
+							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSpell2" x="0" y="-10"/>
 						</Anchors>
 					</Button>
 					
 					<Button name="$parentSpell4" inherits="PokemonTrainerAbilityButtonTemplate" id="4" parentKey="Spell4">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativePoint="BOTTOMRIGHT" relativeTo="$parentEnemy3" x="10" y="-8"/>
+							<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentSpell1" x="-5" y="0"/>
 						</Anchors>
 					</Button>
 					<Button name="$parentSpell5" inherits="PokemonTrainerAbilityButtonTemplate" id="5" parentKey="Spell5">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSpell4" x="0" y="-8"/>
+							<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentSpell2" x="-5" y="0"/>
 						</Anchors>
 					</Button>
 					<Button name="$parentSpell6" inherits="PokemonTrainerAbilityButtonTemplate" id="6" parentKey="Spell6">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSpell5" x="0" y="-8"/>
+							<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentSpell3" x="-5" y="0"/>
 						</Anchors>
 					</Button>
 					
