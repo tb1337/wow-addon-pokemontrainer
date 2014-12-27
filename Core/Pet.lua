@@ -105,7 +105,7 @@ do
 			if( self:IsPlayer() or Battle:IsPVP() ) then
 				return level >= 4 and 3 or level > 1 and 2 or 1;
 			else
-			-- npc abilities must be queries with our helper func
+			-- npc abilities must be queried with our helper func
 				return calculate_num_ability( self:GetSide(), self:GetSlot() );
 			end
 		end

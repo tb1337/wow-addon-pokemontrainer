@@ -28,6 +28,25 @@ function Battle:IsTrainer()
 end
 
 -------------------------------------------------------------
+-- Battle trainer data functions
+-------------------------------------------------------------
+
+-- there are frame display errors going to be happen if only one trainer has loaded data.
+-- we need to track if both trainers data is ready and then fire the pet event in Trainer.lua
+
+function Battle:TrainerLoad()
+	if( self.bothTrainersLoaded ) then
+		self.bothTrainersLoaded = self.bothTrainersLoaded + 1;
+	else
+		self.bothTrainersLoaded = 1;
+	end
+end
+
+function Battle:TrainersLoaded()
+	return self.bothTrainersLoaded and self.bothTrainersLoaded >= 2 or false;
+end
+
+-------------------------------------------------------------
 -- Weather state functions
 -------------------------------------------------------------
 
@@ -92,8 +111,17 @@ function Battle:BattleClose()
 	self.weatherAura = nil;
 	self.weatherState = nil;
 	self.currentRound = nil;
+	self.bothTrainersLoaded = nil;
 end
 
 function Battle:BattleRoundPlayback(num)
 	self.currentRound = num + 1;
+end
+
+-------------------------------------------------------------
+-- Trainer getter func
+-------------------------------------------------------------
+
+function Battle:GetTrainer(side)
+	return PT["Trainer"..side];
 end
