@@ -51,7 +51,13 @@ function Trainer:BattleBeginStart()
 	
 	self.states = self.states or {}; -- setup "global" states, this data will be inherited by pet states
 	
-	PT:FireEvent("BattleInitPetData", self:GetSide(), self:GetNumPets());
+	-- see Battle.lua
+	Battle:TrainerLoad();
+	
+	if( Battle:TrainersLoaded() ) then
+		PT:FireEvent("BattleInitPetData", Const.PLAYER, Battle:GetTrainer(Const.PLAYER):GetNumPets());
+		PT:FireEvent("BattleInitPetData", Const.ENEMY, Battle:GetTrainer(Const.ENEMY):GetNumPets());
+	end
 end
 
 function Trainer:BattleClose()

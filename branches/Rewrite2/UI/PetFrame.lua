@@ -97,25 +97,27 @@ end
 function Pet:UpdateEnemyFrames(quality)
 	quality = quality or Util:GetQualityColorTable(self:GetQuality());
 	
-	-- loop enemy frames and update our pet icon
+	-- loop enemy and our frames (on enemy pet frames) and update icons, borders, etc.
 	local Trainer = self:GetTrainer():GetEnemyTrainer();
 	
 	for i = Const.PET_INDEX, Const.PET_MAX do
-		local frame = Trainer["Pet"..i].Frame.Spells["Enemy"..self:GetSlot()];
+		local enemyFrame = self.Frame.Spells["Enemy"..i];
+		local ourFrame = Trainer["Pet"..i].Frame.Spells["Enemy"..self:GetSlot()];
 		
 		if( i > Trainer:GetNumPets() ) then
-			frame:Hide();
+			enemyFrame:Hide();
 		else
-			frame:Show();
-			frame.Icon:SetTexture(self:GetIcon());
-			frame.BorderAlive:SetVertexColor(quality.r, quality.g, quality.b);
+			enemyFrame:Show();
+			
+			ourFrame.Icon:SetTexture(self:GetIcon());
+			ourFrame.BorderAlive:SetVertexColor(quality.r, quality.g, quality.b);
 			
 			if( self:IsDead() ) then
-				frame.BorderAlive:Hide();
-				frame.BorderDead:Show();
+				ourFrame.BorderAlive:Hide();
+				ourFrame.BorderDead:Show();
 			else
-				frame.BorderAlive:Show();
-				frame.BorderDead:Hide();
+				ourFrame.BorderAlive:Show();
+				ourFrame.BorderDead:Hide();
 			end
 		end
 	end
