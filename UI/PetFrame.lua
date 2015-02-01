@@ -16,6 +16,7 @@ function Pet:UpdateAll()
 	self:UpdateType();
 	self:UpdatePetInfo();
 	self:UpdateEnemyFrames();
+	self:UpdateSpellBonusFrames();
 end
 
 function Pet:UpdateHealth()
@@ -121,6 +122,12 @@ function Pet:UpdateEnemyFrames(quality)
 			end
 		end
 	end
+end
+
+function Pet:UpdateSpellBonusFrames()
+	local frame = self:GetFrame();
+	
+	
 end
 
 -------------------------------------------------------------
