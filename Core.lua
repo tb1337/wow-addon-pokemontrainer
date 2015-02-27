@@ -102,7 +102,7 @@ function PT:OnEnable()
 	-- *************************************************************************************
 	local LibPetJournal = LibStub("LibPetJournal-2.0")
 	LibPetJournal.RegisterCallback(self, "PostPetListUpdated", function()
-		if not _G.IsAddOnLoaded("Blizzard_PetJournal") then _G.LoadAddOn("Blizzard_PetJournal") end
+		if not _G.IsAddOnLoaded("Blizzard_Collections") then _G.LoadAddOn("Blizzard_Collections") end
 		LibPetJournal.UnregisterCallback(self, "PostPetListUpdated")
 	end)
 end
