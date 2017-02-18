@@ -1,6 +1,6 @@
 ## Interface: 70100
 ## Title: Pokemon Trainer
-## Version: 7.1.0
+## Version: 7.1.1
 ## Notes: The pet battle addon with many helpers!
 ## Author: grdn
 ## SavedVariables: PokemonTrainerDB, PTDevDB
