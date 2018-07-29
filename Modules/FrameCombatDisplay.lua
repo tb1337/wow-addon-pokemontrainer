@@ -118,7 +118,7 @@ function module:OnEnable()
 	self:RegisterEvent("CHAT_MSG_PET_BATTLE_COMBAT_LOG", "OnEvent");
 	
 	-- registering aura events into a bucket to throttle PetAura update calls
-	self:RegisterBucketEvent({"PET_BATTLE_AURA_APPLIED", "PET_BATTLE_AURA_CHANGED", "PET_BATLE_AURA_CANCELED"}, 2, "OnAuraBucket");
+	self:RegisterBucketEvent({"PET_BATTLE_AURA_APPLIED", "PET_BATTLE_AURA_CHANGED", "PET_BATTLE_AURA_CANCELED"}, 2, "OnAuraBucket");
 	
 	-- ability buttons handle cooldown highlightning events by themselves
 	for _,frame in ipairs(BattleFrames) do
