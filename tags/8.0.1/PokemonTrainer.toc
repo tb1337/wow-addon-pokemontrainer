@@ -1,0 +1,15 @@
+## Interface: 80000
+## Title: Pokemon Trainer
+## Version: 8.0.1
+## Notes: The pet battle addon with many helpers!
+## Author: grdn
+## SavedVariables: PokemonTrainerDB, PTDevDB
+## LoadOnDemand: 1
+## LoadWith: Blizzard_Collections, Blizzard_PetBattleUI
+## LoadManagers: AddonLoader
+## X-LoadOn-Always: delayed
+## Dependencies: Blizzard_Collections, Blizzard_PetBattleUI
+## OptionalDeps: Ace3, iLib, LibCrayon-3.0, LibPetBreedInfo-1.0, LibPetJournal-2.0
+
+
+includes.xml
