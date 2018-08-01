@@ -665,7 +665,7 @@ do
 			abilityButton.Cooldown:SetText("");
 			
 			if( module.db.profile.cd_highlight ) then
-				abilityButton.CooldownBG:SetTexture(module.db.profile.cd_highlight_r, module.db.profile.cd_highlight_g, module.db.profile.cd_highlight_b, module.db.profile.cd_highlight_a);
+				abilityButton.CooldownBG:SetColorTexture(module.db.profile.cd_highlight_r, module.db.profile.cd_highlight_g, module.db.profile.cd_highlight_b, module.db.profile.cd_highlight_a);
 				abilityButton.CooldownBG:Show();
 			else
 				abilityButton.CooldownBG:Hide();
@@ -736,7 +736,7 @@ do
 				self.Cooldown:SetText(cdleft > 0 and cdleft or "");
 			end
 			if( module.db.profile.cd_highlight ) then
-				self.CooldownBG:SetTexture(module.db.profile.cd_highlight_r, module.db.profile.cd_highlight_g, module.db.profile.cd_highlight_b, module.db.profile.cd_highlight_a);
+				self.CooldownBG:SetColorTexture(module.db.profile.cd_highlight_r, module.db.profile.cd_highlight_g, module.db.profile.cd_highlight_b, module.db.profile.cd_highlight_a);
 				self.CooldownBG:Show();
 			else
 				self.CooldownBG:Hide();
@@ -1281,7 +1281,7 @@ function module.BattleFrame_Options_Apply(self)
 		end
 				
 		-- adjust active highlight colors
-		petFrame.activeBG:SetTexture(
+		petFrame.activeBG:SetColorTexture(
 			module.db.profile.highlight_active_r,
 			module.db.profile.highlight_active_g,
 			module.db.profile.highlight_active_b,
@@ -1302,9 +1302,9 @@ function module.BattleFrame_Options_Apply(self)
 	
 	-- adjust frame background colors
 	if( module.db.profile.bg ) then
-		self.bg:SetTexture(module.db.profile.bg_r, module.db.profile.bg_g, module.db.profile.bg_b, module.db.profile.bg_a);
+		self.bg:SetColorTexture(module.db.profile.bg_r, module.db.profile.bg_g, module.db.profile.bg_b, module.db.profile.bg_a);
 	else
-		self.bg:SetTexture(0, 0, 0, 0.4);
+		self.bg:SetColorTexture(0, 0, 0, 0.4);
 	end
 	
 	-- adjust frame scale

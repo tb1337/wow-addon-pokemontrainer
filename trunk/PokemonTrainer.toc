@@ -1,6 +1,6 @@
 ## Interface: 80000
 ## Title: Pokemon Trainer
-## Version: 8.0.3
+## Version: 8.0.4
 ## Notes: The pet battle addon with many helpers!
 ## Author: grdn
 ## SavedVariables: PokemonTrainerDB, PTDevDB
