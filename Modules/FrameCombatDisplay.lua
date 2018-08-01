@@ -110,7 +110,7 @@ function module:OnEnable()
 	self:RegisterEvent("PET_BATTLE_OPENING_START", "OnEvent");
 	self:RegisterEvent("PET_BATTLE_OVER", "OnEvent");
 	self:RegisterEvent("PET_BATTLE_CLOSE", "OnEvent");
-	self:RegisterEvent("PET_BATTLE_TURN_STARTED", "OnEvent");
+	--self:RegisterEvent("PET_BATTLE_TURN_STARTED", "OnEvent");
 	self:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE", "OnEvent");
 	self:RegisterEvent("PET_BATTLE_PET_CHANGED", "OnEvent");
 	self:RegisterEvent("PET_BATTLE_HEALTH_CHANGED", "OnEvent");
