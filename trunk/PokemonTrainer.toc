@@ -4,6 +4,7 @@
 ## Notes: The pet battle addon with many helpers!
 ## Author: grdn
 ## SavedVariables: PokemonTrainerDB, PTDevDB
+## LoadOnDemand: 1
 ## LoadWith: Blizzard_Collections, Blizzard_PetBattleUI
 ## LoadManagers: AddonLoader
 ## X-LoadOn-Always: delayed
