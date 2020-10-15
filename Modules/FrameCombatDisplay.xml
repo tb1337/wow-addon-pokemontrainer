@@ -478,15 +478,13 @@
 			</OnDragStop>			
 		</Scripts>
 		<Frames>
-			<Frame parentKey="EnemyActive" frameLevel="6">
+			<Frame parentKey="EnemyActive" frameLevel="6" inherits="BackdropTemplate">
 				<Size>
 					<AbsDimension x="26" />
 				</Size>
-				<Backdrop edgeFile="Interface\Tooltips\UI-Tooltip-Border">
-					<EdgeSize>
-						<AbsValue val="14" />
-					</EdgeSize>
-				</Backdrop>
+				<KeyValues>
+					<KeyValue key="backdropInfo" value="BACKDROP_TOOLTIP_8_8_1111" type="global" />
+				</KeyValues>
 				<Scripts>
 					<OnLoad>
 						self:Raise(); -- makes it overlay the parent and all other frames
