@@ -67,6 +67,8 @@ end
 function PT:OnEnable()
 	LibStub("AceConfig-3.0"):RegisterOptionsTable(AddonName, PT.OpenOptions);
 	LibStub("AceConfigDialog-3.0"):AddToBlizOptions(AddonName);
+
+	print("|cff00aaff"..AddonName.."|r: loaded.");
 	
 	_G.SlashCmdList["PT"] = function() _G.InterfaceOptionsFrame_OpenToCategory(AddonName); end
 	_G["SLASH_PT1"] = "/pt";

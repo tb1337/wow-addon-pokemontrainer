@@ -34,6 +34,9 @@ externals:
   Libs/iLib:
     url: https://github.com/grdn1337/wow-lib-ilib
 
+move-folders:
+  PokemonTrainer/Loader: PokemonTrainer_Loader
+
 optional-dependencies:
   - ace3
   - ilib
