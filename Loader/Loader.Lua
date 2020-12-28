@@ -29,7 +29,7 @@ f:SetScript("OnEvent", function(self, event, ...)
         end
     elseif( event == "UPDATE_MOUSEOVER_UNIT" ) then
         local name, unit = _G.GameTooltip:GetUnit();
-        if( _G.UnitIsBattlePet(unit) ) then
+        if( unit and _G.UnitIsBattlePet(unit) ) then
             LoadPokemonTrainer(false);
             f:UnregisterEvent(event);
         end
