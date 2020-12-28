@@ -1,6 +1,6 @@
-## Interface: 80200
+## Interface: 90002
 ## Title: Pokemon Trainer
-## Version: 8.2.0
+## Version: 9.0.0
 ## Notes: The pet battle addon with many helpers!
 ## Author: grdn
 ## SavedVariables: PokemonTrainerDB, PTDevDB
