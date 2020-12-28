@@ -1,7 +1,8 @@
-<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
 
-<!--@non-debug@
+    <!--@non-debug@
 <Include file="Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml"/>
 <Script file="Libs\LibStub\Libstub.lua"/>
 
@@ -22,21 +23,20 @@
 @end-non-debug@-->
 
 
-<Include file="Locales\Locales.xml"/>
+    <Include file="Locales\Locales.xml" />
 
-<Script file="Core.lua"/>
-<Script file="Data.lua"/>
+    <Script file="Core.lua" />
+    <Script file="Data.lua" />
 
-<!--@do-not-package@-->
-<Script file="_scripts\Developer.lua"/>
-<!--@end-do-not-package@-->
+    <!--@do-not-package@-->
+    <Script file="_scripts\Developer.lua" />
+    <!--@end-do-not-package@-->
 
-<Include file="Modules\FrameCombatDisplay.xml"/>
-<Script file="Modules\TooltipCombatDisplay.lua"/>
+    <Include file="Modules\FrameCombatDisplay.xml" />
+    <Script file="Modules\TooltipCombatDisplay.lua" />
 
-<Script file="Modules\AuctionSearch.lua"/>
-<Script file="Modules\WildPetTooltip.lua"/>
-<Include file="Modules\HealBandageButtons.xml"/>
+    <Script file="Modules\WildPetTooltip.lua" />
+    <Include file="Modules\HealBandageButtons.xml" />
 
 
 
